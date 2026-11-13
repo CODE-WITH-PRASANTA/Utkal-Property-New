@@ -4,6 +4,7 @@ import Navbar from './Components/Navbar/Navbar';
 import Footer from './Components/Footer/Footer';
 import Home from './Pages/Home/Home';
 import Topbar from './Components/Topbar/Topbar';
+import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
       </Routes>
 
       <Footer/>
+      <FloatingIcons/>
     </BrowserRouter>
   );
 };
