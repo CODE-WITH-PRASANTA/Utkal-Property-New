@@ -9,6 +9,7 @@ import AgentsPage from './Components/AgentsPage/AgentsPage';
 import Contact from './Components/Contact/Contact';
 import Faq from './Components/Faq/Faq';
 import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
+import Blog from './Components/Blog/Blog';
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/agents" element={<AgentsPage/>} />
         <Route path="/contact" element={<Contact/>} />
         <Route path="/faq" element={<Faq/>} />
+        <Route path="/blog" element={<Blog/>} />
         
       </Routes>
 
