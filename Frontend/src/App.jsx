@@ -8,6 +8,7 @@ import Property from './Components/property/property';
 import AgentsPage from './Components/AgentsPage/AgentsPage';
 import Contact from './Components/Contact/Contact';
 import Faq from './Components/Faq/Faq';
+import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
       </Routes>
 
       <Footer/>
+      <FloatingIcons/>
     </BrowserRouter>
   );
 };
