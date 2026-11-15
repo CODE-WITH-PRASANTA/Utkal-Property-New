@@ -10,6 +10,7 @@ import Faq from './Components/Faq/Faq';
 import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
 import Blog from './Components/Blog/Blog';
 import About from './Pages/About/About';
+import Home from './Pages/Home/Home';
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
       
       <Routes>
          <Route path="/about" element={<About/>} />
+         <Route path="/" element={<Home/>} />
         <Route path="/properties" element={<Property/>} />
         <Route path="/agents" element={<AgentsPage/>} />
         <Route path="/contact" element={<Contact/>} />
