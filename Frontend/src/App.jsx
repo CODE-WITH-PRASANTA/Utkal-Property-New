@@ -33,7 +33,7 @@ const App = () => {
       </Routes>
 
       <Footer/>
-      <FloatingIcons/>
+      {/* <FloatingIcons/>/ */}
     </BrowserRouter>
   );
 };

@@ -324,7 +324,6 @@ const STARS = [
 
 /* ---------------- Page ---------------- */
 const HomeOne = ({
-  heroImage = null,
   heroAlt = "Utkal Property featured project",
   onExplore,
   onSchedule,

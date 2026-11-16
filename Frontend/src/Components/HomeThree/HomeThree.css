@@ -1,0 +1,759 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+.ht3-section {
+  width: 100%;
+  padding: 65px 48px 80px; /* left & right space */
+  background: #fff;
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   HEADER (animates when section is visible)
+========================================= */
+
+.ht3-header {
+  text-align: center;
+  padding: 0;
+  margin-bottom: 55px;
+}
+
+.ht3-h-anim {
+  opacity: 0;
+}
+
+.ht3-visible .ht3-h-anim {
+  animation: ht3HeadIn 0.9s var(--hd, 0s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ht3-subtitle {
+  display: inline-block;
+  color: #e96c54;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+
+.ht3-header h2 {
+  margin: 0;
+  font-size: clamp(36px, 4vw, 54px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  color: #191919;
+}
+
+.ht3-header p {
+  margin-top: 18px;
+  color: #646464;
+  font-size: 19px;
+}
+
+/* =========================================
+   FILTER BUTTONS
+========================================= */
+
+.ht3-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 45px;
+}
+
+.ht3-filter-btn {
+  padding: 13px 27px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ht3-filter-btn:hover {
+  background: #edf5f1;
+  color: #194e43;
+  transform: translateY(-2px);
+}
+
+.ht3-filter-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.ht3-filter-btn.ht3-active {
+  border-color: #333;
+  background: #fff9f7;
+  color: #333;
+}
+
+.ht3-filter-btn.ht3-active:hover {
+  background: #194e43;
+  border-color: #194e43;
+  color: #fff;
+}
+
+/* faster entrance for the filter buttons */
+.ht3-visible .ht3-filter-btn.ht3-h-anim {
+  animation-duration: 0.5s;
+}
+
+/* =========================================
+   GRID + CARDS
+========================================= */
+
+.ht3-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 35px 38px;
+  scroll-margin-top: 30px;
+}
+
+/* EMPTY STATE (when a filter has no properties) */
+
+.ht3-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 0;
+  margin: 0;
+  color: #646464;
+  font-size: 18px;
+}
+
+.ht3-card {
+  height: 516px;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eee;
+  isolation: isolate;
+  opacity: 0; /* hidden until section is visible */
+  transition:
+    transform 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+/* each column enters from a different direction */
+.ht3-card:nth-child(3n + 1) {
+  --from-x: -90px;
+  --from-y: 40px;
+}
+
+.ht3-card:nth-child(3n + 2) {
+  --from-x: 0px;
+  --from-y: 90px;
+}
+
+.ht3-card:nth-child(3n) {
+  --from-x: 90px;
+  --from-y: 40px;
+}
+
+.ht3-visible .ht3-card {
+  animation: ht3CardIn 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ht3-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.14);
+}
+
+/* IMAGE */
+
+.ht3-image {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.ht3-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: scale(1.12);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* image settles from a slight zoom while the card slides in */
+.ht3-visible .ht3-card .ht3-image img {
+  transform: scale(1);
+  transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ht3-visible .ht3-card:hover .ht3-image img {
+  transform: scale(1.08);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ht3-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.12),
+    transparent 40%,
+    rgba(0, 0, 0, 0.12)
+  );
+  pointer-events: none;
+}
+
+/* BADGES (FOR RENT / FOR SALE / FOR BUY / FEATURED) */
+
+.ht3-badges {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+}
+
+.ht3-status,
+.ht3-featured {
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: transform 0.15s ease;
+}
+
+.ht3-status {
+  background: #194e43;
+  color: #fff;
+}
+
+.ht3-featured {
+  background: #f4cb65;
+  color: #222;
+}
+
+.ht3-card:hover .ht3-status,
+.ht3-card:hover .ht3-featured {
+  transform: translateY(-3px);
+}
+
+/* CARD CONTENT */
+
+.ht3-info {
+  position: absolute;
+  z-index: 3;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding: 20px 23px 21px;
+  background: #fff;
+  border-radius: 13px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.10);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.ht3-card:hover .ht3-info {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+}
+
+.ht3-info h3 {
+  font-size: 21px;
+  font-weight: 700;
+  color: #171717;
+  margin: 0 0 15px;
+  letter-spacing: -0.5px;
+  line-height: 1.3;
+}
+
+/* LOCATION */
+
+.ht3-location {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #5a5a5a;
+  margin-bottom: 19px;
+  min-width: 0;
+}
+
+.ht3-location svg {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  color: #244e49;
+}
+
+.ht3-location span {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* PRICE AND FEATURES */
+
+.ht3-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.ht3-price {
+  color: #f06a52;
+  font-size: 24px;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* FEATURES */
+
+.ht3-features {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.ht3-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #4a4a4a;
+  font-variant-numeric: tabular-nums;
+}
+
+.ht3-feature-item svg {
+  width: 22px;
+  height: 22px;
+  color: #344e59;
+  flex-shrink: 0;
+}
+
+.ht3-feature-item span {
+  font-size: 16px;
+  font-weight: 500;
+  min-width: 10px;
+}
+
+.ht3-divider {
+  width: 1px;
+  height: 25px;
+  background: #dedede;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   SEE ALL BUTTON
+========================================= */
+
+.ht3-see-all-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 48px;
+  opacity: 0;
+}
+
+.ht3-visible .ht3-see-all-wrapper {
+  animation: ht3HeadIn 1s 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ht3-see-all-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 15px 17px 15px 30px;
+  min-width: 215px;
+  border: 1px solid #194e43;
+  border-radius: 50px;
+  background: #194e43;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(25, 78, 67, 0.16);
+  transition: all 0.4s ease;
+}
+
+.ht3-see-all-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(
+    110deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.7s ease;
+}
+
+.ht3-see-all-btn:hover::before {
+  left: 140%;
+}
+
+.ht3-see-all-btn:hover {
+  background: #f4cb65;
+  border-color: #f4cb65;
+  color: #172d27;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(25, 78, 67, 0.20);
+}
+
+.ht3-see-all-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+.ht3-see-arrow {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  transition: all 0.4s ease;
+}
+
+.ht3-see-arrow svg {
+  width: 19px;
+  height: 19px;
+  transition: transform 0.4s ease;
+}
+
+.ht3-see-all-btn:hover .ht3-see-arrow {
+  background: #194e43;
+  color: #fff;
+}
+
+.ht3-see-all-btn:hover .ht3-see-arrow svg {
+  transform: translateX(4px);
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes ht3HeadIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* uses `translate` + `scale` so the hover `transform` keeps working */
+@keyframes ht3CardIn {
+  from {
+    opacity: 0;
+    translate: var(--from-x, 0px) var(--from-y, 60px);
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* =========================================
+   LAPTOP
+========================================= */
+
+@media (max-width: 1200px) {
+  .ht3-section {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .ht3-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 25px;
+  }
+
+  .ht3-card {
+    height: 486px;
+  }
+
+  /* 2 columns: left card from left, right card from right */
+  .ht3-card:nth-child(odd) {
+    --from-x: -80px;
+    --from-y: 40px;
+  }
+
+  .ht3-card:nth-child(even) {
+    --from-x: 80px;
+    --from-y: 40px;
+  }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 768px) {
+  .ht3-section {
+    padding: 50px 20px;
+  }
+
+  .ht3-header {
+    margin-bottom: 40px;
+  }
+
+  .ht3-header p {
+    font-size: 16px;
+  }
+
+  .ht3-filters {
+    margin-top: 30px;
+    gap: 7px;
+  }
+
+  .ht3-filter-btn {
+    padding: 11px 17px;
+    font-size: 14px;
+  }
+
+  .ht3-grid {
+    gap: 20px;
+  }
+
+  .ht3-card {
+    height: 446px;
+  }
+
+  .ht3-info {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    padding: 17px 14px;
+  }
+
+  .ht3-info h3 {
+    font-size: 18px;
+  }
+
+  .ht3-location {
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+
+  .ht3-location span {
+    font-size: 12px;
+  }
+
+  .ht3-bottom {
+    flex-wrap: wrap;
+    padding-top: 13px;
+  }
+
+  .ht3-price {
+    font-size: 21px;
+  }
+
+  .ht3-features {
+    gap: 8px;
+  }
+
+  .ht3-feature-item {
+    gap: 4px;
+  }
+
+  .ht3-feature-item svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ht3-feature-item span {
+    font-size: 14px;
+  }
+
+  .ht3-badges {
+    top: 17px;
+    left: 16px;
+  }
+
+  .ht3-status,
+  .ht3-featured {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+
+  .ht3-see-all-wrapper {
+    margin-top: 35px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 540px) {
+  .ht3-section {
+    padding: 40px 14px;
+  }
+
+  .ht3-header {
+    margin-bottom: 30px;
+  }
+
+  .ht3-header h2 {
+    font-size: 34px;
+    letter-spacing: -1px;
+  }
+
+  .ht3-header p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .ht3-subtitle {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .ht3-filters {
+    gap: 5px;
+    margin-top: 25px;
+  }
+
+  .ht3-filter-btn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .ht3-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .ht3-card {
+    height: 436px;
+    border-radius: 13px;
+  }
+
+  /* single column: every card rises from below */
+  .ht3-card:nth-child(n) {
+    --from-x: 0px;
+    --from-y: 70px;
+  }
+
+  .ht3-info {
+    left: 13px;
+    right: 13px;
+    bottom: 13px;
+    padding: 18px 16px;
+  }
+
+  .ht3-info h3 {
+    font-size: 20px;
+  }
+
+  .ht3-location span {
+    font-size: 13px;
+  }
+
+  .ht3-price {
+    font-size: 22px;
+  }
+
+  .ht3-features {
+    gap: 10px;
+  }
+
+  .ht3-feature-item svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .ht3-feature-item span {
+    font-size: 14px;
+  }
+
+  .ht3-see-all-wrapper {
+    margin-top: 30px;
+  }
+
+  .ht3-see-all-btn {
+    min-width: 200px;
+    padding: 12px 14px 12px 24px;
+    font-size: 14px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 380px) {
+  .ht3-price {
+    font-size: 19px;
+  }
+
+  .ht3-features {
+    gap: 7px;
+  }
+
+  .ht3-feature-item {
+    gap: 3px;
+  }
+
+  .ht3-feature-item svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .ht3-feature-item span {
+    font-size: 13px;
+  }
+
+  .ht3-divider {
+    height: 20px;
+  }
+}
+
+/* =========================================
+   FASTER ANIMATION AFTER A FILTER CLICK
+========================================= */
+
+.ht3-visible .ht3-grid.ht3-fast .ht3-card {
+  animation-duration: 0.45s;
+}
+
+.ht3-visible .ht3-grid.ht3-fast .ht3-card .ht3-image img {
+  transition-duration: 0.6s;
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .ht3-section *,
+  .ht3-section *::before,
+  .ht3-section *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

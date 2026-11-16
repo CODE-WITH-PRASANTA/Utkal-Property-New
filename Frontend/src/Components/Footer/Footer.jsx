@@ -2,11 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
-// Import assets from src/assets/
+// Assets from src/assets/
 import logo from '../../assets/logo.webp';
 import footerImage from '../../assets/footerImage.avif';
 
-// Importing icons from react-icons
 import {
   FaPhoneAlt,
   FaChevronRight,
@@ -23,17 +22,17 @@ import { BiHomeAlt2 } from 'react-icons/bi';
 const Footer = () => {
   return (
     <footer className="footer-container" aria-label="Site Footer">
-      {/* Brand Header Row */}
+      {/* Brand + Social */}
       <div className="footer-brand-row">
         <div className="footer-brand-mark">
           <div className="footer-brand-logo">
-            <img 
-              src={logo} 
-              alt="Utkal Property Logo" 
-              className="footer-logo-img" 
+            <img
+              src={logo}
+              alt="Utkal Property Logo"
+              className="footer-logo-img"
               width="48"
               height="48"
-              loading="lazy" 
+              loading="lazy"
               decoding="async"
             />
           </div>
@@ -61,59 +60,49 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Top Banner Cards */}
+      {/* Call-to-action cards */}
       <div className="footer-top-cards">
-        {/* Card 1 */}
         <div className="footer-card">
-          <div className="footer-card-content">
-            <div className="footer-card-icon-box card-icon-orange" aria-hidden="true">
-              <FaHouseUser className="card-large-icon" />
-            </div>
-            <div className="footer-card-text">
-              <h3 className="footer-card-title">You need a house</h3>
-              <p className="footer-card-desc">
-                Tell us your needs, we will give you thousands of suggestions for the dream home.
-              </p>
-            </div>
+          <div className="footer-card-icon-box" aria-hidden="true">
+            <FaHouseUser className="card-large-icon" />
           </div>
-          <div className="footer-card-btn-wrapper">
-            <a href="tel:+918338908897" className="footer-card-btn" aria-label="Call to buy a house">
-              <FaPhoneAlt className="btn-react-icon" aria-hidden="true" />
-              Contact Seller
-            </a>
+          <div className="footer-card-text">
+            <h3 className="footer-card-title">You need a house</h3>
+            <p className="footer-card-desc">
+              Tell us your needs and we will suggest homes that fit.
+            </p>
           </div>
+          <a href="tel:+918338908897" className="footer-card-btn" aria-label="Call to buy a house">
+            <FaPhoneAlt className="btn-react-icon" aria-hidden="true" />
+            Contact Seller
+          </a>
         </div>
 
-        {/* Card 2 */}
         <div className="footer-card">
-          <div className="footer-card-content">
-            <div className="footer-card-icon-box card-icon-yellow" aria-hidden="true">
-              <FaBuildingCircleCheck className="card-large-icon" />
-            </div>
-            <div className="footer-card-text">
-              <h3 className="footer-card-title">Sell your house</h3>
-              <p className="footer-card-desc">
-                We will connect you to thousands of people who need to buy a home.
-              </p>
-            </div>
+          <div className="footer-card-icon-box" aria-hidden="true">
+            <FaBuildingCircleCheck className="card-large-icon" />
           </div>
-          <div className="footer-card-btn-wrapper">
-            <Link to="/sell-property" className="footer-card-btn" aria-label="Sell your property with Utkal Property">
-              <BiHomeAlt2 className="btn-react-icon" aria-hidden="true" />
-              Sell Property
-            </Link>
+          <div className="footer-card-text">
+            <h3 className="footer-card-title">Sell your house</h3>
+            <p className="footer-card-desc">
+              We will connect you with people looking to buy a home.
+            </p>
           </div>
+          <Link to="/sell-property" className="footer-card-btn" aria-label="Sell your property with Utkal Property">
+            <BiHomeAlt2 className="btn-react-icon" aria-hidden="true" />
+            Sell Property
+          </Link>
         </div>
       </div>
 
-      {/* Main Footer Links & Info Grid */}
+      {/* Main grid */}
       <div className="footer-main-content">
-        {/* Column 1: Office Address */}
+        {/* Office Address */}
         <div className="footer-column footer-office-address">
           <h4 className="footer-column-title">Office Address</h4>
 
           <div className="address-group">
-            <span className="address-label">Head office:</span>
+            <span className="address-label">Head office</span>
             <p className="address-text bold-address">
               Plot No-55, Lane-2, Road-2,<br />
               Jagrath Vihar, Baramunda,<br />
@@ -122,7 +111,7 @@ const Footer = () => {
           </div>
 
           <div className="address-group">
-            <span className="address-label">Branch:</span>
+            <span className="address-label">Branch</span>
             <p className="address-text">
               LIG-35, Satyauryan, Po-Sahid Nagar,<br />
               Bhubaneswar (Infront of Lodia Apartment,<br />
@@ -131,11 +120,10 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Column 2: Contact Seller */}
+        {/* Contact Seller */}
         <div className="footer-column footer-contact-seller">
           <h4 className="footer-column-title">Contact Seller</h4>
 
-          {/* Agent Item */}
           <div className="contact-agent-row">
             <div className="agent-avatar-wrapper">
               <img
@@ -150,7 +138,7 @@ const Footer = () => {
             </div>
             <div className="agent-info">
               <span className="agent-name">Property Advisor</span>
-              <span className="agent-subname" style={{ fontSize: '13px', fontWeight: '700', color: '#ffffff' }}>Krushna Chandra Panda</span>
+              <span className="agent-subname">Krushna Chandra Panda</span>
               <a href="tel:+918338908897" className="agent-phone" aria-label="Call Krushna Chandra Panda">+91 83389 08897</a>
             </div>
             <a href="tel:+918338908897" className="agent-action-btn" aria-label="Call Krushna Chandra Panda">
@@ -158,24 +146,22 @@ const Footer = () => {
             </a>
           </div>
 
-          {/* Hotline / Office Phone */}
           <div className="contact-detail-row">
             <div className="contact-icon-wrapper" aria-hidden="true">
-              <FiPhoneCall size={20} />
+              <FiPhoneCall size={16} />
             </div>
             <div className="contact-detail-text">
-              <span className="detail-label">Office Hotline:</span>
+              <span className="detail-label">Office Hotline</span>
               <a href="tel:+917077606668" className="detail-value bold-value" aria-label="Call Office Hotline">+91 70776 06668</a>
             </div>
           </div>
 
-          {/* Email */}
           <div className="contact-detail-row">
             <div className="contact-icon-wrapper" aria-hidden="true">
-              <FiMail size={20} />
+              <FiMail size={16} />
             </div>
             <div className="contact-detail-text">
-              <span className="detail-label">Email:</span>
+              <span className="detail-label">Email</span>
               <a href="mailto:support@utkalproperty.com" className="detail-value" aria-label="Email Utkal Property Support">
                 support@utkalproperty.com
               </a>
@@ -183,7 +169,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Column 3: Our Company */}
+        {/* Our Company */}
         <div className="footer-column footer-our-company">
           <h4 className="footer-column-title">Our Company</h4>
           <ul className="company-links-list">
@@ -195,10 +181,10 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Column 4: Newsletter */}
+        {/* Newsletter */}
         <div className="footer-column footer-newsletter">
           <h4 className="footer-column-title">Newsletter</h4>
-          <p className="newsletter-subtitle">Sign up to receive the latest property articles</p>
+          <p className="newsletter-subtitle">Get the latest property articles in your inbox.</p>
 
           <form className="newsletter-form" onSubmit={(e) => e.preventDefault()} aria-label="Newsletter Subscription Form">
             <input
@@ -216,21 +202,33 @@ const Footer = () => {
           <div className="newsletter-terms">
             <input type="checkbox" id="terms-checkbox" className="terms-checkbox" required />
             <label htmlFor="terms-checkbox" className="terms-label">
-              I have read and agree to the terms &amp; conditions
+              I agree to the terms &amp; conditions
             </label>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="footer-bottom-bar">
-        <p>© {new Date().getFullYear()} Utkal Property. Developed By PRWEBSTOCK.</p>
-        <div className="footer-bottom-links">
-          <Link to="/privacy-policy">Privacy Policy</Link>
-          <span className="footer-bottom-dot" aria-hidden="true">•</span>
-          <Link to="/terms">Terms of Service</Link>
-        </div>
-      </div>
+      {/* Bottom bar */}
+     <div className="footer-bottom-bar">
+  <p>
+    © {new Date().getFullYear()} Utkal Property. Developed By{' '}
+    <a
+      href="https://prwebstock.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="footer-dev-link"
+      aria-label="Visit PRWEBSTOCK website"
+    >
+      PRWEBSTOCK
+    </a>
+    .
+  </p>
+  <div className="footer-bottom-links">
+    <Link to="/privacy-policy">Privacy Policy</Link>
+    <span className="footer-bottom-dot" aria-hidden="true">•</span>
+    <Link to="/terms">Terms of Service</Link>
+  </div>
+</div>
     </footer>
   );
 };
