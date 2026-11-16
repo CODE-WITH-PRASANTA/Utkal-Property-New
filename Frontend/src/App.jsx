@@ -12,7 +12,9 @@ import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
 import About from './Pages/About/About';
 import Home from './Pages/Home/Home';
 import OurTeam from './Pages/Ourteam/OurTeam';
-import Blog from './Pages/Blog/Blog';
+
+import BlogDetails from './Components/BlogDetails/BlogDetails';
+import Blog from './Components/Blog/Blog';
 
 const App = () => {
   return (
@@ -26,8 +28,11 @@ const App = () => {
         <Route path="/properties" element={<Property/>} />
         <Route path="/agents" element={<AgentsPage/>} />
         <Route path="/contact" element={<Contact/>} />
-        <Route path="/faq" element={<Faq/>} />
+        <Route path="/faq" element={<Faq/>} /> 
+
+        <Route path="/blog-details" element={<BlogDetails/>} />
         <Route path="/blog" element={<Blog/>} />
+
         <Route path='/our-team' element={<OurTeam/>}/>
         
       </Routes>
