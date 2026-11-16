@@ -1,0 +1,379 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+.about-seven-section {
+  --about-seven-green: #0A3321;
+  --about-seven-dark: #0F4A2F;
+  --about-seven-gold: #C8A24A;
+  --about-seven-cream: #FFF9F2;
+  --about-seven-muted: #5A6A61;
+
+  width: 100%;
+  min-height: 205px;
+  padding: 27px 5% 30px;
+   background:
+    radial-gradient(
+      ellipse at 5% 10%,
+      rgba(18, 92, 60, 0.075),
+      transparent 38%
+    ),
+    radial-gradient(
+      ellipse at 95% 85%,
+      rgba(11, 74, 4, 0.11),
+      transparent 35%
+    ),
+    linear-gradient(
+      125deg,
+      #F8F5E9 0%,
+      #f2fff4 48%,
+      #EFF4EC 100%
+    );
+
+  border-top: 1px solid rgba(10, 51, 33, 0.09);
+  border-bottom: 1px solid rgba(10, 51, 33, 0.09);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.about-seven-section::before {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  top: -170px;
+  left: -80px;
+  border-radius: 50%;
+  background: rgba(200, 162, 74, 0.09);
+  filter: blur(45px);
+  pointer-events: none;
+}
+
+.about-seven-section::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -100px;
+  bottom: -160px;
+  border-radius: 50%;
+  background: rgba(15, 74, 47, 0.08);
+  filter: blur(45px);
+  pointer-events: none;
+}
+
+.about-seven-container {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading */
+
+.about-seven-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 22px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.8s ease;
+}
+
+.about-seven-heading p {
+  margin: 0 0 3px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--about-seven-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.about-seven-heading h2 {
+  margin: 0;
+  color: var(--about-seven-green);
+  font-family: 'Playfair Display', serif;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.about-seven-heading h2 span {
+  color: var(--about-seven-gold);
+  font-style: italic;
+}
+
+.about-seven-small-line {
+  width: 30px;
+  height: 2px;
+  background: var(--about-seven-gold);
+  margin-bottom: 8px;
+}
+
+.about-seven-bottom-line {
+  width: 42px;
+  height: 1px;
+  margin-top: 8px;
+  background: var(--about-seven-gold);
+  transition: width 0.5s ease;
+}
+
+.about-seven-section:hover .about-seven-bottom-line {
+  width: 85px;
+}
+
+/* Logo layout */
+
+.about-seven-logos {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: 20px;
+}
+
+.about-seven-logo-card {
+  width: 100%;
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.5s ease,
+    background 0.4s ease;
+  transition-delay: var(--logo-delay);
+  border-radius: 12px;
+  padding: 10px 5px;
+  cursor: default;
+}
+
+.about-seven-logo-image {
+  width: 47px;
+  height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.45s ease;
+}
+
+.about-seven-logo-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1) brightness(0.3);
+  opacity: 0.9;
+  transition:
+    filter 0.4s ease,
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.about-seven-company-name {
+  color: var(--about-seven-green);
+  font-family: 'Poppins', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.7px;
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+
+/* Individual logo adjustments */
+
+.about-seven-amd .about-seven-company-name {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -1.3px;
+}
+
+.about-seven-cisco .about-seven-logo-image {
+  width: 42px;
+  height: 42px;
+}
+
+.about-seven-dropbox .about-seven-company-name {
+  font-size: 17px;
+}
+
+.about-seven-logitech .about-seven-company-name {
+  font-size: 18px;
+  letter-spacing: -1px;
+}
+
+.about-seven-spotify .about-seven-company-name {
+  font-size: 18px;
+}
+
+.about-seven-amazon .about-seven-company-name {
+  font-size: 20px;
+  letter-spacing: -1px;
+}
+
+/* Luxury hover effect */
+
+.about-seven-logo-card:hover {
+  background: rgba(255, 255, 255, 0.72);
+  transform: translateY(-6px) !important;
+}
+
+.about-seven-logo-card:hover .about-seven-logo-image {
+  transform: scale(1.12);
+}
+
+.about-seven-logo-card:hover .about-seven-logo-image img {
+  filter: none;
+  opacity: 1;
+}
+
+.about-seven-logo-card:hover .about-seven-company-name {
+  color: var(--about-seven-gold);
+}
+
+/* Entrance animation */
+
+.about-seven-visible .about-seven-heading {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-seven-visible .about-seven-logo-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive tablet */
+
+@media (max-width: 1024px) {
+  .about-seven-section {
+    min-height: 215px;
+    padding: 28px 4%;
+  }
+
+  .about-seven-logos {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 15px;
+    row-gap: 8px;
+  }
+
+  .about-seven-logo-card {
+    min-height: 58px;
+  }
+
+  .about-seven-logo-image {
+    width: 42px;
+    height: 42px;
+  }
+
+  .about-seven-company-name {
+    font-size: 17px;
+  }
+}
+
+/* Responsive mobile */
+
+@media (max-width: 600px) {
+  .about-seven-section {
+    min-height: auto;
+    padding: 27px 15px 25px;
+  }
+
+  .about-seven-heading {
+    margin-bottom: 19px;
+  }
+
+  .about-seven-heading p {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .about-seven-heading h2 {
+    font-size: 20px;
+  }
+
+  .about-seven-logos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 5px;
+  }
+
+  .about-seven-logo-card {
+    min-height: 58px;
+    gap: 7px;
+    padding: 7px 3px;
+  }
+
+  .about-seven-logo-image {
+    width: 37px;
+    height: 37px;
+  }
+
+  .about-seven-company-name {
+    font-size: 16px;
+  }
+
+  .about-seven-amd .about-seven-company-name {
+    font-size: 19px;
+  }
+
+  .about-seven-dropbox .about-seven-company-name,
+  .about-seven-logitech .about-seven-company-name,
+  .about-seven-spotify .about-seven-company-name {
+    font-size: 15px;
+  }
+
+  .about-seven-amazon .about-seven-company-name {
+    font-size: 17px;
+  }
+}
+
+/* Small mobile */
+
+@media (max-width: 360px) {
+  .about-seven-section {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .about-seven-logo-card {
+    gap: 5px;
+  }
+
+  .about-seven-logo-image {
+    width: 32px;
+    height: 32px;
+  }
+
+  .about-seven-company-name {
+    font-size: 14px;
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .about-seven-section *,
+  .about-seven-section *::before,
+  .about-seven-section *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .about-seven-heading,
+  .about-seven-logo-card {
+    opacity: 1;
+    transform: none;
+  }
+}

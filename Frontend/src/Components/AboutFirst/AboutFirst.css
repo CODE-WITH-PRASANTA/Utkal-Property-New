@@ -1,0 +1,900 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap");
+
+/* =========================================
+   ABOUT FIRST - LUXURY VISION & MISSION
+========================================= */
+
+.AboutFirst {
+  --AboutFirst-green: #0f4a2f;
+  --AboutFirst-deep: #0a3321;
+  --AboutFirst-gold: #c8a24a;
+  --AboutFirst-ink: #14241c;
+  --AboutFirst-muted: #5a6a61;
+  --AboutFirst-bg: #f4f7f5;
+  --AboutFirst-white: #ffffff;
+
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 78px 0 65px;
+
+  background: var(--AboutFirst-bg);
+  color: var(--AboutFirst-ink);
+
+  font-family: "Figtree", sans-serif;
+}
+
+.AboutFirst *,
+.AboutFirst *::before,
+.AboutFirst *::after {
+  box-sizing: border-box;
+}
+
+/* =========================================
+   BACKGROUND GLOW
+========================================= */
+
+.AboutFirst__glow {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.AboutFirst__glow--top {
+  width: 350px;
+  height: 350px;
+  top: -150px;
+  right: -100px;
+  background: rgba(200, 162, 74, 0.13);
+  animation: AboutFirst-drift 14s ease-in-out infinite alternate;
+}
+
+.AboutFirst__glow--bottom {
+  width: 350px;
+  height: 350px;
+  bottom: 0;
+  left: -150px;
+  background: rgba(15, 74, 47, 0.10);
+  animation: AboutFirst-drift 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes AboutFirst-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    transform: translate(35px, 30px) scale(1.12);
+  }
+}
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.AboutFirst__container {
+  width: 100%;
+  max-width: 1440px;
+  padding: 0 35px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 85px);
+
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   LEFT CONTENT
+========================================= */
+
+.AboutFirst__left {
+  width: 100%;
+  max-width: 610px;
+}
+
+.AboutFirst__rule {
+  display: block;
+  width: 70px;
+  height: 3px;
+  margin-bottom: 32px;
+
+  background: var(--AboutFirst-gold);
+  border-radius: 5px;
+
+  transform: scaleX(0);
+  transform-origin: left center;
+
+  transition: transform 0.9s 0.1s cubic-bezier(.2, .7, .2, 1);
+}
+
+.AboutFirst.is-in .AboutFirst__rule {
+  transform: scaleX(1);
+}
+
+/* =========================================
+   ENTRANCE ANIMATION
+========================================= */
+
+.AboutFirst__title,
+.AboutFirst__text,
+.AboutFirst__item,
+.AboutFirst__galleryCard {
+  opacity: 0;
+}
+
+.AboutFirst.is-in .AboutFirst__title,
+.AboutFirst.is-in .AboutFirst__text,
+.AboutFirst.is-in .AboutFirst__item,
+.AboutFirst.is-in .AboutFirst__galleryCard {
+  opacity: 1;
+  animation: AboutFirst-rise 0.9s cubic-bezier(.2, .7, .2, 1) both;
+}
+
+@keyframes AboutFirst-rise {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.AboutFirst.is-in .AboutFirst__title {
+  animation-delay: 0.15s;
+}
+
+.AboutFirst.is-in .AboutFirst__text {
+  animation-delay: 0.3s;
+}
+
+.AboutFirst.is-in .AboutFirst__item:nth-child(1) {
+  animation-delay: 0.45s;
+}
+
+.AboutFirst.is-in .AboutFirst__item:nth-child(2) {
+  animation-delay: 0.65s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.AboutFirst.is-in .AboutFirst__galleryCard:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+/* =========================================
+   HEADING
+========================================= */
+
+.AboutFirst__title {
+  margin: 0;
+
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(34px, 3.1vw, 49px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -1px;
+
+  color: var(--AboutFirst-deep);
+}
+
+.AboutFirst__text {
+  max-width: 620px;
+  margin: 28px 0 0;
+
+  font-family: "Figtree", sans-serif;
+  font-size: clamp(16px, 1.3vw, 21px);
+  font-weight: 400;
+  line-height: 1.8;
+
+  color: var(--AboutFirst-muted);
+}
+
+/* =========================================
+   VISION & MISSION WRAPPER
+========================================= */
+
+.AboutFirst__cardWrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =========================================
+   VISION & MISSION CARD
+========================================= */
+
+.AboutFirst__item {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  width: 100%;
+  min-height: 236px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+
+  padding: 38px 40px;
+
+  background: var(--AboutFirst-white);
+  border: 1px solid rgba(15, 74, 47, 0.09);
+  border-radius: 27px;
+
+  box-shadow: 0 18px 36px -26px rgba(10, 51, 33, 0.38);
+
+  cursor: default;
+
+  transition:
+    transform 0.5s cubic-bezier(.2, .7, .2, 1),
+    box-shadow 0.5s ease,
+    border-color 0.4s ease;
+}
+
+/* Green background animation */
+
+.AboutFirst__item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background: linear-gradient(
+    135deg,
+    #0f4a2f,
+    #0a3321
+  );
+
+  transform: translateY(101%);
+
+  transition: transform 0.65s cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Gold top border */
+
+.AboutFirst__item::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 0;
+  height: 4px;
+
+  background: var(--AboutFirst-gold);
+
+  transition: width 0.65s 0.1s cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Hover card */
+
+.AboutFirst__item:hover {
+  transform: translateY(-7px);
+  border-color: transparent;
+
+  box-shadow: 0 30px 50px -25px rgba(10, 51, 33, 0.55);
+}
+
+.AboutFirst__item:hover::before {
+  transform: translateY(0);
+}
+
+.AboutFirst__item:hover::after {
+  width: 100%;
+}
+
+/* =========================================
+   ICON
+========================================= */
+
+.AboutFirst__icon {
+  flex: 0 0 66px;
+
+  width: 66px;
+  height: 66px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--AboutFirst-green);
+  color: var(--AboutFirst-gold);
+
+  box-shadow: 0 0 0 8px rgba(15, 74, 47, 0.08);
+
+  transition:
+    transform 0.5s cubic-bezier(.2, .7, .2, 1),
+    background 0.4s ease,
+    color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.AboutFirst__icon svg {
+  width: 29px;
+  height: 29px;
+  display: block;
+}
+
+.AboutFirst__item:hover .AboutFirst__icon {
+  background: var(--AboutFirst-gold);
+  color: var(--AboutFirst-deep);
+
+  box-shadow: 0 0 0 9px rgba(200, 162, 74, 0.22);
+
+  transform: rotate(-10deg) scale(1.1);
+}
+
+/* =========================================
+   CARD TEXT
+========================================= */
+
+.AboutFirst__itemBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.AboutFirst__itemTitle {
+  margin: 0 0 12px;
+
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(24px, 2vw, 29px);
+  font-weight: 600;
+  line-height: 1.2;
+
+  color: var(--AboutFirst-deep);
+
+  transition: color 0.4s ease, transform 0.4s ease;
+}
+
+.AboutFirst__itemText,
+.AboutMain__itemText {
+  margin: 0;
+
+  font-family: "Figtree", sans-serif;
+  font-size: clamp(16px, 1.2vw, 20px);
+  font-weight: 400;
+  line-height: 1.75;
+
+  color: var(--AboutFirst-muted);
+
+  transition: color 0.45s ease, transform 0.45s ease;
+}
+
+.AboutFirst__item:hover .AboutFirst__itemTitle {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+.AboutFirst__item:hover .AboutFirst__itemText,
+.AboutFirst__item:hover .AboutMain__itemText {
+  color: rgba(255, 255, 255, 0.88);
+  transform: translateX(3px);
+}
+
+/* =========================================
+   IMAGE GALLERY
+========================================= */
+
+.AboutFirst__gallery {
+  width: 100%;
+  max-width: 1440px;
+
+  margin: 65px auto 0;
+  padding: 15px 35px 25px;
+
+  position: relative;
+  z-index: 1;
+}
+
+.AboutFirst__galleryTrack {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 17px;
+  width: 100%;
+}
+
+/* Gallery card */
+
+.AboutFirst__galleryCard {
+  position: relative;
+  display: block;
+
+  width: 100%;
+  height: 260px;
+
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+
+  overflow: hidden;
+  background: #dce6df;
+
+  cursor: zoom-in;
+
+  box-shadow: 0 14px 26px -18px rgba(10, 51, 33, 0.6);
+
+  transition:
+    transform 0.5s cubic-bezier(.2, .7, .2, 1),
+    box-shadow 0.5s ease;
+}
+
+.AboutFirst__galleryImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.7s ease;
+}
+
+.AboutFirst__galleryOverlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to top,
+    rgba(10, 51, 33, 0.85),
+    rgba(10, 51, 33, 0.05) 65%
+  );
+
+  opacity: 0.65;
+  transition: opacity 0.4s ease;
+}
+
+.AboutFirst__galleryCard:hover {
+  transform: translateY(-9px);
+
+  box-shadow: 0 26px 38px -20px rgba(10, 51, 33, 0.65);
+}
+
+.AboutFirst__galleryCard:hover .AboutFirst__galleryImg {
+  transform: scale(1.09);
+}
+
+.AboutFirst__galleryCard:hover .AboutFirst__galleryOverlay {
+  opacity: 1;
+}
+
+/* Gallery plus icon */
+
+.AboutFirst__galleryView {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--AboutFirst-gold);
+  color: var(--AboutFirst-deep);
+
+  font-size: 32px;
+  font-weight: 400;
+
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5) rotate(-90deg);
+
+  transition:
+    opacity 0.35s ease,
+    transform 0.5s cubic-bezier(.2, .7, .2, 1);
+}
+
+
+/* Gallery caption */
+
+
+
+
+
+/* =========================================
+   LIGHTBOX
+========================================= */
+
+.AboutFirst__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+
+  padding: 60px 25px 30px;
+
+  background: rgba(6, 22, 15, 0.95);
+  backdrop-filter: blur(12px);
+
+  animation: AboutFirst-fade 0.3s ease;
+}
+
+@keyframes AboutFirst-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.AboutFirst__figure {
+  max-width: min(88vw, 1100px);
+  max-height: 85vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin: 0;
+
+  animation: AboutFirst-pop 0.35s ease;
+}
+
+@keyframes AboutFirst-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.AboutFirst__figureImg {
+  display: block;
+
+  max-width: 100%;
+  max-height: 76vh;
+
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+  border-radius: 13px;
+
+  background: var(--AboutFirst-deep);
+}
+
+.AboutFirst__figureCaption {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  padding: 15px 5px 0;
+
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.AboutFirst__counter {
+  color: var(--AboutFirst-gold);
+  font-weight: 600;
+}
+
+/* Close button */
+
+.AboutFirst__close {
+  position: absolute;
+  top: 17px;
+  right: 22px;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+
+  font-size: 34px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.AboutFirst__close:hover {
+  background: var(--AboutFirst-gold);
+  color: var(--AboutFirst-deep);
+}
+
+/* Previous and next buttons */
+
+.AboutFirst__nav {
+  flex: 0 0 48px;
+
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+
+  font-size: 35px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.AboutFirst__nav:hover {
+  background: var(--AboutFirst-gold);
+  color: var(--AboutFirst-deep);
+}
+
+/* Keyboard accessibility */
+
+
+.AboutFirst__close:focus-visible,
+.AboutFirst__nav:focus-visible {
+  outline: 3px solid var(--AboutFirst-gold);
+  outline-offset: 4px;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1100px) {
+  .AboutFirst__container {
+    gap: 38px;
+    padding: 0 28px;
+  }
+
+  .AboutFirst__item {
+    min-height: 210px;
+    padding: 30px 27px;
+    gap: 23px;
+  }
+
+  
+}
+
+/* =========================================
+   SMALL TABLET
+========================================= */
+
+@media (max-width: 900px) {
+  .AboutFirst {
+    padding: 65px 0;
+  }
+
+  .AboutFirst__container {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+
+  .AboutFirst__left {
+    max-width: 700px;
+  }
+
+  .AboutFirst__title {
+    max-width: 650px;
+    font-size: clamp(34px, 5vw, 44px);
+  }
+
+  .AboutFirst__text {
+    max-width: 650px;
+  }
+
+  .AboutFirst__cardWrap {
+    gap: 18px;
+  }
+
+  .AboutFirst__item {
+    min-height: auto;
+    padding: 30px;
+  }
+
+  
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .AboutFirst {
+    padding: 48px 0 45px;
+  }
+
+  .AboutFirst__container {
+    padding: 0 18px;
+    gap: 30px;
+  }
+
+  .AboutFirst__rule {
+    width: 55px;
+    margin-bottom: 22px;
+  }
+
+  .AboutFirst__title {
+    font-size: clamp(30px, 8vw, 37px);
+    line-height: 1.25;
+    letter-spacing: -0.6px;
+  }
+
+  .AboutFirst__text {
+    margin-top: 17px;
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .AboutFirst__cardWrap {
+    gap: 16px;
+  }
+
+  .AboutFirst__item {
+    padding: 24px 20px;
+    gap: 17px;
+    border-radius: 20px;
+  }
+
+  .AboutFirst__icon {
+    flex-basis: 49px;
+    width: 49px;
+    height: 49px;
+    box-shadow: 0 0 0 5px rgba(15, 74, 47, 0.08);
+  }
+
+  .AboutFirst__icon svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .AboutFirst__itemTitle {
+    font-size: 23px;
+    margin-bottom: 9px;
+  }
+
+  .AboutFirst__itemText,
+  .AboutMain__itemText {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  
+  .AboutFirst__lightbox {
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 10px;
+    padding: 65px 12px 20px;
+  }
+
+  .AboutFirst__figure {
+    order: 1;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .AboutFirst__figureImg {
+    max-height: 65vh;
+  }
+
+  .AboutFirst__nav {
+    order: 2;
+    margin-top: 12px;
+  }
+
+  .AboutFirst__close {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 380px) {
+  .AboutFirst__container {
+    padding: 0 14px;
+  }
+
+  .AboutFirst__item {
+    gap: 14px;
+    padding: 21px 16px;
+  }
+
+  .AboutFirst__icon {
+    flex-basis: 43px;
+    width: 43px;
+    height: 43px;
+  }
+
+  .AboutFirst__itemTitle {
+    font-size: 21px;
+  }
+
+  .AboutFirst__itemText,
+  .AboutMain__itemText {
+    font-size: 14px;
+  }
+
+  
+
+  
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .AboutFirst *,
+  .AboutFirst *::before,
+  .AboutFirst *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .AboutFirst__title,
+  .AboutFirst__text,
+  .AboutFirst__item,
+  
+
+  .AboutFirst__rule {
+    transform: none;
+  }
+}
