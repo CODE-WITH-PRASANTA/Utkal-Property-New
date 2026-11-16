@@ -1,0 +1,665 @@
+
+/* ============================================
+   ABOUT FIVE - LUXURY BLACK & GOLD DESIGN
+   Premium Real Estate Features Section
+============================================ */
+
+.about-five {
+  --deep-black: #111111;
+  --soft-black: #1C1C1C;
+  --forest-green: #0F4A2F;
+  --premium-gold: #C8A24A;
+  --soft-mint: #F4F7F5;
+  --white: #FFFFFF;
+  --muted-grey: #666666;
+  --warm-cream: #F8F2E4;
+  --border-color: #EAE7DF;
+
+  width: 100%;
+  position: relative;
+  padding: 100px 30px 85px;
+  background: var(--white);
+  overflow: hidden;
+  isolation: isolate;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.about-five *,
+.about-five *::before,
+.about-five *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================
+   BACKGROUND DECORATIVE EFFECTS
+============================================ */
+
+.about-five__ambient {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(2px);
+}
+
+.about-five__ambient--one {
+  width: 350px;
+  height: 350px;
+  top: -190px;
+  left: -150px;
+  background: radial-gradient(
+    circle,
+    rgba(200, 162, 74, 0.09),
+    transparent 70%
+  );
+}
+
+.about-five__ambient--two {
+  width: 400px;
+  height: 400px;
+  right: -200px;
+  bottom: -200px;
+  background: radial-gradient(
+    circle,
+    rgba(15, 74, 47, 0.045),
+    transparent 70%
+  );
+}
+
+/* ============================================
+   MAIN CONTAINER
+============================================ */
+
+.about-five__container {
+  width: 100%;
+  max-width: 1190px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   SECTION HEADING
+============================================ */
+
+.about-five__heading {
+  max-width: 730px;
+  margin: 0 auto 65px;
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(30px);
+
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.about-five--visible .about-five__heading {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* EYEBROW */
+
+.about-five__eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  margin-bottom: 18px;
+
+  color: var(--premium-gold);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 3px;
+}
+
+.about-five__eyebrow-line {
+  width: 28px;
+  height: 1px;
+  background: var(--premium-gold);
+}
+
+/* MAIN TITLE */
+
+.about-five__heading h2 {
+  margin: 0;
+  color: var(--deep-black);
+
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -1.5px;
+}
+
+.about-five__heading h2 span {
+  position: relative;
+  color: var(--deep-black);
+  white-space: nowrap;
+}
+
+/* DESCRIPTION */
+
+.about-five__heading p {
+  max-width: 570px;
+  margin: 19px auto 0;
+
+  color: var(--muted-grey);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.9;
+}
+
+/* HEADING DECORATION */
+
+.about-five__heading-decoration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.about-five__heading-decoration span {
+  width: 38px;
+  height: 1px;
+  background: var(--premium-gold);
+}
+
+.about-five__heading-decoration i {
+  width: 8px;
+  height: 8px;
+  background: var(--premium-gold);
+  transform: rotate(45deg);
+}
+
+/* ============================================
+   FEATURE GRID
+============================================ */
+
+.about-five__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  align-items: stretch;
+}
+
+/* ============================================
+   FEATURE CARDS
+============================================ */
+
+.about-five__card {
+  position: relative;
+  isolation: isolate;
+
+  min-width: 0;
+  min-height: 345px;
+
+  padding: 27px 27px 25px;
+  overflow: hidden;
+  text-align: center;
+
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.045),
+    0 2px 6px rgba(0, 0, 0, 0.025);
+
+  opacity: 0;
+  transform: translateY(45px);
+
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.2, 0.75, 0.3, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+
+  transition-delay: calc(var(--card-index) * 150ms);
+}
+
+/* SCROLL ENTRANCE */
+
+.about-five--visible .about-five__card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* TOP GOLD LINE */
+
+.about-five__card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+
+  width: 0;
+  height: 3px;
+
+  background: var(--premium-gold);
+  transform: translateX(-50%);
+
+  transition: width 0.45s ease;
+  z-index: 2;
+}
+
+.about-five__card:hover::before {
+  width: 75%;
+}
+
+/* CARD HOVER */
+
+.about-five__card:hover {
+  transform: translateY(-10px);
+
+  border-color: var(--premium-gold);
+
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.09),
+    0 5px 15px rgba(200, 162, 74, 0.08);
+}
+
+/* ============================================
+   CARD TOP NUMBER
+============================================ */
+
+.about-five__card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  position: relative;
+  z-index: 2;
+}
+
+.about-five__number {
+  color: var(--premium-gold);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+/* TOP CORNER DETAIL */
+
+.about-five__corner {
+  width: 27px;
+  height: 27px;
+
+  border-top: 1px solid rgba(200, 162, 74, 0.75);
+  border-right: 1px solid rgba(200, 162, 74, 0.75);
+
+  border-radius: 0 7px 0 0;
+
+  transition: transform 0.35s ease;
+}
+
+.about-five__card:hover .about-five__corner {
+  transform: translate(3px, -3px);
+}
+
+/* ============================================
+   ICON DESIGN
+============================================ */
+
+.about-five__icon-wrap {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 94px;
+  height: 94px;
+
+  margin: 20px auto;
+}
+
+/* GOLD ICON BACKGROUND */
+
+.about-five__icon-circle {
+  position: absolute;
+
+  width: 70px;
+  height: 70px;
+
+  left: 6px;
+  bottom: 4px;
+
+  border-radius: 50%;
+  background: var(--warm-cream);
+
+  transition:
+    transform 0.5s ease,
+    background 0.5s ease;
+}
+
+/* ICON BOX */
+
+.about-five__icon {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 68px;
+  height: 68px;
+
+  color: var(--forest-green);
+  background: var(--white);
+
+  border: 1.5px solid var(--forest-green);
+  border-radius: 18px;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+
+  transition:
+    color 0.4s ease,
+    background 0.4s ease,
+    border-radius 0.4s ease,
+    transform 0.4s ease;
+}
+
+.about-five__icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+/* ICON HOVER */
+
+.about-five__card:hover .about-five__icon-circle {
+  background: rgba(200, 162, 74, 0.3);
+  transform: scale(1.2);
+}
+
+.about-five__card:hover .about-five__icon {
+  color: var(--white);
+  background: var(--forest-green);
+
+  border-radius: 50%;
+  transform: translateY(-4px) rotate(-5deg);
+}
+
+/* ============================================
+   CARD CONTENT
+============================================ */
+
+.about-five__card h3 {
+  position: relative;
+  z-index: 1;
+
+  margin: 10px 0 13px;
+
+  color: var(--deep-black);
+  font-size: 19px;
+  font-weight: 750;
+  line-height: 1.4;
+
+  transition: color 0.3s ease;
+}
+
+.about-five__card:hover h3 {
+  color: var(--deep-black);
+}
+
+.about-five__card > p {
+  position: relative;
+  z-index: 1;
+
+  max-width: 310px;
+  margin: 0 auto;
+
+  color: var(--muted-grey);
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.9;
+}
+
+/* ============================================
+   CARD BOTTOM DECORATION
+============================================ */
+
+.about-five__card-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+
+  position: relative;
+  z-index: 1;
+
+  margin-top: 25px;
+}
+
+.about-five__gold-line {
+  width: 22px;
+  height: 1px;
+  background: var(--premium-gold);
+
+  transition: width 0.3s ease;
+}
+
+.about-five__card:hover .about-five__gold-line {
+  width: 36px;
+}
+
+.about-five__card-label {
+  color: var(--premium-gold);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+/* ============================================
+   BACKGROUND WATERMARK
+============================================ */
+
+.about-five__watermark {
+  position: absolute;
+
+  right: 8px;
+  bottom: -24px;
+  z-index: -1;
+
+  color: rgba(17, 17, 17, 0.035);
+
+  font-size: 115px;
+  font-weight: 800;
+  line-height: 1;
+
+  pointer-events: none;
+
+  transition:
+    color 0.4s ease,
+    transform 0.4s ease;
+}
+
+.about-five__card:hover .about-five__watermark {
+  color: rgba(200, 162, 74, 0.10);
+  transform: translateY(-5px);
+}
+
+/* ============================================
+   SECTION FOOTER
+============================================ */
+
+.about-five__footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+
+  margin-top: 45px;
+
+  color: #777777;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(15px);
+
+  transition: all 0.8s ease 0.5s;
+}
+
+.about-five--visible .about-five__footer {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-five__footer-line {
+  width: 55px;
+  height: 1px;
+  background: rgba(200, 162, 74, 0.65);
+}
+
+/* ============================================
+   TABLET RESPONSIVE
+============================================ */
+
+@media (max-width: 950px) {
+
+  .about-five {
+    padding: 80px 25px 70px;
+  }
+
+  .about-five__grid {
+    gap: 18px;
+  }
+
+  .about-five__card {
+    min-height: 365px;
+    padding: 23px 17px;
+  }
+
+  .about-five__card h3 {
+    font-size: 17px;
+  }
+
+  .about-five__card > p {
+    font-size: 13px;
+  }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+============================================ */
+
+@media (max-width: 680px) {
+
+  .about-five {
+    padding: 65px 18px 55px;
+  }
+
+  .about-five__heading {
+    margin-bottom: 40px;
+  }
+
+  .about-five__heading h2 {
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+
+  .about-five__heading p {
+    font-size: 13px;
+    line-height: 1.8;
+    padding: 0 5px;
+  }
+
+  .about-five__eyebrow {
+    font-size: 9px;
+    letter-spacing: 2px;
+    gap: 8px;
+  }
+
+  .about-five__eyebrow-line {
+    width: 19px;
+  }
+
+  .about-five__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  .about-five__card {
+    min-height: auto;
+    padding: 25px 23px 27px;
+  }
+
+  .about-five__icon-wrap {
+    margin: 13px auto 18px;
+  }
+
+  .about-five__card h3 {
+    font-size: 19px;
+  }
+
+  .about-five__card > p {
+    max-width: 320px;
+    font-size: 13.5px;
+  }
+
+  .about-five__footer {
+    margin-top: 35px;
+
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    gap: 9px;
+  }
+
+  .about-five__footer-line {
+    width: 23px;
+  }
+}
+
+/* ============================================
+   SMALL MOBILE
+============================================ */
+
+@media (max-width: 380px) {
+
+  .about-five {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .about-five__heading h2 {
+    font-size: 28px;
+  }
+
+  .about-five__card {
+    padding: 22px 17px;
+  }
+
+  .about-five__card h3 {
+    font-size: 17px;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION ACCESSIBILITY
+============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .about-five *,
+  .about-five *::before,
+  .about-five *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .about-five__heading,
+  .about-five__card,
+  .about-five__footer {
+    opacity: 1;
+    transform: none;
+  }
+}
