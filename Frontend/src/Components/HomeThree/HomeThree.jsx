@@ -49,13 +49,30 @@ const CountUp = ({ end, duration = 2000, delay = 0, start, resetKey }) => {
   return <>{count.toLocaleString("en-IN")}</>;
 };
 
+// ================= FILTERS =================
+// `label` is the button text, `type` matches property.type
+// (type: null means "show everything")
+
+const filters = [
+  { label: "All Properties", type: null },
+  { label: "For Buy", type: "buy" },
+  { label: "For Sale", type: "sale" },
+  { label: "For Rent", type: "rent" },
+];
+
+const STATUS_LABEL = {
+  buy: "FOR BUY",
+  sale: "FOR SALE",
+  rent: "FOR RENT",
+};
+
 // ================= PROPERTY DATA =================
 
 const properties = [
   {
     id: 1,
     title: "Archer House",
-    status: "FOR RENT",
+    type: "rent",
     featured: true,
     image: featured1,
     price: 815000,
@@ -67,7 +84,7 @@ const properties = [
   {
     id: 2,
     title: "Villa One Hyde Park",
-    status: "FOR SELL",
+    type: "sale",
     image: featured2,
     price: 815000,
     location: "148-37 88th Ave, Jamaica, NY 11435",
@@ -78,7 +95,7 @@ const properties = [
   {
     id: 3,
     title: "Home Pitt Street",
-    status: "FOR SELL",
+    type: "buy",
     image: featured3,
     price: 815000,
     location: "148-37 88th Ave, Jamaica, NY 11435",
@@ -89,7 +106,7 @@ const properties = [
   {
     id: 4,
     title: "Villa on Hollywood Boulevard",
-    status: "FOR SELL",
+    type: "sale",
     image: featured4,
     price: 815000,
     location: "148-37 88th Ave, Jamaica, NY 11435",
@@ -100,7 +117,7 @@ const properties = [
   {
     id: 5,
     title: "House on the beverly hills",
-    status: "FOR SELL",
+    type: "buy",
     image: featured5,
     price: 815000,
     location: "148-37 88th Ave, Jamaica, NY 11435",
@@ -111,7 +128,7 @@ const properties = [
   {
     id: 6,
     title: "Office Space at Northwest",
-    status: "FOR SELL",
+    type: "rent",
     image: featured6,
     price: 815000,
     location: "148-37 88th Ave, Jamaica, NY 11435",
@@ -131,10 +148,16 @@ const HomeThree = () => {
   const sectionRef = useRef(null);
   const gridRef = useRef(null);
 
-  const filters = ["All Properties", "For Buy", "For Sale", "For Rent"];
+  // after the first load (any filter click) everything runs faster
+  const fast = animationKey > 0;
+  const speed = (ms) => (fast ? Math.min(ms, 900) : ms);
 
-  // EVERY TAB SHOWS ALL SIX PROPERTY CARDS
-  const displayedProperties = properties;
+  // ---------- FILTERED LIST ----------
+  const activeType = filters.find((f) => f.label === activeFilter)?.type;
+
+  const displayedProperties = activeType
+    ? properties.filter((property) => property.type === activeType)
+    : properties;
 
   // ---------- SCROLL TRIGGER ----------
   useEffect(() => {
@@ -156,8 +179,8 @@ const HomeThree = () => {
   }, []);
 
   // FILTER BUTTON CLICK
-  const handleFilter = (filter) => {
-    if (filter !== activeFilter) setActiveFilter(filter);
+  const handleFilter = (label) => {
+    setActiveFilter(label);
     // replay the card + counting animation on every click
     setAnimationKey((prev) => prev + 1);
   };
@@ -173,11 +196,6 @@ const HomeThree = () => {
         block: "start",
       });
     }, 100);
-  };
-
-  // BACK TO TOP
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -205,15 +223,15 @@ const HomeThree = () => {
         <div className="ht3-filters">
           {filters.map((filter, i) => (
             <button
-              key={filter}
+              key={filter.label}
               className={`ht3-filter-btn ht3-h-anim ${
-                activeFilter === filter ? "ht3-active" : ""
+                activeFilter === filter.label ? "ht3-active" : ""
               }`}
               style={{ "--hd": `${0.36 + i * 0.09}s` }}
-              onClick={() => handleFilter(filter)}
+              onClick={() => handleFilter(filter.label)}
               type="button"
             >
-              {filter}
+              {filter.label}
             </button>
           ))}
         </div>
@@ -221,9 +239,18 @@ const HomeThree = () => {
 
       {/* PROPERTY GRID */}
 
-      <div className="ht3-grid" ref={gridRef} key={animationKey}>
+      <div
+        className={`ht3-grid ${fast ? "ht3-fast" : ""}`}
+        ref={gridRef}
+        key={animationKey}
+      >
+        {displayedProperties.length === 0 && (
+          <p className="ht3-empty">No properties found in this category.</p>
+        )}
+
         {displayedProperties.map((property, index) => {
-          const cardDelay = 500 + index * 130; // ms
+          const cardDelay = fast ? index * 60 : 500 + index * 130; // ms
+          const countDelay = cardDelay + (fast ? 100 : 300);
 
           return (
             <article
@@ -240,7 +267,9 @@ const HomeThree = () => {
                 {/* BADGES */}
 
                 <div className="ht3-badges">
-                  <span className="ht3-status">{property.status}</span>
+                  <span className="ht3-status">
+                    {STATUS_LABEL[property.type]}
+                  </span>
 
                   {property.featured && (
                     <span className="ht3-featured">FEATURED</span>
@@ -276,8 +305,8 @@ const HomeThree = () => {
                     ₹
                     <CountUp
                       end={property.price}
-                      duration={2400}
-                      delay={cardDelay + 300}
+                      duration={speed(2400)}
+                      delay={countDelay}
                       start={inView}
                       resetKey={animationKey}
                     />
@@ -299,8 +328,8 @@ const HomeThree = () => {
                       <span>
                         <CountUp
                           end={property.beds}
-                          duration={1800}
-                          delay={cardDelay + 300}
+                          duration={speed(1800)}
+                          delay={countDelay}
                           start={inView}
                           resetKey={animationKey}
                         />
@@ -325,8 +354,8 @@ const HomeThree = () => {
                       <span>
                         <CountUp
                           end={property.baths}
-                          duration={1800}
-                          delay={cardDelay + 300}
+                          duration={speed(1800)}
+                          delay={countDelay}
                           start={inView}
                           resetKey={animationKey}
                         />
@@ -351,8 +380,8 @@ const HomeThree = () => {
                       <span>
                         <CountUp
                           end={property.area}
-                          duration={2200}
-                          delay={cardDelay + 300}
+                          duration={speed(2200)}
+                          delay={countDelay}
                           start={inView}
                           resetKey={animationKey}
                         />
@@ -390,26 +419,6 @@ const HomeThree = () => {
           </span>
         </button>
       </div>
-
-      {/* BACK TO TOP */}
-
-      <button
-        className="ht3-top"
-        onClick={scrollToTop}
-        type="button"
-        aria-label="Back to top"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 19V5M5 12l7-7 7 7" />
-        </svg>
-      </button>
     </section>
   );
 };

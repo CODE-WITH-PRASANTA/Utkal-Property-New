@@ -1,7 +1,10 @@
-
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
 .hf-section {
+  /* SIDE SPACING CONTROLS - change these to adjust */
+  --hf-side: 30px;
+  --hf-gap: 20px;
+
   width: 100%;
   padding: 65px 0 45px;
   background: #f7f7f7;
@@ -32,16 +35,21 @@
   margin: 17px 0 0;
 }
 
-/* SLIDER */
+/* SLIDER - space on BOTH sides, cards are clipped at this space */
 
 .hf-slider {
-  width: 100%;
+  width: auto;
+  margin: -12px var(--hf-side) 0;
+  padding: 12px 0 30px;          /* room for hover lift + shadow */
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+
+  /* lets cards size themselves from the slider's real width */
+  container-type: inline-size;
 }
 
 .hf-slider::-webkit-scrollbar {
@@ -53,16 +61,19 @@
 .hf-track {
   display: flex;
   align-items: stretch;
-  gap: 24px;
+  gap: var(--hf-gap);
   width: max-content;
-  padding: 0 5px;
+  padding: 0;
 }
 
 /* FIVE CARDS VISIBLE ON DESKTOP */
 
 .hf-card {
   position: relative;
-  flex: 0 0 calc((100vw - 106px) / 5);
+  /* fallback for older browsers */
+  flex: 0 0 calc((100vw - (var(--hf-side) * 2) - (var(--hf-gap) * 4)) / 5);
+  /* exact fit using the slider width */
+  flex: 0 0 calc((100cqw - (var(--hf-gap) * 4)) / 5);
   height: 480px;
   overflow: hidden;
   border-radius: 19px;
@@ -283,7 +294,7 @@
   align-items: center;
   justify-content: center;
   gap: 13px;
-  margin-top: 38px;
+  margin-top: 8px;
 }
 
 /* DOTS */
@@ -354,29 +365,33 @@
   }
 }
 
-/* TABLET */
+/* TABLET - 3 cards */
 
 @media (max-width: 1100px) {
-  .hf-card {
-    flex-basis: calc((100vw - 58px) / 3);
-    height: 430px;
+  .hf-section {
+    --hf-side: 24px;
+    --hf-gap: 20px;
   }
 
-  .hf-track {
-    gap: 24px;
+  .hf-card {
+    flex-basis: calc((100vw - (var(--hf-side) * 2) - (var(--hf-gap) * 2)) / 3);
+    flex-basis: calc((100cqw - (var(--hf-gap) * 2)) / 3);
+    height: 430px;
   }
 }
 
-/* SMALL TABLET */
+/* SMALL TABLET - 2 cards */
 
 @media (max-width: 700px) {
-  .hf-card {
-    flex-basis: calc((100vw - 44px) / 2);
-    height: 400px;
+  .hf-section {
+    --hf-side: 16px;
+    --hf-gap: 14px;
   }
 
-  .hf-track {
-    gap: 16px;
+  .hf-card {
+    flex-basis: calc((100vw - (var(--hf-side) * 2) - var(--hf-gap)) / 2);
+    flex-basis: calc((100cqw - var(--hf-gap)) / 2);
+    height: 400px;
   }
 
   .hf-header h2 {
@@ -397,10 +412,12 @@
   }
 }
 
-/* MOBILE */
+/* MOBILE - 1 card per view */
 
 @media (max-width: 540px) {
   .hf-section {
+    --hf-side: 14px;
+    --hf-gap: 12px;
     padding: 42px 0 30px;
   }
 
@@ -419,12 +436,9 @@
     line-height: 1.7;
   }
 
-  .hf-track {
-    gap: 15px;
-  }
-
   .hf-card {
-    flex: 0 0 84vw;
+    flex: 0 0 calc(100vw - (var(--hf-side) * 2));
+    flex: 0 0 100cqw;
     height: 390px;
     border-radius: 16px;
   }
@@ -451,7 +465,7 @@
 
   .hf-pagination {
     gap: 10px;
-    margin-top: 28px;
+    margin-top: 6px;
   }
 
   .hf-dot-active {

@@ -2,10 +2,11 @@
 
 .ht3-section {
   width: 100%;
-  padding: 65px 0 80px;
+  padding: 65px 48px 80px; /* left & right space */
   background: #fff;
   font-family: 'DM Sans', sans-serif;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* =========================================
@@ -14,7 +15,7 @@
 
 .ht3-header {
   text-align: center;
-  padding: 0 20px;
+  padding: 0;
   margin-bottom: 55px;
 }
 
@@ -49,7 +50,9 @@
   font-size: 19px;
 }
 
-/* FILTER BUTTONS */
+/* =========================================
+   FILTER BUTTONS
+========================================= */
 
 .ht3-filters {
   display: flex;
@@ -70,13 +73,17 @@
   font-weight: 700;
   color: #444;
   cursor: pointer;
-  transition: all 0.35s ease;
+  transition: all 0.2s ease;
 }
 
 .ht3-filter-btn:hover {
   background: #edf5f1;
   color: #194e43;
   transform: translateY(-2px);
+}
+
+.ht3-filter-btn:active {
+  transform: translateY(0) scale(0.96);
 }
 
 .ht3-filter-btn.ht3-active {
@@ -91,6 +98,11 @@
   color: #fff;
 }
 
+/* faster entrance for the filter buttons */
+.ht3-visible .ht3-filter-btn.ht3-h-anim {
+  animation-duration: 0.5s;
+}
+
 /* =========================================
    GRID + CARDS
 ========================================= */
@@ -103,8 +115,19 @@
   scroll-margin-top: 30px;
 }
 
+/* EMPTY STATE (when a filter has no properties) */
+
+.ht3-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 0;
+  margin: 0;
+  color: #646464;
+  font-size: 18px;
+}
+
 .ht3-card {
-  height: 520px;
+  height: 516px;
   min-width: 0;
   position: relative;
   overflow: hidden;
@@ -182,7 +205,7 @@
   pointer-events: none;
 }
 
-/* BADGES */
+/* BADGES (FOR RENT / FOR SALE / FOR BUY / FEATURED) */
 
 .ht3-badges {
   position: absolute;
@@ -199,7 +222,7 @@
   border-radius: 50px;
   font-size: 13px;
   font-weight: 800;
-  transition: transform 0.3s ease;
+  transition: transform 0.15s ease;
 }
 
 .ht3-status {
@@ -341,7 +364,7 @@
 }
 
 .ht3-visible .ht3-see-all-wrapper {
-  animation: ht3HeadIn 1s 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: ht3HeadIn 1s 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .ht3-see-all-btn {
@@ -425,55 +448,6 @@
 }
 
 /* =========================================
-   BACK TO TOP
-========================================= */
-
-.ht3-top {
-  position: fixed;
-  z-index: 99;
-  right: 25px;
-  bottom: 25px;
-  height: 60px;
-  width: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 3px solid #282828;
-  background: #171717;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.18);
-  transition: all 0.35s ease;
-}
-
-.ht3-top svg {
-  width: 24px;
-  height: 24px;
-}
-
-.ht3-top::before {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  border-top-color: #f4cb65;
-  transform: rotate(25deg);
-  transition: transform 0.4s ease;
-  pointer-events: none;
-}
-
-.ht3-top:hover {
-  background: #194e43;
-  transform: translateY(-5px);
-}
-
-.ht3-top:hover::before {
-  transform: rotate(200deg);
-}
-
-/* =========================================
    ANIMATIONS
 ========================================= */
 
@@ -507,14 +481,18 @@
 ========================================= */
 
 @media (max-width: 1200px) {
+  .ht3-section {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
   .ht3-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 25px;
-    padding: 0 20px;
   }
 
   .ht3-card {
-    height: 490px;
+    height: 486px;
   }
 
   /* 2 columns: left card from left, right card from right */
@@ -535,7 +513,7 @@
 
 @media (max-width: 768px) {
   .ht3-section {
-    padding: 50px 0;
+    padding: 50px 20px;
   }
 
   .ht3-header {
@@ -558,11 +536,10 @@
 
   .ht3-grid {
     gap: 20px;
-    padding: 0 15px;
   }
 
   .ht3-card {
-    height: 450px;
+    height: 446px;
   }
 
   .ht3-info {
@@ -633,7 +610,7 @@
 
 @media (max-width: 540px) {
   .ht3-section {
-    padding: 40px 0;
+    padding: 40px 14px;
   }
 
   .ht3-header {
@@ -668,11 +645,10 @@
   .ht3-grid {
     grid-template-columns: 1fr;
     gap: 20px;
-    padding: 0 13px;
   }
 
   .ht3-card {
-    height: 440px;
+    height: 436px;
     border-radius: 13px;
   }
 
@@ -712,13 +688,6 @@
 
   .ht3-feature-item span {
     font-size: 14px;
-  }
-
-  .ht3-top {
-    width: 50px;
-    height: 50px;
-    right: 15px;
-    bottom: 15px;
   }
 
   .ht3-see-all-wrapper {
@@ -761,6 +730,18 @@
   .ht3-divider {
     height: 20px;
   }
+}
+
+/* =========================================
+   FASTER ANIMATION AFTER A FILTER CLICK
+========================================= */
+
+.ht3-visible .ht3-grid.ht3-fast .ht3-card {
+  animation-duration: 0.45s;
+}
+
+.ht3-visible .ht3-grid.ht3-fast .ht3-card .ht3-image img {
+  transition-duration: 0.6s;
 }
 
 /* =========================================
