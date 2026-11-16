@@ -3,18 +3,19 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './Components/Navbar/Navbar';
 import Footer from './Components/Footer/Footer';
 import Topbar from './Components/Topbar/Topbar';
-import Property from './Components/property/property';
 import AgentsPage from './Components/AgentsPage/AgentsPage';
 import Contact from './Components/Contact/Contact';
-import Faq from './Components/Faq/Faq';
 import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
 
 import About from './Pages/About/About';
 import Home from './Pages/Home/Home';
 import OurTeam from './Pages/Ourteam/OurTeam';
 
-import BlogDetails from './Components/BlogDetails/BlogDetails';
-import Blog from './Components/Blog/Blog';
+import PropertyMain from './Pages/PropertyMain/PropertyMain';
+import Breadcrumb from './Components/Breadcrumb/Breadcrumb';
+import FaqMain from './Pages/FaqMain/FaqMain';
+import BlogMain from './Pages/BlogMain/BlogMain';
+import BlogDetailsMain from './Pages/BlogDetailsMain/BlogDetailsMain';
 
 const App = () => {
   return (
@@ -23,17 +24,18 @@ const App = () => {
       <Navbar/>
       
       <Routes>
+         <Route path="/breadcrumb" element={<Breadcrumb/>} />
          <Route path="/about" element={<About/>} />
          <Route path="/" element={<Home/>} />
-        <Route path="/properties" element={<Property/>} />
         <Route path="/agents" element={<AgentsPage/>} />
         <Route path="/contact" element={<Contact/>} />
-        <Route path="/faq" element={<Faq/>} /> 
+        <Route path="/faq" element={<FaqMain/>} /> 
 
-        <Route path="/blog-details" element={<BlogDetails/>} />
-        <Route path="/blog" element={<Blog/>} />
+        <Route path="/blog-details" element={<BlogDetailsMain/>} />
+        <Route path="/blog" element={<BlogMain/>} />
 
         <Route path='/our-team' element={<OurTeam/>}/>
+        <Route path='/properties' element={<PropertyMain/>}/>
         
       </Routes>
 

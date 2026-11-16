@@ -229,9 +229,10 @@ const BlogDetails = () => {
                   bookmarked ? "saved" : ""
                 }`}
                 onClick={() => {
-                  setBookmarked(!bookmarked);
+                  const nextState = !bookmarked;
+                  setBookmarked(nextState);
                   setNotice(
-                    !bookmarked
+                    nextState
                       ? "Article added to your saved list!"
                       : "Article removed from your saved list."
                   );
@@ -327,11 +328,19 @@ const BlogDetails = () => {
               <div className="blog-details-article-share">
                 <strong>Share:</strong>
 
-                <button onClick={handleShare} aria-label="Share article">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  aria-label="Share article"
+                >
                   ↗
                 </button>
 
-                <button onClick={handleCopyLink} aria-label="Copy article link">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  aria-label="Copy article link"
+                >
                   ⧉
                 </button>
               </div>
@@ -570,6 +579,21 @@ const BlogDetails = () => {
           </aside>
         </div>
       </main>
+
+      {/* TOAST NOTIFICATION */}
+      {notice && (
+        <div className="blog-details-notice" role="status">
+          <span>✦</span>
+          <p style={{ margin: 0 }}>{notice}</p>
+          <button
+            type="button"
+            onClick={() => setNotice("")}
+            aria-label="Close notification"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 };
