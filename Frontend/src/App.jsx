@@ -9,6 +9,7 @@ import AgentsPage from './Components/AgentsPage/AgentsPage';
 import Contact from './Components/Contact/Contact';
 import Faq from './Components/Faq/Faq';
 import FloatingIcons from './Components/FloatingIcons/FloatingIcons';
+import Home from './Pages/Home/Home';
 
 const App = () => {
   return (
@@ -17,7 +18,7 @@ const App = () => {
       <Navbar/>
       
       <Routes>
-        {/* <Route path="/" element={<Home/>} /> */}
+        { <Route path="/" element={<Home/>} /> }
         <Route path="/properties" element={<Property/>} />
         <Route path="/agents" element={<AgentsPage/>} />
         <Route path="/contact" element={<Contact/>} />
