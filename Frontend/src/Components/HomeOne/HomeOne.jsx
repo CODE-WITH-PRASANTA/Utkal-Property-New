@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import "./HomeOne.css";
-import heroimg from "../../assets/images (1).jpg";
+import heroimg from "../../assets/homeone.png";
 /* ------------------------------------------------------------------
    HOW TO ADD YOUR OWN IMAGE (right side)
    1. import myImage from "../assets/your-image.png";
@@ -324,7 +324,6 @@ const STARS = [
 
 /* ---------------- Page ---------------- */
 const HomeOne = ({
-  heroImage = null,
   heroAlt = "Utkal Property featured project",
   onExplore,
   onSchedule,
