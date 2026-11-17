@@ -1,0 +1,694 @@
+/* =========================================================
+   Topbar.css
+   Utkal Property Theme: White bar + Light Green
+   (matches the new Sidebar)
+========================================================= */
+
+:root {
+  --topbar-height: 68px;
+}
+
+.Topbar {
+  --tb-bg: #ffffff;
+  --tb-bg-soft: #f4fbf6;
+  --tb-border: rgba(15, 42, 27, 0.08);
+
+  --tb-green: #16a34a;
+  --tb-green-strong: #15803d;
+  --tb-green-light: #4ade80;
+  --tb-green-soft: rgba(34, 197, 94, 0.10);
+  --tb-green-softer: rgba(34, 197, 94, 0.06);
+  --tb-green-border: rgba(34, 197, 94, 0.28);
+  --tb-green-ring: rgba(74, 222, 128, 0.35);
+
+  --tb-text: #0f2a1b;
+  --tb-muted: #5f7a6c;
+  --tb-placeholder: #93a89b;
+
+  --tb-shadow-sm: 0 1px 3px rgba(22, 101, 52, 0.08);
+  --tb-shadow-md: 0 22px 44px -14px rgba(22, 101, 52, 0.25),
+    0 8px 16px -8px rgba(22, 101, 52, 0.12);
+}
+
+.Topbar,
+.Topbar *,
+.Topbar *::before,
+.Topbar *::after {
+  box-sizing: border-box;
+}
+
+/* Fixed bar, offset by the shared --sidebar-width from MainLayout */
+.Topbar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width, 270px);
+  right: 0;
+  z-index: 90;
+  height: var(--topbar-height);
+
+  background: linear-gradient(90deg, #ffffff 0%, #f7fcf8 60%, #eaf7ee 100%);
+  border-bottom: 1px solid var(--tb-border);
+  box-shadow: 0 4px 22px rgba(22, 101, 52, 0.07);
+
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Thin green accent line under the bar */
+.Topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--tb-green-strong) 0%,
+    var(--tb-green-light) 45%,
+    transparent 100%
+  );
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Reserves the space of the fixed topbar */
+.Topbar-spacer {
+  height: var(--topbar-height);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.Topbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: opacity 0.15s ease;
+}
+
+.Topbar-inner.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.Topbar-left,
+.Topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ---------- Sidebar Toggle ---------- */
+.Topbar-toggle-btn {
+  background: linear-gradient(135deg, #22c55e 0%, var(--tb-green-strong) 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  cursor: pointer;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 14px rgba(22, 163, 74, 0.30);
+  flex-shrink: 0;
+}
+
+.Topbar-toggle-btn:hover {
+  background: linear-gradient(135deg, #4ade80 0%, var(--tb-green) 100%);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.40);
+  transform: translateY(-1px);
+}
+
+/* ---------- Search ---------- */
+.Topbar-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.Topbar-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--tb-placeholder);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.Topbar-search-input {
+  background-color: #ffffff;
+  border: 1px solid var(--tb-border);
+  padding: 11px 64px 11px 40px;
+  border-radius: 24px;
+  outline: none;
+  width: clamp(160px, 22vw, 290px);
+  font-size: 13px;
+  color: var(--tb-text);
+  transition: all 0.25s ease;
+  font-family: inherit;
+  box-shadow: var(--tb-shadow-sm);
+}
+
+.Topbar-search-input::placeholder {
+  color: var(--tb-placeholder);
+}
+
+.Topbar-search-input:focus {
+  width: clamp(200px, 26vw, 320px);
+  border-color: var(--tb-green);
+  box-shadow: 0 0 0 4px var(--tb-green-ring);
+}
+
+.Topbar-search-input:focus + .Topbar-search-icon {
+  color: var(--tb-green);
+}
+
+.Topbar-search-shortcut {
+  position: absolute;
+  right: 12px;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--tb-green-strong);
+  background: var(--tb-green-soft);
+  border: 1px solid var(--tb-green-border);
+  padding: 2px 6px;
+  border-radius: 6px;
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+
+/* ---------- Mobile search ---------- */
+.Topbar-mobile-search-btn {
+  display: none;
+}
+
+.Topbar-mobile-search-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right));
+  background: #ffffff;
+  animation: topbarSearchSlide 0.18s ease-out;
+}
+
+.Topbar-mobile-search-overlay .Topbar-search-icon {
+  position: static;
+  flex-shrink: 0;
+  color: var(--tb-green);
+}
+
+.Topbar-mobile-search-input {
+  flex: 1;
+  min-width: 0;
+  background-color: #ffffff;
+  border: 1px solid var(--tb-green);
+  padding: 10px 14px;
+  border-radius: 22px;
+  outline: none;
+  font-size: 14px;
+  color: var(--tb-text);
+  font-family: inherit;
+  box-shadow: 0 0 0 4px var(--tb-green-ring);
+}
+
+.Topbar-mobile-search-input::placeholder {
+  color: var(--tb-placeholder);
+}
+
+.Topbar-mobile-search-close {
+  background: var(--tb-bg-soft);
+  border: 1px solid var(--tb-border);
+  color: var(--tb-muted);
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.Topbar-mobile-search-close:hover {
+  color: #ef4444;
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+@keyframes topbarSearchSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Right actions ---------- */
+.Topbar-right {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.Topbar-action-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.Topbar-action-btn {
+  background: #ffffff;
+  border: 1px solid var(--tb-border);
+  color: var(--tb-green-strong);
+  cursor: pointer;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--tb-shadow-sm);
+  flex-shrink: 0;
+}
+
+.Topbar-action-btn:hover,
+.Topbar-action-btn.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #22c55e 0%, var(--tb-green-strong) 100%);
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
+  transform: translateY(-1px);
+}
+
+.Topbar-action-btn:focus-visible,
+.Topbar-toggle-btn:focus-visible,
+.Topbar-user:focus-visible,
+.Topbar-dropdown-item:focus-visible {
+  outline: 2px solid var(--tb-green);
+  outline-offset: 2px;
+}
+
+.Topbar-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  height: 19px;
+  min-width: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+/* ---------- User ---------- */
+.Topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 12px 4px 5px;
+  border-radius: 30px;
+  position: relative;
+  user-select: none;
+  background: #ffffff;
+  border: 1px solid var(--tb-border);
+  transition: all 0.2s ease;
+  margin-left: 4px;
+  flex-shrink: 0;
+  box-shadow: var(--tb-shadow-sm);
+}
+
+.Topbar-user:hover,
+.Topbar-user.active {
+  background-color: var(--tb-green-soft);
+  border-color: var(--tb-green-border);
+}
+
+.Topbar-avatar-wrapper {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.Topbar-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--tb-green-light);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+}
+
+.Topbar-status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  background-color: #22c55e;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
+.Topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.Topbar-username {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tb-text);
+}
+
+.Topbar-role {
+  font-size: 11px;
+  color: var(--tb-muted);
+  font-weight: 600;
+}
+
+.Topbar-chevron {
+  color: var(--tb-muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.Topbar-chevron.open {
+  transform: rotate(180deg);
+  color: var(--tb-green);
+}
+
+/* ---------- Dropdowns ---------- */
+.Topbar-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -4px;
+  background-color: #ffffff;
+  border: 1px solid var(--tb-border);
+  border-radius: 16px;
+  box-shadow: var(--tb-shadow-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  width: min(260px, calc(100vw - 32px));
+  animation: topbarDropdownSlide 0.2s ease-out;
+  color: var(--tb-text);
+  cursor: default;
+}
+
+@keyframes topbarDropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.Topbar-user-dropdown {
+  width: min(230px, calc(100vw - 32px));
+}
+
+/* Green profile card, same as the sidebar's active style */
+.Topbar-user-card {
+  padding: 12px 14px;
+  margin-bottom: 2px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #22c55e 0%, var(--tb-green-strong) 100%);
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.25);
+}
+
+.Topbar-card-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.Topbar-card-email {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 3px 0 0 0;
+  word-break: break-all;
+}
+
+.Topbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #3f5a4b;
+  text-decoration: none;
+  border-radius: 9px;
+  transition: all 0.15s ease;
+}
+
+.Topbar-dropdown-item svg {
+  color: var(--tb-green);
+  flex-shrink: 0;
+}
+
+.Topbar-dropdown-item:hover {
+  background-color: var(--tb-green-soft);
+  color: var(--tb-green-strong);
+  padding-left: 16px;
+  box-shadow: inset 3px 0 0 var(--tb-green);
+}
+
+/* Logout button (a <button>, so reset its defaults here) */
+button.Topbar-dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.Topbar-dropdown-item.logout,
+.Topbar-dropdown-item.logout svg {
+  color: #ef4444;
+}
+
+.Topbar-dropdown-item.logout:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+  box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.Topbar-dropdown-divider {
+  height: 1px;
+  background-color: var(--tb-border);
+  margin: 4px 0;
+}
+
+/* ---------- Notifications ---------- */
+.Topbar-notifications-dropdown {
+  width: min(300px, calc(100vw - 32px));
+  padding: 12px;
+}
+
+.Topbar-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--tb-border);
+  margin-bottom: 8px;
+}
+
+.Topbar-dropdown-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--tb-text);
+}
+
+.Topbar-dropdown-badge {
+  font-size: 10px;
+  background: var(--tb-green-soft);
+  color: var(--tb-green-strong);
+  border: 1px solid var(--tb-green-border);
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+.Topbar-notification-list {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 197, 94, 0.4) transparent;
+}
+
+.Topbar-notification-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background-color 0.15s;
+}
+
+.Topbar-notification-item:hover {
+  background-color: var(--tb-green-softer);
+}
+
+.Topbar-notification-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--tb-green);
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+}
+
+.Topbar-notification-text {
+  font-size: 12.5px;
+  color: #3f5a4b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.Topbar-notification-text strong {
+  color: var(--tb-text);
+}
+
+.Topbar-notification-time {
+  font-size: 10.5px;
+  color: var(--tb-placeholder);
+  display: block;
+  margin-top: 3px;
+}
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 1024px) {
+  .Topbar {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  .Topbar-search-input {
+    width: clamp(140px, 18vw, 220px);
+  }
+
+  .Topbar-user-info {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 768px) {
+  .Topbar {
+    left: 0;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .Topbar-inner {
+    gap: 8px;
+  }
+
+  .Topbar-left,
+  .Topbar-right {
+    gap: 8px;
+  }
+
+  .Topbar-search-box {
+    display: none;
+  }
+
+  .Topbar-mobile-search-btn {
+    display: flex;
+  }
+
+  .Topbar-user-info {
+    display: none;
+  }
+
+  .Topbar-user {
+    padding: 4px;
+    margin-left: 0;
+  }
+
+  .Topbar-chevron {
+    display: none;
+  }
+
+  .Topbar-dropdown {
+    position: fixed;
+    top: calc(var(--topbar-height) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .Topbar-notification-list {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --topbar-height: 60px;
+  }
+
+  .Topbar-toggle-btn,
+  .Topbar-action-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .Topbar-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .Topbar-dropdown {
+    left: 8px;
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Topbar,
+  .Topbar-inner,
+  .Topbar-dropdown,
+  .Topbar-mobile-search-overlay,
+  .Topbar-toggle-btn,
+  .Topbar-action-btn,
+  .Topbar-chevron {
+    transition: none;
+    animation: none;
+  }
+}

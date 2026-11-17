@@ -1,4 +1,4 @@
-import  { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./property.css";
 
 /* ---------- images from src/assets ---------- */
@@ -12,39 +12,105 @@ const IMAGES = [img1, img2, img3, img4];
 /* each card gets all 4 images, starting from a different one */
 const rotate = (arr, n) => arr.map((_, i) => arr[(i + n) % arr.length]);
 
-/* ---------- demo data (replace with your API data) ---------- */
-const NAMES = [
-  ["Archer House", "FOR RENT", true],
-  ["Villa One Hyde Park", "FOR SELL", false],
-  ["Home Pitt Street", "FOR SELL", false],
-  ["Relaxing Villa", "FOR SELL", false],
-  ["Archer House", "FOR RENT", true],
-  ["Villa One Hyde Park", "FOR SELL", false],
+/* ---------- Indian Rupee (INR) formatter ---------- */
+const formatINR = (amount) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+/* ---------- demo data (localized for India) ---------- */
+const LISTINGS = [
+  {
+    title: "Oberoi Sky City",
+    status: "FOR RENT",
+    featured: true,
+    price: 85000, // ₹85,000/mo
+    address: "Western Express Hwy, Borivali East, Mumbai, MH 400066",
+    beds: 3,
+    baths: 3,
+    sqft: 1850,
+  },
+  {
+    title: "Prestige Lakeside Villa",
+    status: "FOR SALE",
+    featured: false,
+    price: 24500000, // ₹2,45,00,000 (2.45 Cr)
+    address: "Varthur Hubli, Whitefield, Bengaluru, KA 560066",
+    beds: 4,
+    baths: 4,
+    sqft: 3200,
+  },
+  {
+    title: "DLF Camellias Residence",
+    status: "FOR SALE",
+    featured: false,
+    price: 75000000, // ₹7,50,00,000 (7.50 Cr)
+    address: "Golf Course Road, Sector 42, Gurugram, HR 122002",
+    beds: 4,
+    baths: 5,
+    sqft: 4500,
+  },
+  {
+    title: "Palm Meadows Villa",
+    status: "FOR SALE",
+    featured: false,
+    price: 18500000, // ₹1,85,00,000 (1.85 Cr)
+    address: "Jubilee Hills, Road No. 36, Hyderabad, TS 500033",
+    beds: 4,
+    baths: 3,
+    sqft: 2660,
+  },
+  {
+    title: "Lodha World Towers",
+    status: "FOR RENT",
+    featured: true,
+    price: 150000, // ₹1,50,000/mo
+    address: "Senapati Bapat Marg, Lower Parel, Mumbai, MH 400013",
+    beds: 3,
+    baths: 3,
+    sqft: 2100,
+  },
+  {
+    title: "Hiranandani Heritage",
+    status: "FOR SALE",
+    featured: false,
+    price: 12500000, // ₹1,25,00,000 (1.25 Cr)
+    address: "Powai Vihar Complex, Powai, Mumbai, MH 400076",
+    beds: 2,
+    baths: 2,
+    sqft: 1280,
+  },
 ];
 
-const PROPERTIES = NAMES.map(([title, status, featured], i) => ({
+const PROPERTIES = LISTINGS.map((item, i) => ({
   id: i + 1,
-  title,
-  status,
-  featured,
-  price: "$815,000",
-  address: "148-37 88th Ave, Jamaica, NY 11435",
-  beds: 4,
-  baths: 3,
-  sqft: 2660,
+  ...item,
+  formattedPrice:
+    item.status === "FOR RENT"
+      ? `${formatINR(item.price)} / mo`
+      : formatINR(item.price),
   images: rotate(IMAGES, i),
 }));
 
 const FILTERS = [
-  { key: "status", label: "All Status", options: ["All Status", "For Rent", "For Sell"] },
-  { key: "type", label: "Home Type", options: ["Home Type", "House", "Apartment", "Villa", "Condo"] },
-  { key: "location", label: "Location", options: ["Location", "New York", "Jamaica", "Brooklyn", "Queens"] },
-  { key: "beds", label: "Beds", options: ["Beds", "1+", "2+", "3+", "4+"] },
+  { key: "status", label: "All Status", options: ["All Status", "For Rent", "For Sale"] },
+  { key: "type", label: "Home Type", options: ["Home Type", "Flat / Apartment", "Independent House", "Villa", "Penthouse", "Plot"] },
+  { key: "location", label: "City", options: ["City", "Mumbai", "Bengaluru", "Delhi NCR", "Hyderabad", "Pune", "Bhubaneswar"] },
+  { key: "beds", label: "BHK", options: ["BHK", "1 BHK", "2 BHK", "3 BHK", "4+ BHK"] },
   { key: "baths", label: "Baths", options: ["Baths", "1+", "2+", "3+", "4+"] },
-  { key: "garages", label: "Garages", options: ["Garages", "1+", "2+", "3+"] },
+  { key: "parking", label: "Parking", options: ["Parking", "1 Covered", "2 Covered", "Open Parking"] },
 ];
 
-const PRICES = ["$100,000", "$250,000", "$500,000", "$815,000", "$1,000,000", "$2,000,000"];
+const PRICES = [
+  "₹25,00,000",
+  "₹50,00,000",
+  "₹1,00,00,000",
+  "₹2,50,00,000",
+  "₹5,00,00,000",
+  "₹10,00,00,000",
+];
 
 /* ---------- icons ---------- */
 const Svg = ({ children, size = 22 }) => (
@@ -161,13 +227,13 @@ function PropertyCard({ item, index }) {
       <div className="pl-card__body">
         <div className="pl-card__top">
           <h3>{item.title}</h3>
-          <span className="pl-card__price">{item.price}</span>
+          <span className="pl-card__price">{item.formattedPrice}</span>
         </div>
         <p className="pl-card__addr"><IconPin /> {item.address}</p>
         <ul className="pl-card__meta">
-          <li><IconBed /> {item.beds} Beds</li>
+          <li><IconBed /> {item.beds} BHK</li>
           <li><IconBath /> {item.baths} Baths</li>
-          <li><IconArea /> {item.sqft} Sqft</li>
+          <li><IconArea /> {item.sqft.toLocaleString("en-IN")} Sqft</li>
         </ul>
       </div>
     </article>
@@ -176,7 +242,7 @@ function PropertyCard({ item, index }) {
 
 /* ---------- main page ---------- */
 const Property = () => {
-  const [query, setQuery] = useState("New York NY homes");
+  const [query, setQuery] = useState("Mumbai, Maharashtra homes");
   const [filters, setFilters] = useState({});
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -203,7 +269,7 @@ const Property = () => {
   return (
     <section className="pl">
       <header className="pl-hero">
-        <h1>Real Estate &amp; Homes For Sale</h1>
+        <h1>Real Estate &amp; Properties in India</h1>
         <nav aria-label="Breadcrumb">
           <a href="/">Home</a> <span>/</span> <em>Property List</em>
         </nav>
@@ -215,7 +281,7 @@ const Property = () => {
           <form className="pl-form" onSubmit={(e) => e.preventDefault()}>
             <label className="pl-search">
               <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search location" />
+                placeholder="Search city, locality, or project" />
               <IconSearch />
             </label>
 
@@ -225,24 +291,24 @@ const Property = () => {
             ))}
 
             <div className="pl-row">
-              <input className="pl-input" type="number" placeholder="Min. Area" />
-              <input className="pl-input" type="number" placeholder="Max. Area" />
+              <input className="pl-input" type="number" placeholder="Min. Sqft" />
+              <input className="pl-input" type="number" placeholder="Max. Sqft" />
             </div>
 
             <div className="pl-row">
-              <Select label="Min. Price" options={PRICES} value={minPrice} onChange={setMinPrice} />
-              <Select label="Max. Price" options={PRICES} value={maxPrice} onChange={setMaxPrice} />
+              <Select label="Min. Budget" options={PRICES} value={minPrice} onChange={setMinPrice} />
+              <Select label="Max. Budget" options={PRICES} value={maxPrice} onChange={setMaxPrice} />
             </div>
 
             <button type="button" className={`pl-more ${moreOpen ? "is-open" : ""}`}
               onClick={() => setMoreOpen(!moreOpen)} aria-expanded={moreOpen}>
               <span className="pl-more__icon"><IconPlus /></span>
-              Other Features
+              Amenities &amp; Features
             </button>
 
             <div className={`pl-features ${moreOpen ? "is-open" : ""}`}>
               <div>
-                {["Air Conditioning", "Swimming Pool", "Garden", "Gym"].map((x) => (
+                {["Vastu Compliant", "Power Backup", "Swimming Pool", "Clubhouse & Gym", "24x7 Security"].map((x) => (
                   <label key={x} className="pl-check">
                     <input type="checkbox" /> <span>{x}</span>
                   </label>
@@ -259,7 +325,7 @@ const Property = () => {
         {/* ---------- results ---------- */}
         <main className="pl-main">
           <div className="pl-bar">
-            <span className="pl-count">9,998 results</span>
+            <span className="pl-count">9,998 properties found</span>
             <div className="pl-sort">
               <span>Sort by</span>
               <Select label="Newest listings"
@@ -290,12 +356,6 @@ const Property = () => {
           </nav>
         </main>
       </div>
-
-      <button type="button" className={`pl-top ${showTop ? "is-visible" : ""}`}
-        style={{ "--p": `${progress}%` }}
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Scroll to top">
-        <IconUp />
-      </button>
     </section>
   );
 };

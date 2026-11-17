@@ -1,0 +1,213 @@
+/* =========================================================
+   MainLayout.css
+   Utkal Property Theme (matches Sidebar + Topbar)
+   White + Light Green
+========================================================= */
+
+.MainLayout {
+  /* Single source of truth for the sidebar width.
+     Must match Sidebar.css (270px / 76px). */
+  --sidebar-width: 270px;
+
+  --ml-bg: #f3faf5;
+  --ml-text: #0f2a1b;
+  --ml-green: #16a34a;
+  --ml-green-strong: #15803d;
+  --ml-green-soft: rgba(34, 197, 94, 0.10);
+  --ml-border: rgba(15, 42, 27, 0.08);
+  --ml-muted: #5f7a6c;
+
+  --ml-pad-x: 28px;
+  --ml-pad-y: 24px;
+
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(
+      circle at 100% 0%,
+      rgba(74, 222, 128, 0.12),
+      transparent 40%
+    ),
+    var(--ml-bg);
+  background-attachment: fixed;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--ml-text);
+
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   COLLAPSED SIDEBAR (desktop toggle and tablet default)
+========================================================= */
+
+.MainLayout.sidebar-collapsed {
+  --sidebar-width: 76px;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.MainLayout-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  min-width: 0;
+  min-height: 100vh;
+
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.MainLayout-content {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.MainLayout-placeholder {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 40px;
+  text-align: center;
+
+  background-color: #ffffff;
+  border: 1px solid var(--ml-border);
+  border-radius: 14px;
+  color: var(--ml-muted);
+  box-shadow: 0 2px 10px rgba(22, 101, 52, 0.06);
+}
+
+.MainLayout-placeholder h2 {
+  margin: 0 0 10px;
+  color: var(--ml-green-strong);
+}
+
+/* =========================================================
+   MOBILE OVERLAY
+========================================================= */
+
+.MainLayout-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999; /* above the topbar (90), below the sidebar (1000) */
+  cursor: pointer;
+
+  background-color: rgba(15, 42, 27, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  animation: mainLayoutFadeIn 0.25s ease;
+}
+
+@keyframes mainLayoutFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================================================
+   TABLET (769px - 1024px)
+   The sidebar is auto-collapsed by MainLayout.jsx, so the
+   .sidebar-collapsed rule above already sets the 76px width.
+========================================================= */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .MainLayout {
+    --ml-pad-x: 22px;
+    --ml-pad-y: 20px;
+  }
+}
+
+/* =========================================================
+   MOBILE (<= 768px)
+========================================================= */
+
+@media (max-width: 768px) {
+  .MainLayout,
+  .MainLayout.sidebar-collapsed {
+    --sidebar-width: 0px;
+    --ml-pad-x: 16px;
+    --ml-pad-y: 16px;
+
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .MainLayout-container {
+    width: 100%;
+    margin-left: 0;
+    transition: none;
+  }
+
+  .MainLayout-overlay {
+    display: block;
+  }
+
+  .MainLayout-placeholder {
+    padding: 28px 20px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE (<= 480px)
+========================================================= */
+
+@media (max-width: 480px) {
+  .MainLayout,
+  .MainLayout.sidebar-collapsed {
+    --ml-pad-x: 12px;
+    --ml-pad-y: 12px;
+  }
+
+  .MainLayout-placeholder {
+    padding: 24px 16px;
+    border-radius: 12px;
+  }
+}
+
+/* =========================================================
+   EXTRA SMALL (<= 360px)
+========================================================= */
+
+@media (max-width: 360px) {
+  .MainLayout,
+  .MainLayout.sidebar-collapsed {
+    --ml-pad-x: 10px;
+    --ml-pad-y: 10px;
+  }
+
+  .MainLayout-placeholder {
+    padding: 20px 14px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .MainLayout-container {
+    transition: none;
+  }
+
+  .MainLayout-overlay {
+    animation: none;
+  }
+}

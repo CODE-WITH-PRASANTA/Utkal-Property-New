@@ -1,0 +1,382 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.TermAndConditionMain {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  padding: 3rem 1rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
+  /* Layered soft sage/mint ambient background matching PrivacyPolicyMain */
+  background-color: #eef5f0;
+  background-image:
+    radial-gradient(at 10% 5%, rgba(29, 122, 58, 0.12) 0px, transparent 48%),
+    radial-gradient(at 92% 18%, rgba(16, 185, 129, 0.1) 0px, transparent 45%),
+    radial-gradient(at 15% 75%, rgba(21, 92, 43, 0.09) 0px, transparent 50%),
+    radial-gradient(at 88% 92%, rgba(52, 211, 153, 0.11) 0px, transparent 48%),
+    radial-gradient(rgba(21, 92, 43, 0.11) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+}
+
+.TermAndConditionMain * {
+  box-sizing: border-box;
+}
+
+/* Soft Decorative Ambient Orbs */
+.TermAndConditionMain-bgGlow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.TermAndConditionMain-bgGlowTop {
+  top: -120px;
+  right: -100px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(29, 122, 58, 0.18), rgba(167, 243, 208, 0.05));
+}
+
+.TermAndConditionMain-bgGlowBottom {
+  bottom: -140px;
+  left: -120px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.16), rgba(209, 250, 229, 0.04));
+}
+
+.TermAndConditionMain-container {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* Header Card */
+.TermAndConditionMain-headerCard {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-top: 4px solid #1b6532;
+  border-radius: 16px;
+  padding: 1.85rem 2rem;
+  box-shadow:
+    0 10px 30px -5px rgba(17, 66, 33, 0.07),
+    0 2px 6px rgba(17, 66, 33, 0.03);
+}
+
+.TermAndConditionMain-headerTop {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  margin-bottom: 1.15rem;
+}
+
+.TermAndConditionMain-headerIconBox {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+}
+
+.TermAndConditionMain-headerIconBox svg {
+  width: 28px;
+  height: 28px;
+}
+
+.TermAndConditionMain-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.TermAndConditionMain-date {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: #526058;
+  font-weight: 400;
+}
+
+.TermAndConditionMain-intro {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: #2d3748;
+}
+
+.TermAndConditionMain-intro strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Policy Section Cards */
+.TermAndConditionMain-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(220, 234, 224, 0.9);
+  border-radius: 15px;
+  padding: 1.4rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  box-shadow:
+    0 6px 20px -4px rgba(17, 66, 33, 0.05),
+    0 1px 3px rgba(17, 66, 33, 0.03);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+}
+
+.TermAndConditionMain-card:hover {
+  background: #ffffff;
+  border-color: #b7d7c1;
+  box-shadow:
+    0 14px 28px -6px rgba(21, 92, 43, 0.1),
+    0 4px 10px rgba(21, 92, 43, 0.04);
+  transform: translateY(-2px);
+}
+
+/* Left Icon Container */
+.TermAndConditionMain-iconBox {
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(135deg, #e7f5ec 0%, #d8eee0 100%);
+  border: 1px solid rgba(27, 101, 50, 0.12);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1b6532;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.TermAndConditionMain-iconBox svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Content Area */
+.TermAndConditionMain-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.TermAndConditionMain-sectionTitle {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #155c2b;
+  line-height: 1.3;
+}
+
+.TermAndConditionMain-text {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* Bottom Support Banner Card */
+.TermAndConditionMain-supportCard {
+  margin-top: 0.45rem;
+  background: linear-gradient(135deg, #e5f3e9 0%, #dcf0e3 100%);
+  border: 1px solid #c5e0cd;
+  border-radius: 15px;
+  padding: 1.45rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-shadow:
+    0 8px 24px -5px rgba(21, 92, 43, 0.08),
+    0 2px 6px rgba(21, 92, 43, 0.04);
+}
+
+.TermAndConditionMain-supportLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.TermAndConditionMain-supportIconBox {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  background-color: #d0ead8;
+  border: 1px solid rgba(27, 101, 50, 0.14);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1b6532;
+}
+
+.TermAndConditionMain-supportIconBox svg {
+  width: 26px;
+  height: 26px;
+}
+
+.TermAndConditionMain-supportTitle {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #155c2b;
+  line-height: 1.25;
+}
+
+.TermAndConditionMain-supportDesc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.TermAndConditionMain-supportDivider {
+  width: 1px;
+  height: 46px;
+  background-color: #bfd8c6;
+  flex-shrink: 0;
+}
+
+.TermAndConditionMain-supportRight {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  flex-shrink: 0;
+}
+
+.TermAndConditionMain-contactItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #1f2937;
+  font-size: 0.93rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.TermAndConditionMain-contactItem:hover {
+  color: #155c2b;
+}
+
+.TermAndConditionMain-contactIcon {
+  width: 19px;
+  height: 19px;
+  color: #1b6532;
+  flex-shrink: 0;
+}
+
+/* Tablet Responsiveness */
+@media (max-width: 860px) {
+  .TermAndConditionMain-supportCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1rem;
+  }
+
+  .TermAndConditionMain-supportDivider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .TermAndConditionMain-supportRight {
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .TermAndConditionMain {
+    padding: 2rem 0.85rem;
+  }
+
+  .TermAndConditionMain-headerCard,
+  .TermAndConditionMain-card,
+  .TermAndConditionMain-supportCard {
+    padding: 1.35rem 1.4rem;
+  }
+
+  .TermAndConditionMain-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .TermAndConditionMain {
+    padding: 1.4rem 0.65rem;
+  }
+
+  .TermAndConditionMain-headerCard,
+  .TermAndConditionMain-card,
+  .TermAndConditionMain-supportCard {
+    padding: 1.15rem 1.1rem;
+    border-radius: 13px;
+  }
+
+  .TermAndConditionMain-card {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .TermAndConditionMain-supportLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .TermAndConditionMain-supportRight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .TermAndConditionMain-headerTop {
+    gap: 0.85rem;
+  }
+
+  .TermAndConditionMain-headerIconBox {
+    width: 48px;
+    height: 48px;
+  }
+
+  .TermAndConditionMain-iconBox,
+  .TermAndConditionMain-supportIconBox {
+    width: 46px;
+    height: 46px;
+  }
+
+  .TermAndConditionMain-iconBox svg,
+  .TermAndConditionMain-supportIconBox svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .TermAndConditionMain-title {
+    font-size: 1.35rem;
+  }
+
+  .TermAndConditionMain-sectionTitle,
+  .TermAndConditionMain-supportTitle {
+    font-size: 1.05rem;
+  }
+
+  .TermAndConditionMain-intro,
+  .TermAndConditionMain-text,
+  .TermAndConditionMain-supportDesc,
+  .TermAndConditionMain-contactItem {
+    font-size: 0.88rem;
+  }
+}

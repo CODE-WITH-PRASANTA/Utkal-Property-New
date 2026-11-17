@@ -1,0 +1,287 @@
+/* =========================================================
+   Utkal Property – Animated Skyline Loader (white + green)
+   ========================================================= */
+.upl-overlay,
+.upl-overlay * {
+  box-sizing: border-box;
+}
+
+.upl-overlay {
+  --g-deep: #1f6b3f;
+  --g-main: #2f8f57;
+  --g-soft: #7cc796;
+  --g-light: #bfe3cb;
+  --g-pale: #dff1e5;
+  --g-mist: #eef8f1;
+  --ink: #3f5c4a;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  overflow: hidden;
+  font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.77, 0, 0.18, 1),
+    visibility 0.7s;
+}
+
+.upl-overlay.upl-exit {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5%);
+}
+
+/* ---------- background glows ---------- */
+.upl-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+.upl-glow-a {
+  width: 440px;
+  height: 440px;
+  background: var(--g-mist);
+  top: -130px;
+  left: -110px;
+  animation: upl-float 6s ease-in-out infinite;
+}
+.upl-glow-b {
+  width: 400px;
+  height: 400px;
+  background: var(--g-pale);
+  bottom: -140px;
+  right: -100px;
+  animation: upl-float 7s ease-in-out infinite reverse;
+}
+
+/* ---------- stage ---------- */
+.upl-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* ---------- skyline svg ---------- */
+.upl-svg {
+  width: 300px;
+  max-width: 80vw;
+  height: auto;
+  overflow: visible;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 12px 22px rgba(47, 143, 87, 0.18));
+}
+
+.upl-svg rect,
+.upl-svg polygon,
+.upl-svg path,
+.upl-svg circle {
+  transform-box: fill-box;
+}
+
+/* ground line draws from the centre */
+.upl-ground {
+  fill: var(--g-soft);
+  transform-origin: 50% 50%;
+  transform: scaleX(0);
+  animation: upl-grow-x 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0s forwards;
+}
+
+/* buildings rise from the ground */
+.upl-b {
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  animation: upl-rise 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+.upl-b1 { fill: var(--g-pale);  animation-delay: 0.15s; }
+.upl-b2 { fill: var(--g-light); animation-delay: 0.3s; }
+.upl-house { fill: var(--g-main); animation-delay: 0.45s; }
+.upl-b3 { fill: var(--g-light); animation-delay: 0.6s; }
+.upl-b4 { fill: var(--g-pale);  animation-delay: 0.75s; }
+
+/* roof drops onto the house */
+.upl-roof {
+  fill: var(--g-deep);
+  opacity: 0;
+  transform: translateY(-26px);
+  animation: upl-drop 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 1s forwards;
+}
+
+.upl-door {
+  fill: #ffffff;
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  animation: upl-rise 0.5s ease 1.25s forwards;
+}
+
+/* windows light up and twinkle */
+.upl-w,
+.upl-hw {
+  opacity: 0;
+  animation: upl-twinkle 1.4s ease-in-out infinite;
+}
+.upl-w { fill: #ffffff; }
+.upl-hw { fill: #ffffff; }
+
+.upl-w1 { animation-delay: 1.1s; }
+.upl-w2 { animation-delay: 1.4s; }
+.upl-w3 { animation-delay: 1.7s; }
+.upl-w4 { animation-delay: 1.2s; }
+.upl-w5 { animation-delay: 1.5s; }
+.upl-w6 { animation-delay: 1.3s; }
+.upl-w7 { animation-delay: 1.6s; }
+.upl-w8 { animation-delay: 1.15s; }
+.upl-w9 { animation-delay: 1.45s; }
+.upl-hw1 { animation-delay: 1.3s; }
+.upl-hw2 { animation-delay: 1.6s; }
+
+/* glowing star above the roof */
+.upl-star {
+  fill: var(--g-soft);
+  transform-origin: 50% 50%;
+  transform: scale(0);
+  animation:
+    upl-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards,
+    upl-glow-pulse 1.2s ease-in-out 2s infinite;
+}
+
+/* ---------- brand text ---------- */
+.upl-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.upl-name {
+  display: flex;
+  font-size: clamp(38px, 7vw, 54px);
+  font-weight: 700;
+  color: var(--g-deep);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.upl-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(26px);
+  animation: upl-letter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(0.5s + var(--i) * 0.08s);
+}
+
+.upl-sub {
+  margin-top: 8px;
+  padding-left: 0.7em;
+  font-size: clamp(13px, 2.4vw, 17px);
+  font-weight: 500;
+  letter-spacing: 0.7em;
+  color: var(--g-main);
+  opacity: 0;
+  animation: upl-fade 0.7s ease 1s forwards;
+}
+
+.upl-unit {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  opacity: 0;
+  animation: upl-fade 0.7s ease 1.4s forwards;
+}
+
+/* ---------- progress ---------- */
+.upl-progress {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.upl-bar {
+  position: relative;
+  width: 210px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--g-mist);
+  box-shadow: inset 0 0 0 1px rgba(47, 143, 87, 0.12);
+  overflow: hidden;
+}
+
+.upl-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--g-soft), var(--g-main));
+  overflow: hidden;
+}
+.upl-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: translateX(-100%);
+  animation: upl-shimmer 1.1s linear infinite;
+}
+
+.upl-percent {
+  width: 40px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--g-main);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes upl-grow-x { to { transform: scaleX(1); } }
+@keyframes upl-rise   { to { transform: scaleY(1); } }
+@keyframes upl-drop   { to { opacity: 1; transform: translateY(0); } }
+@keyframes upl-pop    { to { transform: scale(1); } }
+@keyframes upl-letter { to { opacity: 1; transform: translateY(0); } }
+@keyframes upl-fade   { to { opacity: 1; } }
+@keyframes upl-shimmer { to { transform: translateX(100%); } }
+
+@keyframes upl-twinkle {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 1; }
+}
+@keyframes upl-glow-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.5); }
+}
+@keyframes upl-float {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(26px, 20px); }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 480px) {
+  .upl-bar { width: 150px; }
+  .upl-sub { letter-spacing: 0.5em; padding-left: 0.5em; }
+  .upl-unit { font-size: 10px; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .upl-glow, .upl-w, .upl-hw, .upl-star, .upl-fill::after { animation: none; }
+  .upl-ground, .upl-b, .upl-door, .upl-star { transform: none; animation: none; }
+  .upl-roof { opacity: 1; transform: none; animation: none; }
+  .upl-w, .upl-hw { opacity: 1; }
+  .upl-letter, .upl-sub, .upl-unit { opacity: 1; transform: none; animation: none; }
+}
