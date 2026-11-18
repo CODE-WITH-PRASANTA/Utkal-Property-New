@@ -23,6 +23,7 @@ import SellManagement from './Components/SellManagement/SellManagement';
 import RentManagement from './Components/RentManagement/RentManagement';
 import Enquiry from './Components/Enquiry/Enquiry';
 import ColdLead from './Components/ColdLead/ColdLead';
+import Property from './Components/Property/Property';
 
 const App = () => {
   return (
@@ -51,6 +52,7 @@ const App = () => {
 
             {/* Properties & Listings */}
             <Route path="properties" element={<PropertyManagement />} />
+            <Route path="/properties/add" element={<Property/>} />
             <Route path="sell" element={<SellManagement />} />
             <Route path="rent" element={<RentManagement />} />
 
