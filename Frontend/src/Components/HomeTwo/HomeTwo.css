@@ -1,0 +1,408 @@
+/* =================================
+   HOME TWO - PREMIUM FEATURE SECTION
+================================= */
+
+.home-two {
+  width: 100%;
+  padding: 70px 6% 75px;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", "Poppins", sans-serif;
+}
+
+.home-two-container {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* =================================
+   HEADER
+================================= */
+
+.home-two-header {
+  text-align: center;
+  margin-bottom: 42px;
+}
+
+/* hidden until the section is visible */
+.ht2-anim {
+  opacity: 0;
+}
+
+.is-visible .ht2-anim {
+  animation: ht2HeadIn 0.9s var(--hd, 0s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.home-two-eyebrow {
+  display: inline-block;
+  color: #bd943c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+}
+
+.home-two-header h2 {
+  font-size: clamp(28px, 3.4vw, 42px);
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -1.4px;
+  color: #191919;
+  margin: 0 0 12px;
+}
+
+.home-two-header h2 span {
+  background: linear-gradient(
+    110deg,
+    #b58b32,
+    #e9c96f,
+    #bd9138
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ht2Shimmer 5s linear infinite;
+}
+
+.home-two-header p {
+  color: #666666;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.heading-line {
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #b88d35, #efd27e);
+  border-radius: 20px;
+  margin: 18px auto 0;
+}
+
+.is-visible .heading-line {
+  animation: ht2LineGrow 1s 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* =================================
+   GRID
+================================= */
+
+.home-two-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  align-items: stretch;
+}
+
+/* =================================
+   FEATURE CARD
+================================= */
+
+.home-two-card {
+  position: relative;
+  text-align: center;
+  padding: 18px 20px 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  opacity: 0; /* hidden until visible */
+  transition:
+    transform 0.5s cubic-bezier(.2,.8,.2,1),
+    box-shadow 0.5s ease,
+    background 0.5s ease;
+}
+
+/* each card enters from a different direction */
+.home-two-card:nth-child(1) {
+  --from-x: -90px;
+  --from-y: 30px;
+}
+
+.home-two-card:nth-child(2) {
+  --from-x: 0px;
+  --from-y: 80px;
+}
+
+.home-two-card:nth-child(3) {
+  --from-x: 90px;
+  --from-y: 30px;
+}
+
+.is-visible .home-two-card {
+  animation: ht2CardIn 1s calc(0.45s + var(--card-index) * 0.2s)
+    cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.home-two-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.07);
+  background: #fffefa;
+}
+
+/* =================================
+   ICON DESIGN
+================================= */
+
+.feature-icon-wrapper {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s ease;
+}
+
+.feature-icon-circle {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #edcc75;
+  left: 4px;
+  bottom: 2px;
+  scale: 0;
+  transition:
+    width 0.5s ease,
+    height 0.5s ease,
+    background 0.5s ease;
+}
+
+/* circle pops in */
+.is-visible .feature-icon-circle {
+  animation: ht2CirclePop 0.8s calc(0.7s + var(--card-index) * 0.2s)
+    cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.feature-icon {
+  position: relative;
+  z-index: 2;
+  width: 70px;
+  height: 70px;
+  color: #191919;
+  overflow: visible;
+  transition:
+    transform 0.5s ease,
+    color 0.4s ease;
+}
+
+/* icon lines draw themselves */
+.feature-icon * {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+}
+
+.is-visible .feature-icon * {
+  animation: ht2Draw 1.6s calc(0.8s + var(--card-index) * 0.2s)
+    ease-out both;
+}
+
+.home-two-card:hover .feature-icon-wrapper {
+  transform: translateY(-4px) scale(1.06);
+}
+
+.home-two-card:hover .feature-icon-circle {
+  width: 76px;
+  height: 76px;
+  background: #e5bd59;
+}
+
+.home-two-card:hover .feature-icon {
+  transform: rotate(-4deg);
+  color: #9f7624;
+}
+
+/* =================================
+   TEXT
+================================= */
+
+.home-two-card h3 {
+  font-size: clamp(18px, 1.35vw, 22px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.5px;
+  color: #1d1d1d;
+  margin: 0 0 10px;
+  transition: color 0.3s ease;
+}
+
+.home-two-card:hover h3 {
+  color: #ad8534;
+}
+
+.home-two-card p {
+  max-width: 360px;
+  margin: 0 auto;
+  font-size: 15.5px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: #444444;
+}
+
+/* =================================
+   BOTTOM HOVER LINE
+================================= */
+
+.card-bottom-line {
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #bd9138, #edcc75);
+  border-radius: 10px;
+  margin: 16px auto 0;
+  transition: width 0.45s ease;
+}
+
+.home-two-card:hover .card-bottom-line {
+  width: 65px;
+}
+
+/* =================================
+   ANIMATIONS
+================================= */
+
+@keyframes ht2HeadIn {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ht2LineGrow {
+  from { width: 0; }
+  to { width: 65px; }
+}
+
+@keyframes ht2Shimmer {
+  to { background-position: 200% center; }
+}
+
+/* uses `translate` + `scale` so the hover `transform` keeps working */
+@keyframes ht2CardIn {
+  from {
+    opacity: 0;
+    translate: var(--from-x, 0px) var(--from-y, 60px);
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes ht2CirclePop {
+  from { scale: 0; }
+  to { scale: 1; }
+}
+
+@keyframes ht2Draw {
+  from { stroke-dashoffset: 400; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* =================================
+   RESPONSIVE DESIGN
+================================= */
+
+@media (max-width: 992px) {
+  .home-two {
+    padding: 60px 5% 65px;
+  }
+
+  .home-two-grid {
+    gap: 18px;
+  }
+
+  .home-two-card {
+    padding: 16px 10px 22px;
+  }
+
+  .home-two-card h3 {
+    font-size: 18px;
+  }
+
+  .home-two-card p {
+    font-size: 14.5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-two {
+    padding: 55px 6% 60px;
+  }
+
+  .home-two-header {
+    margin-bottom: 32px;
+  }
+
+  .home-two-header p {
+    font-size: 15px;
+  }
+
+  .home-two-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 460px;
+    margin: 0 auto;
+  }
+
+  /* single column: all cards rise from below */
+  .home-two-card:nth-child(n) {
+    --from-x: 0px;
+    --from-y: 60px;
+  }
+
+  .home-two-card {
+    padding: 22px 18px 24px;
+  }
+
+  .feature-icon-wrapper {
+    margin-bottom: 12px;
+  }
+
+  .home-two-card h3 {
+    font-size: 20px;
+  }
+
+  .home-two-card p {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-two {
+    padding: 48px 18px 52px;
+  }
+
+  .home-two-header h2 {
+    font-size: 28px;
+    letter-spacing: -0.8px;
+  }
+
+  .home-two-eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+
+  .home-two-card {
+    padding: 20px 14px 22px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .home-two *,
+  .home-two *::before,
+  .home-two *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

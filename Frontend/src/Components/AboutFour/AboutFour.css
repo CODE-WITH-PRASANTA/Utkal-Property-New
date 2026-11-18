@@ -1,0 +1,488 @@
+
+.about-four {
+  width: 100%;
+  padding: 85px 4%;
+   background:
+    radial-gradient(
+      ellipse at 5% 10%,
+      rgba(18, 92, 60, 0.075),
+      transparent 38%
+    ),
+    radial-gradient(
+      ellipse at 95% 85%,
+      rgba(11, 74, 4, 0.11),
+      transparent 35%
+    ),
+    linear-gradient(
+      125deg,
+      #F8F5E9 0%,
+      #f2fff4 48%,
+      #EFF4EC 100%
+    );
+
+  overflow: hidden;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.about-four *,
+.about-four *::before,
+.about-four *::after {
+  box-sizing: border-box;
+}
+
+.about-four__container {
+  width: 100%;
+  max-width: 1450px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(55px, 8vw, 125px);
+}
+
+/* =========================
+   LEFT IMAGE
+========================= */
+
+.about-four__visual {
+  position: relative;
+  min-width: 0;
+  opacity: 0;
+  transform: translateX(-45px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.about-four__visual.about-four__visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.about-four__image-wrap {
+  position: relative;
+  width: 100%;
+  height: 610px;
+  border-radius: 17px;
+  overflow: hidden;
+  background: #F4F7F5;
+}
+
+.about-four__image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 1s cubic-bezier(.2, .7, .2, 1);
+}
+
+.about-four__visual:hover .about-four__image {
+  transform: scale(1.045);
+}
+
+.about-four__image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 51, 33, 0.04) 0%,
+    transparent 45%,
+    rgba(10, 51, 33, 0.16) 100%
+  );
+  pointer-events: none;
+}
+
+/* =========================
+   FLOATING CLIENT CARD
+========================= */
+
+.about-four__client-card {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  min-width: 255px;
+  padding: 19px 23px;
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 12px 35px rgba(10, 51, 33, 0.12);
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.about-four__client-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px rgba(10, 51, 33, 0.18);
+}
+
+.about-four__client-icon {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0F4A2F;
+  background: #F8F2E4;
+  border-radius: 50%;
+  transition: background 0.35s ease, transform 0.35s ease;
+}
+
+.about-four__client-card:hover .about-four__client-icon {
+  background: #C8A24A;
+  color: #FFFFFF;
+  transform: rotate(-7deg);
+}
+
+.about-four__client-icon svg {
+  width: 29px;
+  height: 29px;
+}
+
+.about-four__client-info {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.about-four__client-info span {
+  color: #5A6A61;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.about-four__client-info strong {
+  color: #0A3321;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* =========================
+   GOLD IMAGE DECORATION
+========================= */
+
+.about-four__image-decoration {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  right: -13px;
+  bottom: -13px;
+  border-right: 3px solid #C8A24A;
+  border-bottom: 3px solid #C8A24A;
+  border-radius: 0 0 15px 0;
+  z-index: -1;
+}
+
+/* =========================
+   RIGHT CONTENT
+========================= */
+
+.about-four__content {
+  max-width: 550px;
+  opacity: 0;
+  transform: translateY(35px);
+  transition:
+    opacity 0.9s ease 0.2s,
+    transform 0.9s ease 0.2s;
+}
+
+.about-four__content.about-four__visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* EYEBROW */
+
+.about-four__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  color: #C8A24A;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.1px;
+}
+
+.about-four__eyebrow span {
+  display: inline-block;
+  width: 32px;
+  height: 2px;
+  background: #C8A24A;
+}
+
+/* HEADING */
+
+.about-four__content h2 {
+  max-width: 510px;
+  margin: 0;
+  color: #082016;
+  font-size: clamp(36px, 3.3vw, 49px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+}
+
+.about-four__content h2 span {
+  color: #084329;
+}
+
+/* GOLD HEADING LINE */
+
+.about-four__heading-line {
+  width: 65px;
+  height: 3px;
+  background: #C8A24A;
+  margin: 25px 0 24px;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+.about-four__content:hover .about-four__heading-line {
+  width: 105px;
+}
+
+/* DESCRIPTION */
+
+.about-four__description {
+  max-width: 520px;
+  color: #5A6A61;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.95;
+  margin: 0;
+}
+
+/* =========================
+   LEARN MORE BUTTON
+========================= */
+
+.about-four__button {
+  width: fit-content;
+  min-width: 158px;
+  min-height: 54px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 17px;
+  margin-top: 34px;
+  padding: 0 24px;
+  border-radius: 9px;
+  background: #0A3321;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #0A3321;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.about-four__button svg {
+  width: 19px;
+  height: 19px;
+  transition: transform 0.35s ease;
+}
+
+.about-four__button:hover {
+  background: #C8A24A;
+  border-color: #C8A24A;
+  color: #0A3321;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(200, 162, 74, 0.25);
+}
+
+.about-four__button:hover svg {
+  transform: translateX(5px);
+}
+
+/* =========================
+   BOTTOM TRUST TEXT
+========================= */
+
+.about-four__trust {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.about-four__trust-line {
+  width: 35px;
+  height: 1px;
+  background: #C8A24A;
+}
+
+.about-four__trust span:last-child {
+  color: #5A6A61;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+/* =========================
+   LAPTOP
+========================= */
+
+@media (max-width: 1100px) {
+  .about-four {
+    padding: 75px 4%;
+  }
+
+  .about-four__container {
+    gap: 55px;
+  }
+
+  .about-four__image-wrap {
+    height: 510px;
+  }
+
+  .about-four__content h2 {
+    font-size: 39px;
+  }
+
+  .about-four__client-card {
+    min-width: 225px;
+    padding: 15px 18px;
+  }
+
+  .about-four__client-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 768px) {
+  .about-four {
+    padding: 65px 25px;
+  }
+
+  .about-four__container {
+    grid-template-columns: 1fr;
+    gap: 55px;
+    max-width: 600px;
+  }
+
+  .about-four__image-wrap {
+    height: 540px;
+  }
+
+  .about-four__content {
+    max-width: 100%;
+  }
+
+  .about-four__content h2 {
+    max-width: 500px;
+    font-size: 38px;
+  }
+
+  .about-four__description {
+    max-width: 100%;
+  }
+
+  .about-four__client-card {
+    top: 20px;
+    left: 18px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 480px) {
+  .about-four {
+    padding: 50px 18px 60px;
+  }
+
+  .about-four__container {
+    gap: 43px;
+  }
+
+  .about-four__image-wrap {
+    height: 390px;
+    border-radius: 13px;
+  }
+
+  .about-four__client-card {
+    top: 14px;
+    left: 12px;
+    min-width: 195px;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+
+  .about-four__client-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .about-four__client-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .about-four__client-info span {
+    font-size: 12px;
+  }
+
+  .about-four__client-info strong {
+    font-size: 20px;
+  }
+
+  .about-four__content h2 {
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+
+  .about-four__eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    margin-bottom: 17px;
+  }
+
+  .about-four__description {
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .about-four__button {
+    margin-top: 26px;
+  }
+
+  .about-four__trust {
+    margin-top: 28px;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .about-four *,
+  .about-four *::before,
+  .about-four *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .about-four__visual,
+  .about-four__content {
+    opacity: 1;
+    transform: none;
+  }
+}
