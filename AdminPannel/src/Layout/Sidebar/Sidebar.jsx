@@ -66,7 +66,7 @@ const menuItems = [
     icon: <FiMail size={20} />,
   },
   {
-    text: "Contact / Cold Lead",
+    text: "Cold Lead",
     path: "/leads",
     icon: <FiPhoneIncoming size={20} />,
   },
