@@ -49,6 +49,40 @@ const ICONS = {
   info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01",
   checkCircle: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6",
   building: "M5 21V4h10v17M15 9h4v12M9 8h2M9 12h2M9 16h2M3 21h18",
+
+  /* ---- amenity icons ---- */
+  pool: "M8 13V6a2 2 0 0 1 2-2M16 13V6a2 2 0 0 1 2-2M8 8h8M8 11h8M2 16c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0M2 20c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0",
+  swim: "M16 7a1.8 1.8 0 1 0 0-3.6A1.8 1.8 0 0 0 16 7zM4 13l6-4 4 2 3-3M2 17c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0M2 21c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0",
+  kids: "M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5 9l7 2 7-2M12 11v4M9 21l3-6 3 6",
+  laptop: "M5 6h14v9H5zM3 19h18",
+  tree: "M12 3l5 7h-3l4 6H6l4-6H7zM12 16v5",
+  lift: "M5 3h14v18H5zM12 3v18M8.5 11V6M7 7.5L8.5 6 10 7.5M15.5 13v5M14 16.5l1.5 1.5 1.5-1.5",
+  highLift: "M6 3h12v18H6zM12 7v10M9.5 9.5L12 7l2.5 2.5M9.5 14.5L12 17l2.5-2.5",
+  temple: "M12 3v3M8 21V11l4-5 4 5v10M4 21h16M10 21v-4h4v4",
+  paddle: "M10 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM13.5 13.5L19 19M17 3a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z",
+  videoPhone: "M3 7h12v10H3zM15 11l6-3v8l-6-3z",
+  parking: "M5 3h14v18H5zM10 17V8h3a2.5 2.5 0 0 1 0 5h-3",
+  intercom: "M5 4h14v16H5zM9 8h6M9 12h6M9 16h6",
+  paw: "M12 14c-3 0-5 2-5 4 0 1.5 1.5 2 3 1.5l2-.5 2 .5c1.5.5 3 0 3-1.5 0-2-2-4-5-4zM6 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM10 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM14 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM18 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z",
+  shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4",
+  cctv: "M3 8l12-3 2 5-12 3zM17 9l4-1M9 13l-1 5M6 18h5",
+  bolt: "M13 3L5 14h6l-1 7 8-11h-6z",
+  hall: "M3 8l9-4 9 4M5 8v10M19 8v10M3 20h18M9 20v-6h6v6",
+  power: "M12 3v8M7 6a8 8 0 1 0 10 0",
+  landscape: "M3 19h18M5 19l5-9 3 5 2-3 4 7",
+  torii: "M3 6c3 1 15 1 18 0M5 9h14M7 9v12M17 9v12M12 7v2",
+  seat: "M8 3v9h8l2 4M8 12v9M16 12v9M6 21h12",
+  yoga: "M12 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 7v6M5 10l7 3 7-3M8 21l4-8 4 8",
+  office: "M3 21h18M5 21V8l7-5 7 5v13M9 21v-5h6v5M9 11h6",
+  cloud: "M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9z",
+  rain: "M7 14a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 5a4.5 4.5 0 0 1 0 9zM8 17l-1 3M12 17l-1 3M16 17l-1 3",
+  recycle: "M21 12a9 9 0 0 0-15-6.7L3 8M3 3v5h5M3 12a9 9 0 0 0 15 6.7l3-2.7M21 21v-5h-5",
+  dumbbell: "M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12",
+  drop: "M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",
+  fire: "M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3 0-6 1-9z",
+  gate: "M3 21h18M5 21V10M19 21V10M5 10l7-6 7 6M9 21v-8M15 21v-8",
+  sprout: "M12 21v-9M12 12c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2-5-6-5 0 3 2 5 6 5z",
+  quake: "M5 21V4h10v17M15 9h4v12M3 21h18M8 8l2 2-2 2 2 2",
 };
 
 const Icon = ({ name, size = 18, className = "" }) => (
@@ -72,13 +106,49 @@ const Icon = ({ name, size = 18, className = "" }) => (
 /*  STATIC DATA                                                        */
 /* ------------------------------------------------------------------ */
 const CATEGORIES = ["Residential", "Commercial", "Rental"];
-const PROPERTY_TYPES = ["Duplex", "Independent House", "Plot / Land", "Apartment", "Villa", "Flat"];
+// Duplex + Independent House are now ONE option
+const PROPERTY_TYPES = ["Duplex / Independent House", "Plot / Land", "Apartment", "Villa", "Flat"];
 const STATUSES = ["Active", "Inactive", "Pending", "Under Construction", "Sold", "Ready to Move", "Upcoming"];
+
+// Every amenity has an icon (used for the premium icon tiles)
 const AMENITIES = [
-  "Lift", "Power Backup", "Security", "Clubhouse", "Swimming Pool", "Gym",
-  "Children Play Area", "Garden", "CCTV", "Water Supply", "Fire Safety",
-  "Intercom", "Parking", "Gated Community",
+  { name: "Swimming Pool", icon: "pool" },
+  { name: "Children Play Area", icon: "kids" },
+  { name: "Coworking Space", icon: "laptop" },
+  { name: "Elevated Podium Garden", icon: "tree" },
+  { name: "Lift", icon: "lift" },
+  { name: "Temple", icon: "temple" },
+  { name: "Indoor Games", icon: "paddle" },
+  { name: "Kids' Pool", icon: "swim" },
+  { name: "Video Door Phones", icon: "videoPhone" },
+  { name: "Reserved Parking", icon: "parking" },
+  { name: "Intercom", icon: "intercom" },
+  { name: "Pet Friendly", icon: "paw" },
+  { name: "Security", icon: "shield" },
+  { name: "CCTV Camera", icon: "cctv" },
+  { name: "Guest Parking", icon: "car" },
+  { name: "EV Charging", icon: "bolt" },
+  { name: "Multipurpose Hall", icon: "hall" },
+  { name: "Club House", icon: "checkCircle" },
+  { name: "Power Backup", icon: "power" },
+  { name: "Landscape", icon: "landscape" },
+  { name: "Grand Entrance", icon: "torii" },
+  { name: "High Speed Lift", icon: "highLift" },
+  { name: "Earthquake-Resistant Structure", icon: "quake" },
+  { name: "Senior Citizen Seating", icon: "seat" },
+  { name: "Yoga", icon: "yoga" },
+  { name: "Society Office", icon: "office" },
+  { name: "Sky Lounge", icon: "cloud" },
+  { name: "Rainwater Harvesting", icon: "rain" },
+  { name: "Sewage Treatment Plant", icon: "recycle" },
+  { name: "Gym", icon: "dumbbell" },
+  { name: "Garden", icon: "sprout" },
+  { name: "Water Supply", icon: "drop" },
+  { name: "Fire Safety", icon: "fire" },
+  { name: "Parking", icon: "parking" },
+  { name: "Gated Community", icon: "gate" },
 ];
+
 const BEDROOMS = ["1 Bedroom", "2 Bedrooms", "3 Bedrooms", "4 Bedrooms", "5 Bedrooms", "6+ Bedrooms"];
 const BATHROOMS = ["1 Bathroom", "2 Bathrooms", "3 Bathrooms", "4 Bathrooms", "5 Bathrooms", "6+ Bathrooms"];
 const PARKINGS = ["Covered Parking", "Open Parking", "Basement Parking", "Stilt Parking", "Covered + Open", "No Parking"];
@@ -638,10 +708,10 @@ const Property = () => {
   };
 
   /* ---- amenities ---- */
-  const toggleAmenity = (a) => {
-    set("amenities", form.amenities.includes(a) ? form.amenities.filter((x) => x !== a) : [...form.amenities, a]);
+  const toggleAmenity = (name) => {
+    set("amenities", form.amenities.includes(name) ? form.amenities.filter((x) => x !== name) : [...form.amenities, name]);
   };
-  const visibleAmenities = AMENITIES.filter((a) => a.toLowerCase().includes(amenityQuery.toLowerCase()));
+  const visibleAmenities = AMENITIES.filter((a) => a.name.toLowerCase().includes(amenityQuery.toLowerCase()));
 
   /* ---- uploads ---- */
   const addImages = (fileList) => {
@@ -959,11 +1029,24 @@ const Property = () => {
 
       {/* ===== 3. Amenities & Property Images ===== */}
       <PropertySection id="media" title="Amenities & Property Images" icon="bookmark" open={openSections.media} onToggle={toggleSection} hasError={secErr.media}>
-        <div className="Property__grid Property__grid--two">
+        <div className="Property__grid Property__grid--stack">
           <div className="Property__panel">
-            <h4 className="Property__panelTitle">
-              <Icon name="bookmark" size={19} /> Amenities
-            </h4>
+            <div className="Property__panelHead">
+              <h4 className="Property__panelTitle">
+                <Icon name="bookmark" size={19} /> Amenities
+              </h4>
+              <div className="Property__amenityMeta">
+                <span className="Property__amenityCount">
+                  <b>{form.amenities.length}</b> / {AMENITIES.length} selected
+                </span>
+                {form.amenities.length > 0 && (
+                  <button type="button" className="Property__amenityClear" onClick={() => set("amenities", [])}>
+                    Clear all
+                  </button>
+                )}
+              </div>
+            </div>
+
             <PropertyField label="Amenities (Select Multiple)" required error={errors.amenities}>
               <div className="PropertyInput PropertyInput--search">
                 <Icon name="search" className="PropertyInput__icon" size={18} />
@@ -974,13 +1057,25 @@ const Property = () => {
                   </button>
                 )}
               </div>
-              <div className="Property__chips">
+
+              <div className="Property__amenities">
                 {visibleAmenities.map((a) => {
-                  const on = form.amenities.includes(a);
+                  const on = form.amenities.includes(a.name);
                   return (
-                    <button type="button" key={a} className={`PropertyChip ${on ? "is-on" : ""}`} onClick={() => toggleAmenity(a)}>
-                      {a}
-                      {on && <Icon name="check" size={13} />}
+                    <button
+                      type="button"
+                      key={a.name}
+                      className={`PropertyAmenity ${on ? "is-on" : ""}`}
+                      aria-pressed={on}
+                      onClick={() => toggleAmenity(a.name)}
+                    >
+                      <span className="PropertyAmenity__check">
+                        <Icon name="check" size={11} />
+                      </span>
+                      <span className="PropertyAmenity__iconWrap">
+                        <Icon name={a.icon} size={26} className="PropertyAmenity__icon" />
+                      </span>
+                      <span className="PropertyAmenity__label">{a.name}</span>
                     </button>
                   );
                 })}
@@ -1289,7 +1384,14 @@ const Property = () => {
               <div className="PropertyPreview__desc" dangerouslySetInnerHTML={{ __html: form.description }} />
             )}
             <div className="PropertyPreview__chips">
-              {form.amenities.map((a) => <span key={a}>{a}</span>)}
+              {form.amenities.map((name) => {
+                const a = AMENITIES.find((x) => x.name === name);
+                return (
+                  <span key={name}>
+                    {a && <Icon name={a.icon} size={13} />} {name}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>

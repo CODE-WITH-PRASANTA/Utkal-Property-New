@@ -1,0 +1,268 @@
+.SellProperty {
+  --sp-green-900: #0b3d24;
+  --sp-green-700: #11623a;
+  --sp-green-600: #168049;
+  --sp-green-500: #1fa35a;
+  --sp-green-100: #e4f4ea;
+  --sp-green-50: #f3faf6;
+  --sp-ink: #14281d;
+  --sp-muted: #6a7b72;
+  --sp-line: #d8e6dd;
+  --sp-gold: #f2b83b;
+  --sp-red: #d64545;
+  --sp-radius: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  padding: 28px clamp(12px, 3vw, 40px) 48px;
+  color: var(--sp-ink);
+  font-family: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(900px 400px at 100% 0%, #dff2e6 0%, transparent 60%),
+    radial-gradient(700px 400px at 0% 100%, #e8f6ee 0%, transparent 60%),
+    #f6fbf8;
+}
+.SellProperty *, .SellProperty *::before, .SellProperty *::after { box-sizing: border-box; }
+.SellProperty button { font-family: inherit; }
+.SellProperty :focus-visible { outline: 3px solid rgba(31, 163, 90, .45); outline-offset: 2px; }
+
+/* ---------- tabs ---------- */
+.SellProperty-tabs {
+  display: flex; width: fit-content; margin: 0 auto 22px; padding: 5px; gap: 4px;
+  background: #fff; border: 1px solid var(--sp-line); border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(17, 98, 58, .1);
+}
+.SellProperty-tab {
+  display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
+  padding: 11px 28px; border-radius: 999px; font-size: 15px; font-weight: 600;
+  background: transparent; color: var(--sp-green-700); transition: background .2s, color .2s, box-shadow .2s;
+}
+.SellProperty-tab:hover { background: var(--sp-green-50); }
+.SellProperty-tab--active, .SellProperty-tab--active:hover {
+  background: linear-gradient(135deg, var(--sp-green-700), var(--sp-green-500)); color: #fff;
+  box-shadow: 0 6px 16px rgba(17, 98, 58, .35);
+}
+
+/* ---------- layout ---------- */
+.SellProperty-layout {
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px;
+  max-width: 1240px; margin: 0 auto; align-items: start;
+}
+.SellProperty-card {
+  background: #fff; border: 1px solid var(--sp-line); border-radius: 22px;
+  padding: clamp(18px, 2.6vw, 30px); box-shadow: 0 18px 50px rgba(17, 98, 58, .1);
+}
+.SellProperty-aside { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 20px; }
+
+/* ---------- sections ---------- */
+.SellProperty-section { margin-bottom: 26px; }
+.SellProperty-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.SellProperty-section-icon {
+  width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-size: 14px; color: #fff; background: linear-gradient(135deg, var(--sp-green-700), var(--sp-green-500));
+  box-shadow: 0 4px 10px rgba(17, 98, 58, .3);
+}
+.SellProperty-section-title { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.2; }
+.SellProperty-section-sub { margin: 2px 0 0; font-size: 12.5px; color: var(--sp-muted); }
+
+.SellProperty-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; margin-bottom: 14px; }
+.SellProperty-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.SellProperty-field { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.SellProperty-field:focus-within { z-index: 6; }
+.SellProperty-label { font-size: 13px; font-weight: 600; color: #26402f; }
+.SellProperty-req { color: var(--sp-red); margin-left: 3px; }
+.SellProperty-error { font-size: 12px; color: var(--sp-red); font-weight: 500; margin-top: 2px; }
+
+/* ---------- inputs ---------- */
+.SellProperty-input, .SellProperty-dropdown-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 0 14px;
+  background: #fff; border: 1.5px solid var(--sp-line); border-radius: var(--sp-radius);
+  transition: border-color .2s, box-shadow .2s, background .2s; font-size: 14px; color: var(--sp-ink);
+}
+.SellProperty-input:hover, .SellProperty-dropdown-btn:hover { border-color: #a9cdb8; }
+.SellProperty-input:focus-within, .SellProperty-dropdown-btn:focus-visible, .SellProperty-dropdown-btn--open {
+  border-color: var(--sp-green-500); box-shadow: 0 0 0 4px rgba(31, 163, 90, .14); outline: none;
+}
+.SellProperty-input--error { border-color: var(--sp-red); background: #fff8f8; }
+.SellProperty-input input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; padding: 12px 0;
+}
+.SellProperty-input input::placeholder, .SellProperty-textarea::placeholder { color: #9aaba1; }
+.SellProperty-input-icon { color: var(--sp-green-600); display: inline-flex; font-size: 15px; flex: none; }
+.SellProperty-suffix {
+  font-size: 12px; font-weight: 600; color: var(--sp-green-700); background: var(--sp-green-100);
+  padding: 4px 9px; border-radius: 8px; flex: none;
+}
+.SellProperty-textarea {
+  width: 100%; resize: vertical; min-height: 92px; padding: 12px 14px; font: inherit; font-size: 14px;
+  color: var(--sp-ink); border: 1.5px solid var(--sp-line); border-radius: var(--sp-radius); outline: 0;
+  transition: border-color .2s, box-shadow .2s;
+}
+.SellProperty-textarea:focus { border-color: var(--sp-green-500); box-shadow: 0 0 0 4px rgba(31, 163, 90, .14); }
+
+/* ---------- dropdown ---------- */
+.SellProperty-dropdown, .SellProperty-datepicker { position: relative; }
+.SellProperty-dropdown-btn { cursor: pointer; text-align: left; }
+.SellProperty-dropdown-value, .SellProperty-dropdown-placeholder {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.SellProperty-dropdown-placeholder { color: #9aaba1; }
+.SellProperty-dropdown-chevron { font-size: 11px; color: var(--sp-muted); transition: transform .2s; flex: none; }
+.SellProperty-dropdown-btn--open .SellProperty-dropdown-chevron { transform: rotate(180deg); color: var(--sp-green-600); }
+.SellProperty-dropdown-list {
+  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0; right: 0; margin: 0; padding: 6px;
+  list-style: none; max-height: 250px; overflow-y: auto; background: #fff; border: 1px solid var(--sp-line);
+  border-radius: 14px; box-shadow: 0 18px 40px rgba(11, 61, 36, .18); animation: SellProperty-pop .16s ease-out;
+}
+.SellProperty-dropdown-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px;
+  border-radius: 9px; font-size: 14px; cursor: pointer; color: var(--sp-ink);
+}
+.SellProperty-dropdown-option--active { background: var(--sp-green-50); }
+.SellProperty-dropdown-option--selected { color: var(--sp-green-700); font-weight: 600; background: var(--sp-green-100); }
+.SellProperty-dropdown-option svg { font-size: 12px; color: var(--sp-green-600); }
+
+/* ---------- calendar ---------- */
+.SellProperty-calendar {
+  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0; width: min(312px, 86vw); padding: 14px;
+  background: #fff; border: 1px solid var(--sp-line); border-radius: 18px;
+  box-shadow: 0 22px 48px rgba(11, 61, 36, .22); animation: SellProperty-pop .16s ease-out;
+}
+.SellProperty-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.SellProperty-cal-title { font-weight: 700; font-size: 15px; }
+.SellProperty-cal-nav {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--sp-line); background: #fff;
+  color: var(--sp-green-700); cursor: pointer; display: grid; place-items: center; font-size: 12px; transition: background .15s;
+}
+.SellProperty-cal-nav:hover:not(:disabled) { background: var(--sp-green-100); }
+.SellProperty-cal-nav:disabled { opacity: .35; cursor: not-allowed; }
+.SellProperty-cal-week, .SellProperty-cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.SellProperty-cal-week span { font-size: 11.5px; font-weight: 600; color: var(--sp-muted); padding: 6px 0; }
+.SellProperty-cal-day {
+  aspect-ratio: 1; border: 0; border-radius: 10px; background: transparent; font-size: 13.5px;
+  color: var(--sp-ink); cursor: pointer; transition: background .15s, color .15s;
+}
+.SellProperty-cal-day:hover:not(:disabled) { background: var(--sp-green-100); }
+.SellProperty-cal-day:disabled { color: #c3cfc8; cursor: not-allowed; }
+.SellProperty-cal-day--today { box-shadow: inset 0 0 0 1.5px var(--sp-green-500); font-weight: 600; }
+.SellProperty-cal-day--selected, .SellProperty-cal-day--selected:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--sp-green-700), var(--sp-green-500)); color: #fff; font-weight: 700;
+}
+.SellProperty-cal-foot { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--sp-line); }
+.SellProperty-cal-foot button {
+  border: 0; background: none; color: var(--sp-green-700); font-weight: 600; font-size: 13px; cursor: pointer;
+  padding: 6px 10px; border-radius: 8px;
+}
+.SellProperty-cal-foot button:hover { background: var(--sp-green-50); }
+@keyframes SellProperty-pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* ---------- amenities ---------- */
+.SellProperty-amenities { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.SellProperty-amenity {
+  position: relative; display: flex; align-items: center; gap: 9px; padding: 10px 12px; font-size: 13.5px;
+  border: 1.5px solid var(--sp-line); border-radius: var(--sp-radius); cursor: pointer; background: #fff;
+  transition: border-color .15s, background .15s;
+}
+.SellProperty-amenity:hover { border-color: #a9cdb8; }
+.SellProperty-amenity input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.SellProperty-amenity:has(input:focus-visible) { outline: 3px solid rgba(31, 163, 90, .45); outline-offset: 2px; }
+.SellProperty-amenity-box {
+  width: 18px; height: 18px; flex: none; border: 1.5px solid #b5c9bc; border-radius: 5px; display: grid;
+  place-items: center; font-size: 10px; color: #fff; transition: background .15s, border-color .15s;
+}
+.SellProperty-amenity-icon { color: var(--sp-green-600); display: inline-flex; }
+.SellProperty-amenity--on { background: var(--sp-green-50); border-color: var(--sp-green-500); }
+.SellProperty-amenity--on .SellProperty-amenity-box { background: var(--sp-green-600); border-color: var(--sp-green-600); }
+
+/* ---------- upload ---------- */
+.SellProperty-dropzone {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; cursor: pointer;
+  padding: 26px 16px; border: 2px dashed #9fcbb0; border-radius: 16px; background: var(--sp-green-50);
+  transition: background .2s, border-color .2s;
+}
+.SellProperty-dropzone:hover, .SellProperty-dropzone--drag { background: var(--sp-green-100); border-color: var(--sp-green-500); }
+.SellProperty-dropzone.SellProperty-input--error { border-color: var(--sp-red); }
+.SellProperty-dropzone-icon { font-size: 34px; color: var(--sp-green-600); }
+.SellProperty-dropzone strong { font-size: 14.5px; }
+.SellProperty-dropzone small { color: var(--sp-muted); font-size: 12px; }
+.SellProperty-previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-top: 12px; }
+.SellProperty-preview { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid var(--sp-line); }
+.SellProperty-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.SellProperty-preview button {
+  position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(11, 61, 36, .8); color: #fff; display: grid; place-items: center; font-size: 11px;
+}
+.SellProperty-preview button:hover { background: var(--sp-red); }
+
+/* ---------- submit ---------- */
+.SellProperty-submit {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px;
+  border: 0; border-radius: 14px; cursor: pointer; font-size: 16px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--sp-green-900), var(--sp-green-600));
+  box-shadow: 0 12px 26px rgba(17, 98, 58, .35); transition: transform .15s, box-shadow .2s, filter .2s;
+}
+.SellProperty-submit:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 16px 30px rgba(17, 98, 58, .4); }
+.SellProperty-submit:disabled { opacity: .7; cursor: progress; }
+.SellProperty-secure { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 12px; color: var(--sp-muted); }
+.SellProperty-success {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding: 14px 16px; border-radius: 14px;
+  background: var(--sp-green-100); color: var(--sp-green-900); font-weight: 600; font-size: 14px; border: 1px solid #b8dfc7;
+}
+.SellProperty-success svg { font-size: 20px; color: var(--sp-green-600); flex: none; }
+
+/* ---------- aside ---------- */
+.SellProperty-hero {
+  position: relative; border-radius: 22px; overflow: hidden; aspect-ratio: 4 / 3; background: var(--sp-green-100);
+  box-shadow: 0 18px 40px rgba(11, 61, 36, .22);
+}
+.SellProperty-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(11, 61, 36, .35)); }
+.SellProperty-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.SellProperty-why {
+  padding: 22px 20px; border-radius: 22px; background: #fff; border: 1px solid var(--sp-line);
+  box-shadow: 0 12px 30px rgba(17, 98, 58, .08); display: flex; flex-direction: column; gap: 16px;
+}
+.SellProperty-why-title { margin: 0; text-align: center; font-size: 17px; font-weight: 700; color: var(--sp-green-700); }
+.SellProperty-why-item { display: flex; align-items: center; gap: 14px; }
+.SellProperty-why-item strong { font-size: 14px; display: block; }
+.SellProperty-why-item p { margin: 2px 0 0; font-size: 12.5px; color: var(--sp-muted); line-height: 1.4; }
+.SellProperty-why-icon {
+  width: 46px; height: 46px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 19px;
+  color: var(--sp-green-600); background: var(--sp-green-100); border: 1px solid #c8e6d3;
+}
+.SellProperty-cta {
+  padding: 24px 20px; border-radius: 22px; color: #fff; text-align: center;
+  background: linear-gradient(145deg, var(--sp-green-900), var(--sp-green-600));
+  box-shadow: 0 16px 34px rgba(11, 61, 36, .32);
+}
+.SellProperty-cta h3 { margin: 0 0 6px; font-size: 20px; }
+.SellProperty-cta p { margin: 0 0 16px; font-size: 13.5px; opacity: .88; }
+.SellProperty-cta-btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 999px; text-decoration: none;
+  font-weight: 700; font-size: 14px; color: var(--sp-gold); border: 1.5px solid var(--sp-gold); transition: background .2s, color .2s;
+}
+.SellProperty-cta-btn:hover { background: var(--sp-gold); color: var(--sp-green-900); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1100px) {
+  .SellProperty-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; }
+  .SellProperty-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .SellProperty-layout { grid-template-columns: 1fr; }
+  .SellProperty-aside { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .SellProperty-hero { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+}
+@media (max-width: 600px) {
+  .SellProperty { padding-top: 18px; }
+  .SellProperty-tabs { width: 100%; }
+  .SellProperty-tab { flex: 1; justify-content: center; padding: 11px 10px; font-size: 14px; }
+  .SellProperty-grid, .SellProperty-grid--2 { grid-template-columns: 1fr; }
+  .SellProperty-aside { grid-template-columns: 1fr; }
+  .SellProperty-card { border-radius: 18px; }
+  .SellProperty-amenities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .SellProperty-amenity { padding: 10px; font-size: 12.5px; }
+  .SellProperty-calendar { left: 50%; transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .SellProperty * { animation: none !important; transition: none !important; }
+}
