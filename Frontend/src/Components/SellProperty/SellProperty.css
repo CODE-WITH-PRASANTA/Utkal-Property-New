@@ -46,7 +46,7 @@
 /* ---------- layout ---------- */
 .SellProperty-layout {
   display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px;
-  max-width: 1240px; margin: 0 auto; align-items: start;
+   margin: 0 auto; align-items: start;
 }
 .SellProperty-card {
   background: #fff; border: 1px solid var(--sp-line); border-radius: 22px;

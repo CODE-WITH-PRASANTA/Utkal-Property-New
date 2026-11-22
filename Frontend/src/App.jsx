@@ -17,7 +17,7 @@ import PageLoader from './Components/PageLoader/PageLoader';
 
 import About from './Pages/About/About';
 import Home from './Pages/Home/Home';
-import OurTeam from './Pages/Ourteam/OurTeam';
+import OurTeam from './Pages/OurTeam/OurTeam';
 import PropertyMain from './Pages/PropertyMain/PropertyMain';
 import Breadcrumb from './Components/Breadcrumb/Breadcrumb';
 import FaqMain from './Pages/FaqMain/FaqMain';
