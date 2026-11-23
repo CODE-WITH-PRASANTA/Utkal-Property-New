@@ -16,10 +16,12 @@ const CONTACT_ITEMS = [
     icon: FaPhoneVolume,
     text: "+91 70776 06668",
     href: "tel:+917077606668",
+    className: "Topbar-item--phone",
   },
   {
     icon: FaClock,
     text: "Mon – Sat: 9 AM – 7 PM",
+    className: "Topbar-item--hours",
   },
 ];
 
@@ -49,21 +51,25 @@ const Topbar = () => {
         {/* Soft Sage / Mint Diagonal Accent */}
         <span className="Topbar-accent" aria-hidden="true" />
 
-        {/* Right Deep Forest Green Section (Matches Footer & Navbar Button) */}
+        {/* Right Deep Forest Green Section */}
         <div className="Topbar-right">
           <span className="Topbar-shine" aria-hidden="true" />
 
           <div className="Topbar-contact">
-            {CONTACT_ITEMS.map(({ icon: Icon, text, href }) =>
+            {CONTACT_ITEMS.map(({ icon: Icon, text, href, className }) =>
               href ? (
-                <a href={href} className="Topbar-item Topbar-link" key={text}>
+                <a
+                  href={href}
+                  className={`Topbar-item Topbar-link ${className || ""}`}
+                  key={text}
+                >
                   <span className="Topbar-icon-wrap" aria-hidden="true">
                     <Icon className="Topbar-icon" />
                   </span>
                   <span className="Topbar-text">{text}</span>
                 </a>
               ) : (
-                <div className="Topbar-item" key={text}>
+                <div className={`Topbar-item ${className || ""}`} key={text}>
                   <span className="Topbar-icon-wrap" aria-hidden="true">
                     <Icon className="Topbar-icon" />
                   </span>
@@ -74,7 +80,7 @@ const Topbar = () => {
 
             <a
               href="mailto:support@utkalproperty.com"
-              className="Topbar-item Topbar-link"
+              className="Topbar-item Topbar-link Topbar-item--email"
             >
               <span className="Topbar-icon-wrap" aria-hidden="true">
                 <FaEnvelope className="Topbar-icon" />
