@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, getMediaUrl } from "../../config/api";
 import "./ManageGallery.css";
 
 /* ---------------------------------- Icons --------------------------------- */
@@ -65,60 +67,24 @@ const STATUS_META = {
   Unpublished: { icon: "eyeoff", cls: "unpublished" },
 };
 
-const iso = (offset) => {
-  const d = new Date(2026, 10, 15);
-  d.setDate(d.getDate() - offset);
-  return d.toISOString().slice(0, 10);
-};
-
-const SEED_FIRST = [
-  { title: "3BHK Luxury Villa in Patia", desc: "Modern gated community villa elevation & interior gallery", category: "Independent Houses & Villas", location: "Bhubaneswar", count: 11, status: "Published" },
-  { title: "Utkal Tech Park Commercial Tower", desc: "Retail and corporate office space gallery", category: "Commercial Properties", location: "Bhubaneswar", count: 9, status: "Published" },
-  { title: "BDA Approved Residential Plots", desc: "Site layout, wide roads, and boundary development photos", category: "Plots & Land", location: "Cuttack", count: 8, status: "Draft" },
-  { title: "Sea-View Premium Apartments", desc: "2BHK & 3BHK flat floor plans and balcony views", category: "Apartments & Flats", location: "Puri", count: 7, status: "Unpublished" },
-  { title: "Green Valley Duplex Homes", desc: "Ready-to-move residential duplex property showcase", category: "Residential Properties", location: "Khordha", count: 6, status: "Published" },
-];
-
-const buildSeed = () => {
-  const topics = [
-    ["Skyline Residency Phase II", "Ongoing Projects"],
-    ["Sahid Nagar Retail Complex", "Commercial Properties"],
-    ["Highway Commercial Plots", "Plots & Land"],
-    ["Furnished Corporate Suites", "Rental & Lease"],
-    ["Heritage Enclave Villas", "Independent Houses & Villas"],
-    ["Smart City Heights 3BHK", "Apartments & Flats"],
-    ["Utkal Greens Township", "Completed Projects"],
-    ["Infocity Duplex Residences", "Residential Properties"],
-    ["CDA Sector-9 Commercial Hub", "Commercial Properties"],
-    ["Trishulia Riverfront Plots", "Plots & Land"],
-  ];
-  const drafts = [4, 10, 16, 22, 28];
-  const unpub = [13];
-  const rest = Array.from({ length: 31 }, (_, i) => {
-    const [title, category] = topics[i % topics.length];
-    return {
-      title: `${title}${i >= topics.length ? ` #${Math.floor(i / topics.length) + 1}` : ""}`,
-      desc: `${category} showcase gallery by Utkal Property`,
-      category,
-      location: LOCATIONS[(i + 2) % LOCATIONS.length],
-      count: 4 + ((i * 3) % 9),
-      status: drafts.includes(i) ? "Draft" : unpub.includes(i) ? "Unpublished" : "Published",
-    };
-  });
-  return [...SEED_FIRST, ...rest].map((g, i) => ({
-    id: i + 1,
-    ...g,
-    images: [],
-    createdAt: iso(i),
-  }));
-};
-
 const fmtDate = (isoStr) => {
+  if (!isoStr) return "—";
   const d = new Date(isoStr);
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return isNaN(d.getTime())
+    ? String(isoStr)
+    : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const EMPTY_FORM = { title: "", desc: "", category: CATEGORY_LIST[0], location: LOCATIONS[0], status: "Published", images: [] };
+const EMPTY_FORM = {
+  title: "",
+  desc: "",
+  category: CATEGORY_LIST[0],
+  location: LOCATIONS[0],
+  status: "Published",
+  images: [],
+  existingImages: [],
+  newFiles: [],
+};
 
 /* ------------------------------- Small parts ------------------------------ */
 const Thumb = ({ category, src, size = "md" }) => {
@@ -128,7 +94,17 @@ const Thumb = ({ category, src, size = "md" }) => {
       className={`manage-gallery__thumb manage-gallery__thumb--${size}`}
       style={src ? undefined : { background: `linear-gradient(135deg, ${m.from}, ${m.to})` }}
     >
-      {src ? <img src={src} alt="" /> : <span>{m.emoji}</span>}
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          onError={(e) => {
+            e.target.style.display = "none";
+          }}
+        />
+      ) : (
+        <span>{m.emoji}</span>
+      )}
     </span>
   );
 };
@@ -211,7 +187,9 @@ const Modal = ({ title, subtitle, onClose, children, footer, size = "md" }) => {
 
 /* ------------------------------- Main component --------------------------- */
 const ManageGallery = () => {
-  const [galleries, setGalleries] = useState(buildSeed);
+  const navigate = useNavigate();
+  const [galleries, setGalleries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
@@ -230,6 +208,69 @@ const ManageGallery = () => {
     return () => clearTimeout(t);
   }, [toast]);
 
+  const notify = useCallback((msg, type = "success") => setToast({ msg, type }), []);
+
+  /* fetch galleries from database */
+  const loadGalleries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(API_ENDPOINTS.GALLERIES);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setGalleries(
+          json.data.map((g) => ({
+            id: g._id,
+            title: g.title,
+            desc: g.description || `${g.category} showcase gallery`,
+            category: g.category,
+            location: g.location || "Bhubaneswar",
+            status: g.status || "Published",
+            images: Array.isArray(g.images) ? g.images.map((img) => getMediaUrl(img)) : [],
+            rawImages: g.images || [],
+            count: Array.isArray(g.images) ? g.images.length : 0,
+            createdAt: g.createdAt || new Date().toISOString(),
+          }))
+        );
+      } else {
+        setGalleries([]);
+      }
+    } catch (err) {
+      console.error("Failed to load galleries:", err);
+      notify("Could not load galleries from database", "danger");
+      setGalleries([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [notify]);
+
+  useEffect(() => {
+    loadGalleries();
+  }, [loadGalleries]);
+
+  /* toggle published/unpublished status */
+  const toggleStatus = async (id, nextStatus) => {
+    // Optimistic UI update
+    setGalleries((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, status: nextStatus } : g))
+    );
+    try {
+      const res = await fetch(`${API_ENDPOINTS.GALLERIES}/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || "Failed to update status");
+      }
+      notify(`Gallery status updated to ${nextStatus}`);
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      notify("Failed to update gallery status", "danger");
+      loadGalleries();
+    }
+  };
+
   /* stats */
   const stats = useMemo(() => ({
     total: galleries.length,
@@ -245,7 +286,7 @@ const ManageGallery = () => {
       (g) =>
         (!q || g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q)) &&
         (!category || g.category === category) &&
-        (!location || g.location === location) &&
+        (!location || g.location.toLowerCase() === location.toLowerCase()) &&
         (!status || g.status === status)
     );
   }, [galleries, search, category, location, status]);
@@ -264,7 +305,6 @@ const ManageGallery = () => {
 
   const hasFilters = search || category || location || status;
   const resetFilters = () => { setSearch(""); setCategory(""); setLocation(""); setStatus(""); setPage(1); };
-  const notify = (msg, type = "success") => setToast({ msg, type });
 
   /* selection */
   const rowIds = rows.map((r) => r.id);
@@ -276,56 +316,131 @@ const ManageGallery = () => {
   const closeModal = () => { setModal(null); setError(""); };
   const openAdd = () => { setForm(EMPTY_FORM); setError(""); setModal({ type: "add" }); };
   const openEdit = (item) => {
-    setForm({ title: item.title, desc: item.desc, category: item.category, location: item.location, status: item.status, images: item.images });
+    setForm({
+      title: item.title,
+      desc: item.desc,
+      category: item.category,
+      location: item.location,
+      status: item.status,
+      existingImages: item.rawImages || [],
+      images: item.images || [],
+      newFiles: [],
+    });
     setError("");
     setModal({ type: "edit", item });
   };
 
   const handleFiles = (e) => {
-    const urls = Array.from(e.target.files || []).map((f) => URL.createObjectURL(f));
-    setForm((f) => ({ ...f, images: [...f.images, ...urls] }));
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setForm((f) => ({
+      ...f,
+      images: [...(f.images || []), ...urls],
+      newFiles: [...(f.newFiles || []), ...files],
+    }));
     e.target.value = "";
   };
-  const removeFormImage = (idx) => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
 
-  const saveForm = (e) => {
+  const removeFormImage = (idx) => {
+    setForm((f) => {
+      const existingCount = (f.existingImages || []).length;
+      let nextExisting = [...(f.existingImages || [])];
+      let nextNew = [...(f.newFiles || [])];
+      let nextPreviews = [...(f.images || [])];
+
+      if (idx < existingCount) {
+        nextExisting.splice(idx, 1);
+      } else {
+        nextNew.splice(idx - existingCount, 1);
+      }
+      nextPreviews.splice(idx, 1);
+
+      return {
+        ...f,
+        existingImages: nextExisting,
+        newFiles: nextNew,
+        images: nextPreviews,
+      };
+    });
+  };
+
+  const saveForm = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return setError("Gallery title is required.");
     if (modal.type === "add") {
-      const id = Math.max(0, ...galleries.map((g) => g.id)) + 1;
-      const item = {
-        id,
-        title: form.title.trim(),
-        desc: form.desc.trim() || `${form.category} showcase gallery`,
-        category: form.category,
-        location: form.location,
-        status: form.status,
-        images: form.images,
-        count: form.images.length,
-        createdAt: new Date().toISOString().slice(0, 10),
-      };
-      setGalleries((g) => [item, ...g]);
-      setPage(1);
-      notify("Property gallery added successfully");
+      try {
+        const fd = new FormData();
+        fd.append("title", form.title.trim());
+        fd.append("category", form.category);
+        fd.append("location", form.location);
+        fd.append("description", form.desc.trim());
+        fd.append("status", form.status);
+        (form.newFiles || []).forEach((f) => fd.append("images", f));
+
+        const res = await fetch(API_ENDPOINTS.GALLERIES, {
+          method: "POST",
+          body: fd,
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || "Failed to create gallery");
+        notify("Property gallery created successfully");
+        closeModal();
+        loadGalleries();
+      } catch (err) {
+        setError(err.message || "Failed to save gallery");
+      }
     } else {
-      const old = modal.item;
-      setGalleries((list) =>
-        list.map((g) =>
-          g.id === old.id
-            ? { ...g, ...form, title: form.title.trim(), desc: form.desc.trim(), count: Math.max(g.count - g.images.length, 0) + form.images.length }
-            : g
-        )
-      );
-      notify("Property gallery updated successfully");
+      try {
+        const fd = new FormData();
+        fd.append("title", form.title.trim());
+        fd.append("category", form.category);
+        fd.append("location", form.location);
+        fd.append("description", form.desc.trim());
+        fd.append("status", form.status);
+        fd.append("existingImages", JSON.stringify(form.existingImages || []));
+        (form.newFiles || []).forEach((f) => fd.append("images", f));
+
+        const res = await fetch(`${API_ENDPOINTS.GALLERIES}/${modal.item.id}`, {
+          method: "PUT",
+          body: fd,
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || "Failed to update gallery");
+        notify("Property gallery updated successfully");
+        closeModal();
+        loadGalleries();
+      } catch (err) {
+        setError(err.message || "Failed to update gallery");
+      }
     }
-    closeModal();
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     const ids = modal.type === "bulk" ? selected : [modal.item.id];
-    setGalleries((g) => g.filter((x) => !ids.includes(x.id)));
-    setSelected((s) => s.filter((id) => !ids.includes(id)));
-    notify(ids.length > 1 ? `${ids.length} galleries deleted` : "Gallery deleted", "danger");
+    try {
+      if (ids.length > 1) {
+        const res = await fetch(`${API_ENDPOINTS.GALLERIES}/bulk-delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message);
+      } else {
+        const res = await fetch(`${API_ENDPOINTS.GALLERIES}/${ids[0]}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message);
+      }
+      setGalleries((g) => g.filter((x) => !ids.includes(x.id)));
+      setSelected((s) => s.filter((id) => !ids.includes(id)));
+      notify(ids.length > 1 ? `${ids.length} galleries deleted` : "Gallery deleted", "danger");
+    } catch (err) {
+      console.error("Failed to delete gallery:", err);
+      notify("Failed to delete gallery", "danger");
+    }
     closeModal();
   };
 
@@ -386,9 +501,9 @@ const ManageGallery = () => {
         <button type="button" className="manage-gallery__btn manage-gallery__btn--reset" onClick={resetFilters} disabled={!hasFilters}>
           <Icon name="reset" size={15} /> Reset
         </button>
-        <button type="button" className="manage-gallery__btn manage-gallery__btn--add" onClick={openAdd}>
+        <Link to="/gallery/add" className="manage-gallery__btn manage-gallery__btn--add">
           <Icon name="plus" size={18} /> Add Gallery
-        </button>
+        </Link>
       </section>
 
       {/* Bulk bar */}
@@ -424,69 +539,96 @@ const ManageGallery = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((g, i) => {
-                const cat = CATEGORIES[g.category] || CATEGORIES[CATEGORY_LIST[0]];
-                const st = STATUS_META[g.status];
-                const thumbs = [0, 1, 2].slice(0, Math.min(3, Math.max(g.count, 1)));
-                const extra = g.count - thumbs.length;
-                return (
-                  <tr key={g.id} className={selected.includes(g.id) ? "is-selected" : ""}>
-                    <td className="col-check" data-label="">
-                      <input type="checkbox" className="manage-gallery__check" checked={selected.includes(g.id)} onChange={() => toggleOne(g.id)} aria-label={`Select ${g.title}`} />
-                    </td>
-                    <td className="col-num" data-label="#">{start + i + 1}</td>
-                    <td className="col-title" data-label="Title">
-                      <div className="manage-gallery__gallery">
-                        <Thumb category={g.category} src={g.images[0]} size="lg" />
-                        <div>
-                          <strong>{g.title}</strong>
-                          <small>{g.desc}</small>
+              {loading ? (
+                <tr>
+                  <td colSpan={9} style={{ textAlign: "center", padding: "60px 20px", color: "var(--mg-muted)" }}>
+                    Loading real galleries from database...
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <div className="manage-gallery__empty">
+                      <span><Icon name="image" size={34} /></span>
+                      <h4>No property galleries found</h4>
+                      <p>{galleries.length === 0 ? "You have not added any property galleries to the database yet." : "Try changing your search or filters."}</p>
+                      {galleries.length === 0 ? (
+                        <Link to="/gallery/add" className="manage-gallery__btn manage-gallery__btn--add" style={{ margin: "14px auto 0", display: "inline-flex" }}>
+                          <Icon name="plus" size={18} /> Add First Gallery
+                        </Link>
+                      ) : (
+                        <button type="button" className="manage-gallery__btn manage-gallery__btn--reset" onClick={resetFilters}>Reset filters</button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                rows.map((g, i) => {
+                  const cat = CATEGORIES[g.category] || CATEGORIES[CATEGORY_LIST[0]];
+                  const st = STATUS_META[g.status] || STATUS_META.Published;
+                  const thumbs = [0, 1, 2].slice(0, Math.min(3, Math.max(g.count, 1)));
+                  const extra = g.count - thumbs.length;
+                  return (
+                    <tr key={g.id} className={selected.includes(g.id) ? "is-selected" : ""}>
+                      <td className="col-check" data-label="">
+                        <input type="checkbox" className="manage-gallery__check" checked={selected.includes(g.id)} onChange={() => toggleOne(g.id)} aria-label={`Select ${g.title}`} />
+                      </td>
+                      <td className="col-num" data-label="#">{start + i + 1}</td>
+                      <td className="col-title" data-label="Title">
+                        <div className="manage-gallery__gallery">
+                          <Thumb category={g.category} src={g.images[0]} size="lg" />
+                          <div>
+                            <strong>{g.title}</strong>
+                            <small>{g.desc}</small>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td data-label="Category">
-                      <span className="manage-gallery__badge" style={{ background: cat.bg, color: cat.fg }}>
-                        <span>{cat.emoji}</span> {g.category}
-                      </span>
-                    </td>
-                    <td data-label="Location">
-                      <span className="manage-gallery__loc"><Icon name="pin" size={15} /> {g.location}</span>
-                    </td>
-                    <td data-label="Images">
-                      <div className="manage-gallery__images">
-                        {thumbs.map((t) => <Thumb key={t} category={g.category} src={g.images[t]} />)}
-                        {extra > 0 && <span className="manage-gallery__more">+{extra}</span>}
-                      </div>
-                    </td>
-                    <td data-label="Status">
-                      <span className={`manage-gallery__status manage-gallery__status--${st.cls}`}>
-                        <Icon name={st.icon} size={14} /> {g.status}
-                      </span>
-                    </td>
-                    <td data-label="Created">
-                      <span className="manage-gallery__date"><Icon name="calendar" size={15} /> {fmtDate(g.createdAt)}</span>
-                    </td>
-                    <td className="col-action" data-label="Action">
-                      <div className="manage-gallery__actions">
-                        <button type="button" className="manage-gallery__action manage-gallery__action--view" title="View" onClick={() => setModal({ type: "view", item: g })}><Icon name="eye" size={17} /></button>
-                        <button type="button" className="manage-gallery__action manage-gallery__action--edit" title="Edit" onClick={() => openEdit(g)}><Icon name="edit" size={17} /></button>
-                        <button type="button" className="manage-gallery__action manage-gallery__action--delete" title="Delete" onClick={() => setModal({ type: "delete", item: g })}><Icon name="trash" size={17} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td data-label="Category">
+                        <span className="manage-gallery__badge" style={{ background: cat.bg, color: cat.fg }}>
+                          <span>{cat.emoji}</span> {g.category}
+                        </span>
+                      </td>
+                      <td data-label="Location">
+                        <span className="manage-gallery__loc"><Icon name="pin" size={15} /> {g.location}</span>
+                      </td>
+                      <td data-label="Images">
+                        <div className="manage-gallery__images">
+                          {thumbs.map((t) => <Thumb key={t} category={g.category} src={g.images[t]} />)}
+                          {extra > 0 && <span className="manage-gallery__more">+{extra}</span>}
+                        </div>
+                      </td>
+                      <td data-label="Status">
+                        <button
+                          type="button"
+                          className={`GalleryToggleSwitch ${g.status === "Published" ? "is-active" : ""}`}
+                          onClick={() => toggleStatus(g.id, g.status === "Published" ? "Unpublished" : "Published")}
+                          title={g.status === "Published" ? "Published (Click to Unpublish)" : "Unpublished (Click to Publish)"}
+                          aria-label="Toggle Gallery Status"
+                        >
+                          <span className="GalleryToggleSwitch__track">
+                            <span className="GalleryToggleSwitch__thumb" />
+                          </span>
+                          <span className="GalleryToggleSwitch__label">
+                            {g.status === "Published" ? "Published" : "Unpublished"}
+                          </span>
+                        </button>
+                      </td>
+                      <td data-label="Created">
+                        <span className="manage-gallery__date"><Icon name="calendar" size={15} /> {fmtDate(g.createdAt)}</span>
+                      </td>
+                      <td className="col-action" data-label="Action">
+                        <div className="manage-gallery__actions">
+                          <button type="button" className="manage-gallery__action manage-gallery__action--view" title="View" onClick={() => setModal({ type: "view", item: g })}><Icon name="eye" size={17} /></button>
+                          <button type="button" className="manage-gallery__action manage-gallery__action--edit" title="Edit" onClick={() => navigate(`/gallery/add?id=${g.id}`)}><Icon name="edit" size={17} /></button>
+                          <button type="button" className="manage-gallery__action manage-gallery__action--delete" title="Delete" onClick={() => setModal({ type: "delete", item: g })}><Icon name="trash" size={17} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
-
-          {rows.length === 0 && (
-            <div className="manage-gallery__empty">
-              <span><Icon name="image" size={34} /></span>
-              <h4>No property galleries found</h4>
-              <p>Try changing your search or filters.</p>
-              <button type="button" className="manage-gallery__btn manage-gallery__btn--reset" onClick={resetFilters}>Reset filters</button>
-            </div>
-          )}
         </div>
 
         {/* Footer / pagination */}
@@ -580,7 +722,7 @@ const ManageGallery = () => {
           footer={
             <>
               <button type="button" className="manage-gallery__btn manage-gallery__btn--ghost" onClick={closeModal}>Close</button>
-              <button type="button" className="manage-gallery__btn manage-gallery__btn--add" onClick={() => openEdit(modal.item)}><Icon name="edit" size={16} /> Edit</button>
+              <button type="button" className="manage-gallery__btn manage-gallery__btn--add" onClick={() => navigate(`/gallery/add?id=${modal.item.id}`)}><Icon name="edit" size={16} /> Edit</button>
             </>
           }
         >
@@ -590,15 +732,15 @@ const ManageGallery = () => {
                 {(CATEGORIES[modal.item.category] || CATEGORIES[CATEGORY_LIST[0]]).emoji} {modal.item.category}
               </span>
               <span className="manage-gallery__loc"><Icon name="pin" size={15} /> {modal.item.location}</span>
-              <span className={`manage-gallery__status manage-gallery__status--${STATUS_META[modal.item.status].cls}`}>
-                <Icon name={STATUS_META[modal.item.status].icon} size={14} /> {modal.item.status}
+              <span className={`manage-gallery__status manage-gallery__status--${(STATUS_META[modal.item.status] || STATUS_META.Published).cls}`}>
+                <Icon name={(STATUS_META[modal.item.status] || STATUS_META.Published).icon} size={14} /> {modal.item.status}
               </span>
               <span className="manage-gallery__date"><Icon name="calendar" size={15} /> {fmtDate(modal.item.createdAt)}</span>
             </div>
-            <h5>{modal.item.count} Property Images</h5>
+            <h5>{(modal.item.images || []).length} Property Images</h5>
             <div className="manage-gallery__grid">
-              {Array.from({ length: Math.min(modal.item.count, 12) }, (_, i) => (
-                <Thumb key={i} category={modal.item.category} src={modal.item.images[i]} size="grid" />
+              {(modal.item.images || []).map((imgUrl, i) => (
+                <Thumb key={i} category={modal.item.category} src={imgUrl} size="grid" />
               ))}
             </div>
           </div>

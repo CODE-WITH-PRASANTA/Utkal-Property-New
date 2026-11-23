@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { API_ENDPOINTS, getMediaUrl } from "../../config/api";
 import "./Property.css";
 
 /* ------------------------------------------------------------------ */
@@ -186,7 +188,10 @@ const fmtDate = (iso) => {
 };
 const slugify = (s) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
-const fmtSize = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+const fmtSize = (b) => {
+  if (!b || isNaN(b)) return "Uploaded";
+  return b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+};
 
 /* ------------------------------------------------------------------ */
 /*  REUSABLE: Field wrapper                                            */
@@ -484,7 +489,7 @@ const PropertySection = ({ id, title, icon, open, onToggle, hasError, children }
 /* ------------------------------------------------------------------ */
 /*  REUSABLE: Rich text editor                                         */
 /* ------------------------------------------------------------------ */
-const PropertyEditor = ({ onChange, error, onRequestLink, registerApi }) => {
+const PropertyEditor = ({ value, onChange, error, onRequestLink, registerApi }) => {
   const editorRef = useRef(null);
   const wrapRef = useRef(null);
   const [words, setWords] = useState(0);
@@ -510,6 +515,16 @@ const PropertyEditor = ({ onChange, error, onRequestLink, registerApi }) => {
       });
     } catch (e) { /* noop */ }
   }, [onChange]);
+
+  useEffect(() => {
+    if (editorRef.current && value !== undefined) {
+      if (editorRef.current.innerHTML !== value && document.activeElement !== editorRef.current) {
+        editorRef.current.innerHTML = value || "";
+        const text = editorRef.current.innerText.trim();
+        setWords(text ? text.split(/\s+/).length : 0);
+      }
+    }
+  }, [value]);
 
   const exec = (cmd, arg = null) => {
     editorRef.current.focus();
@@ -609,40 +624,44 @@ const PropertyEditor = ({ onChange, error, onRequestLink, registerApi }) => {
 /*  MAIN COMPONENT                                                     */
 /* ------------------------------------------------------------------ */
 const Property = () => {
+  const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("id") || paramId;
+  const isEdit = Boolean(editId);
+
   const [form, setForm] = useState({
-    title: "3 BHK Luxury Apartment in Patia, Bhubaneswar",
-    location: "Patia, Bhubaneswar",
+    title: "",
+    location: "",
     description: "",
     descriptionText: "",
     category: "Residential",
     propertyType: "Apartment",
     status: "Active",
-    price: "8500000",
-    pricePerSqft: "5500",
-    rera: "OD/2024/000123",
-    projectArea: "2.5 Acres",
-    superArea: "1,500 Sq. Ft.",
-    houses: "24",
-    floors: "G + 6 (7 Floors)",
-    bedrooms: "3 Bedrooms",
-    bathrooms: "3 Bathrooms",
-    parking: "Covered Parking",
-    facing: "East Facing",
-    overlooking: "Garden / Road / City View",
-    maintenance: "2000",
-    rental: "25000",
+    price: "",
+    pricePerSqft: "",
+    rera: "",
+    projectArea: "",
+    superArea: "",
+    houses: "",
+    floors: "",
+    bedrooms: "",
+    bathrooms: "",
+    parking: "",
+    facing: "",
+    overlooking: "",
+    maintenance: "",
+    rental: "",
     possession: "",
-    amenities: ["Lift", "Power Backup", "Security"],
-    metaTitle: "3 BHK Flat in Patia, Bhubaneswar | Utkal Property",
+    amenities: [],
+    metaTitle: "",
     metaDescription: "",
-    slug: "3-bhk-flat-in-patia-bhubaneswar",
+    slug: "",
   });
   const [images, setImages] = useState([]);
   const [plans, setPlans] = useState([]);
   const [nearby, setNearby] = useState([
-    { id: uid(), name: "KIIT University", distance: "2.5 km" },
-    { id: uid(), name: "Khandagiri Square", distance: "3.0 km" },
-    { id: uid(), name: "Bhubaneswar Railway Station", distance: "8.5 km" },
+    { id: uid(), name: "", distance: "" },
   ]);
   const [openSections, setOpenSections] = useState({ basic: true, details: true, media: true, plans: true, seo: true });
   const [activeStep, setActiveStep] = useState(1);
@@ -676,13 +695,110 @@ const Property = () => {
     return () => clearTimeout(t);
   }, [toast]);
 
+  /* ---- fetch existing property if editId is provided ---- */
+  useEffect(() => {
+    if (!editId) return;
+    let isMounted = true;
+    const loadProperty = async () => {
+      try {
+        setBusy("loading");
+        const res = await fetch(`${API_ENDPOINTS.PROPERTIES}/${editId}`);
+        const json = await res.json();
+        if (!res.ok || !json.success || !json.data) {
+          throw new Error(json.message || "Property not found");
+        }
+        if (!isMounted) return;
+        const p = json.data;
+        setForm({
+          title: p.title || "",
+          location: p.location || "",
+          description: p.description || "",
+          descriptionText: p.description
+            ? p.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+            : "",
+          category: p.category || "Residential",
+          propertyType: p.propertyType || "Apartment",
+          status: p.status || "Active",
+          price: p.price != null ? String(p.price) : "",
+          pricePerSqft: p.pricePerSqft != null ? String(p.pricePerSqft) : "",
+          rera: p.rera || "",
+          projectArea: p.projectArea || "",
+          superArea: p.superArea || "",
+          houses: p.houses != null ? String(p.houses) : "",
+          floors: p.floors || "",
+          bedrooms: p.bedrooms || "",
+          bathrooms: p.bathrooms || "",
+          parking: p.parking || "",
+          facing: p.facing || "",
+          overlooking: p.overlooking || "",
+          maintenance: p.maintenance != null ? String(p.maintenance) : "",
+          rental: p.rental != null ? String(p.rental) : "",
+          possession: p.possession ? p.possession.split("T")[0] : "",
+          amenities: Array.isArray(p.amenities) ? p.amenities : [],
+          metaTitle: p.metaTitle || "",
+          metaDescription: p.metaDescription || "",
+          slug: p.slug || "",
+        });
+        slugTouched.current = true;
+        metaTouched.current = true;
+
+        if (Array.isArray(p.images) && p.images.length > 0) {
+          setImages(
+            p.images.map((img) => ({
+              id: uid(),
+              name: img.split("/").pop() || "image.jpg",
+              url: getMediaUrl(img),
+              existingUrl: img,
+            }))
+          );
+        }
+
+        if (Array.isArray(p.floorPlans) && p.floorPlans.length > 0) {
+          setPlans(
+            p.floorPlans.map((plan) => ({
+              id: uid(),
+              name: plan.split("/").pop() || "plan",
+              url: getMediaUrl(plan),
+              pdf: plan.toLowerCase().endsWith(".pdf"),
+              existingUrl: plan,
+            }))
+          );
+        }
+
+        if (Array.isArray(p.nearbyPlaces) && p.nearbyPlaces.length > 0) {
+          setNearby(
+            p.nearbyPlaces.map((np) => ({
+              id: uid(),
+              name: np.name || "",
+              distance: np.distance || "",
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch property details for editing:", err);
+        showToast(err.message || "Could not load property details", "error");
+      } finally {
+        if (isMounted) setBusy(false);
+      }
+    };
+
+    loadProperty();
+    return () => {
+      isMounted = false;
+    };
+  }, [editId, showToast]);
+
   /* ---- title → slug / meta title auto sync ---- */
   const onTitleChange = (v) => {
     setForm((f) => ({
       ...f,
       title: v,
       slug: slugTouched.current ? f.slug : slugify(v),
-      metaTitle: metaTouched.current ? f.metaTitle : `${v.slice(0, 38)} | Utkal Property`.slice(0, 60),
+      metaTitle: metaTouched.current
+        ? f.metaTitle
+        : v.trim()
+        ? `${v.slice(0, 38)} | Utkal Property`.slice(0, 60)
+        : "",
     }));
     setErrors((e) => ({ ...e, title: undefined }));
   };
@@ -717,9 +833,9 @@ const Property = () => {
   const addImages = (fileList) => {
     const ok = [];
     Array.from(fileList).forEach((f) => {
-      if (!/^image\/(png|jpe?g|webp)$/.test(f.type)) return showToast(`${f.name}: only PNG, JPG, WEBP allowed`, "error");
-      if (f.size > 5 * 1024 * 1024) return showToast(`${f.name}: max 5 MB allowed`, "error");
-      ok.push({ id: uid(), name: f.name, url: URL.createObjectURL(f) });
+      if (!/^image\/(png|jpe?g|webp)$/i.test(f.type)) return showToast(`${f.name}: only PNG, JPG, WEBP allowed`, "error");
+      if (f.size > 15 * 1024 * 1024) return showToast(`${f.name}: max 15 MB allowed`, "error");
+      ok.push({ id: uid(), name: f.name, url: URL.createObjectURL(f), file: f });
     });
     if (ok.length) {
       setImages((i) => [...i, ...ok]);
@@ -731,9 +847,9 @@ const Property = () => {
   const addPlans = (fileList) => {
     const ok = [];
     Array.from(fileList).forEach((f) => {
-      if (!/^(image\/(png|jpe?g)|application\/pdf)$/.test(f.type)) return showToast(`${f.name}: only PNG, JPG, PDF allowed`, "error");
-      if (f.size > 10 * 1024 * 1024) return showToast(`${f.name}: max 10 MB allowed`, "error");
-      ok.push({ id: uid(), name: f.name, size: f.size, pdf: f.type === "application/pdf" });
+      if (!/^(image\/(png|jpe?g|webp)|application\/pdf)$/i.test(f.type)) return showToast(`${f.name}: only PNG, JPG, PDF allowed`, "error");
+      if (f.size > 15 * 1024 * 1024) return showToast(`${f.name}: max 15 MB allowed`, "error");
+      ok.push({ id: uid(), name: f.name, size: f.size, pdf: f.type === "application/pdf", file: f });
     });
     if (ok.length) {
       setPlans((p) => [...p, ...ok]);
@@ -818,28 +934,93 @@ const Property = () => {
   });
   const secErr = sectionErrors(errors);
 
-  const buildPayload = (status) => ({
-    ...form,
-    status: status || form.status,
-    images: images.map((i) => i.name),
-    floorPlans: plans.map((p) => p.name),
-    nearbyPlaces: nearby.filter((n) => n.name.trim()),
-  });
+  const buildFormData = (status, isDraft = false) => {
+    const fd = new FormData();
+    fd.append("title", form.title || "");
+    fd.append("slug", form.slug || "");
+    fd.append("location", form.location || "");
+    fd.append("description", form.description || form.descriptionText || "");
+    fd.append("descriptionText", form.descriptionText || "");
+    fd.append("category", form.category || "Residential");
+    fd.append("propertyType", form.propertyType || "Apartment");
+    fd.append("status", status || form.status || "Active");
+    fd.append("isDraft", isDraft ? "true" : "false");
+    if (isDraft) fd.append("saveAs", "draft");
+
+    if (form.price) fd.append("price", form.price);
+    if (form.pricePerSqft) fd.append("pricePerSqft", form.pricePerSqft);
+    if (form.rera) fd.append("rera", form.rera);
+    if (form.projectArea) fd.append("projectArea", form.projectArea);
+    if (form.superArea) fd.append("superArea", form.superArea);
+    if (form.houses) fd.append("houses", form.houses);
+    if (form.floors) fd.append("floors", form.floors);
+    if (form.bedrooms) fd.append("bedrooms", form.bedrooms);
+    if (form.bathrooms) fd.append("bathrooms", form.bathrooms);
+    if (form.parking) fd.append("parking", form.parking);
+    if (form.facing) fd.append("facing", form.facing);
+    if (form.overlooking) fd.append("overlooking", form.overlooking);
+    if (form.maintenance) fd.append("maintenance", form.maintenance);
+    if (form.rental) fd.append("rental", form.rental);
+    if (form.possession) fd.append("possession", form.possession);
+
+    fd.append("amenities", JSON.stringify(form.amenities || []));
+    fd.append(
+      "nearbyPlaces",
+      JSON.stringify(nearby.filter((n) => n.name && n.name.trim()))
+    );
+
+    fd.append("metaTitle", form.metaTitle || "");
+    fd.append("metaDescription", form.metaDescription || "");
+
+    const existingImgs = images.filter((img) => img.existingUrl).map((img) => img.existingUrl);
+    fd.append("existingImages", JSON.stringify(existingImgs));
+
+    const existingPls = plans.filter((p) => p.existingUrl).map((p) => p.existingUrl);
+    fd.append("existingFloorPlans", JSON.stringify(existingPls));
+
+    images.forEach((img) => {
+      if (img.file) {
+        fd.append("images", img.file);
+      }
+    });
+
+    plans.forEach((p) => {
+      if (p.file) {
+        fd.append("floorPlans", p.file);
+      }
+    });
+
+    return fd;
+  };
 
   /* ---- actions ---- */
-  const onSaveDraft = () => {
+  const onSaveDraft = async () => {
     if (!form.title.trim()) {
       setErrors((e) => ({ ...e, title: "Property title is required to save a draft" }));
       setOpenSections((s) => ({ ...s, basic: true }));
       return setModal({ type: "errors", list: ["Property title is required to save a draft"] });
     }
     setBusy("draft");
-    setTimeout(() => {
-      // TODO: connect API → await api.post("/properties/draft", buildPayload("Pending"))
-      console.log("Draft payload", buildPayload("Pending"));
-      setBusy(false);
+    try {
+      const fd = buildFormData("Pending", true);
+      const url = isEdit ? `${API_ENDPOINTS.PROPERTIES}/${editId}` : API_ENDPOINTS.PROPERTIES;
+      const method = isEdit ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to save property draft");
+      }
+      showToast(isEdit ? "Property changes saved as draft!" : "Property draft saved successfully to database!");
       setModal({ type: "draft" });
-    }, 800);
+    } catch (err) {
+      console.error("Draft save failed:", err);
+      showToast(err.message || "Failed to save draft", "error");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onPreview = () => setModal({ type: "preview" });
@@ -856,14 +1037,28 @@ const Property = () => {
     setModal({ type: "confirm" });
   };
 
-  const onConfirmPublish = () => {
+  const onConfirmPublish = async () => {
     setBusy("publish");
-    setTimeout(() => {
-      // TODO: connect API → await api.post("/properties", buildPayload("Active"))
-      console.log("Publish payload", buildPayload("Active"));
-      setBusy(false);
+    try {
+      const fd = buildFormData(form.status || "Active", false);
+      const url = isEdit ? `${API_ENDPOINTS.PROPERTIES}/${editId}` : API_ENDPOINTS.PROPERTIES;
+      const method = isEdit ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || (isEdit ? "Failed to update property" : "Failed to publish property"));
+      }
+      showToast(isEdit ? "Property updated successfully!" : "Property published and saved to database successfully!");
       setModal({ type: "success" });
-    }, 1100);
+    } catch (err) {
+      console.error("Publish/Update failed:", err);
+      showToast(err.message || (isEdit ? "Failed to update property" : "Failed to publish property"), "error");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const closeModal = () => setModal({ type: null });
@@ -877,7 +1072,7 @@ const Property = () => {
         <span className="Property__logo">
           <Icon name="home" size={30} />
         </span>
-        <h1 className="Property__heading">Add New Property</h1>
+        <h1 className="Property__heading">{isEdit ? "Edit Property" : "Add New Property"}</h1>
       </header>
 
       {/* ===== Stepper ===== */}
@@ -912,6 +1107,7 @@ const Property = () => {
             </PropertyField>
             <PropertyField label="Description" required error={errors.description} className="Property__descField">
               <PropertyEditor
+                value={form.description}
                 error={errors.description}
                 onChange={(html, text) => {
                   setForm((f) => ({ ...f, description: html, descriptionText: text }));
@@ -971,55 +1167,55 @@ const Property = () => {
       <PropertySection id="details" title="Property & Project Details" icon="layers" open={openSections.details} onToggle={toggleSection} hasError={secErr.details}>
         <div className="Property__grid Property__grid--three">
           <PropertyField label="Property Price" required error={errors.price}>
-            <PropertyInput icon="rupee" prefix="₹" inputMode="numeric" value={formatINR(form.price)} error={errors.price} onChange={(e) => set("price", digits(e.target.value))} />
+            <PropertyInput icon="rupee" prefix="₹" inputMode="numeric" placeholder="e.g. 85,00,000" value={formatINR(form.price)} error={errors.price} onChange={(e) => set("price", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="Price per Sq. Feet" required error={errors.pricePerSqft}>
-            <PropertyInput icon="rupee" inputMode="numeric" value={formatINR(form.pricePerSqft)} error={errors.pricePerSqft} onChange={(e) => set("pricePerSqft", digits(e.target.value))} />
+            <PropertyInput icon="rupee" inputMode="numeric" placeholder="e.g. 5,500" value={formatINR(form.pricePerSqft)} error={errors.pricePerSqft} onChange={(e) => set("pricePerSqft", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="RERA No.">
-            <PropertyInput icon="file" value={form.rera} placeholder="OD/2024/000123" onChange={(e) => set("rera", e.target.value.toUpperCase())} />
+            <PropertyInput icon="file" value={form.rera} placeholder="e.g. OD/2024/000123" onChange={(e) => set("rera", e.target.value.toUpperCase())} />
           </PropertyField>
         </div>
 
         <div className="Property__grid Property__grid--four">
           <PropertyField label="Project Area" required error={errors.projectArea}>
-            <PropertyInput icon="area" value={form.projectArea} error={errors.projectArea} onChange={(e) => set("projectArea", e.target.value)} />
+            <PropertyInput icon="area" placeholder="e.g. 2.5 Acres" value={form.projectArea} error={errors.projectArea} onChange={(e) => set("projectArea", e.target.value)} />
           </PropertyField>
           <PropertyField label="Super Built-up Area" required error={errors.superArea}>
-            <PropertyInput icon="ruler" value={form.superArea} error={errors.superArea} onChange={(e) => set("superArea", e.target.value)} />
+            <PropertyInput icon="ruler" placeholder="e.g. 1,500 Sq. Ft." value={form.superArea} error={errors.superArea} onChange={(e) => set("superArea", e.target.value)} />
           </PropertyField>
           <PropertyField label="Number of Houses / Villas" required error={errors.houses}>
-            <PropertyInput icon="home" inputMode="numeric" value={form.houses} error={errors.houses} onChange={(e) => set("houses", digits(e.target.value))} />
+            <PropertyInput icon="home" inputMode="numeric" placeholder="e.g. 24" value={form.houses} error={errors.houses} onChange={(e) => set("houses", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="Total Floors" required error={errors.floors}>
-            <PropertyInput icon="layers" value={form.floors} error={errors.floors} onChange={(e) => set("floors", e.target.value)} />
+            <PropertyInput icon="layers" placeholder="e.g. G + 6 (7 Floors)" value={form.floors} error={errors.floors} onChange={(e) => set("floors", e.target.value)} />
           </PropertyField>
         </div>
 
         <div className="Property__grid Property__grid--four">
           <PropertyField label="Bedrooms" required error={errors.bedrooms}>
-            <PropertySelect icon="bed" value={form.bedrooms} options={BEDROOMS} error={errors.bedrooms} onChange={(v) => set("bedrooms", v)} />
+            <PropertySelect icon="bed" placeholder="Select Bedrooms" value={form.bedrooms} options={BEDROOMS} error={errors.bedrooms} onChange={(v) => set("bedrooms", v)} />
           </PropertyField>
           <PropertyField label="Bathrooms" required error={errors.bathrooms}>
-            <PropertySelect icon="bath" value={form.bathrooms} options={BATHROOMS} error={errors.bathrooms} onChange={(v) => set("bathrooms", v)} />
+            <PropertySelect icon="bath" placeholder="Select Bathrooms" value={form.bathrooms} options={BATHROOMS} error={errors.bathrooms} onChange={(v) => set("bathrooms", v)} />
           </PropertyField>
           <PropertyField label="Parking" required error={errors.parking}>
-            <PropertySelect icon="car" value={form.parking} options={PARKINGS} error={errors.parking} onChange={(v) => set("parking", v)} />
+            <PropertySelect icon="car" placeholder="Select Parking" value={form.parking} options={PARKINGS} error={errors.parking} onChange={(v) => set("parking", v)} />
           </PropertyField>
           <PropertyField label="Facing" required error={errors.facing}>
-            <PropertySelect icon="compass" value={form.facing} options={FACINGS} error={errors.facing} onChange={(v) => set("facing", v)} />
+            <PropertySelect icon="compass" placeholder="Select Facing" value={form.facing} options={FACINGS} error={errors.facing} onChange={(v) => set("facing", v)} />
           </PropertyField>
         </div>
 
         <div className="Property__grid Property__grid--four">
           <PropertyField label="Property Overlooking" required error={errors.overlooking}>
-            <PropertySelect icon="eye" value={form.overlooking} options={OVERLOOKINGS} error={errors.overlooking} onChange={(v) => set("overlooking", v)} />
+            <PropertySelect icon="eye" placeholder="Select Overlooking" value={form.overlooking} options={OVERLOOKINGS} error={errors.overlooking} onChange={(v) => set("overlooking", v)} />
           </PropertyField>
           <PropertyField label="Monthly Maintenance" required error={errors.maintenance}>
-            <PropertyInput icon="calendar" prefix="₹" inputMode="numeric" value={formatINR(form.maintenance)} error={errors.maintenance} onChange={(e) => set("maintenance", digits(e.target.value))} />
+            <PropertyInput icon="calendar" prefix="₹" inputMode="numeric" placeholder="e.g. 2,000" value={formatINR(form.maintenance)} error={errors.maintenance} onChange={(e) => set("maintenance", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="Expected Rental" required error={errors.rental}>
-            <PropertyInput icon="key" prefix="₹" suffix="/ Month" inputMode="numeric" value={formatINR(form.rental)} error={errors.rental} onChange={(e) => set("rental", digits(e.target.value))} />
+            <PropertyInput icon="key" prefix="₹" suffix="/ Month" inputMode="numeric" placeholder="e.g. 25,000" value={formatINR(form.rental)} error={errors.rental} onChange={(e) => set("rental", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="Possession Date">
             <PropertyCalendar value={form.possession} onChange={(v) => set("possession", v)} placeholder="Select possession date" />
@@ -1199,6 +1395,7 @@ const Property = () => {
             <PropertyInput
               icon="tag"
               maxLength={60}
+              placeholder="e.g. 3 BHK Luxury Apartment in Patia"
               value={form.metaTitle}
               error={errors.metaTitle}
               onChange={(e) => { metaTouched.current = true; set("metaTitle", e.target.value); }}
@@ -1219,6 +1416,7 @@ const Property = () => {
           <PropertyField label="URL Slug" required error={errors.slug}>
             <PropertyInput
               icon="link"
+              placeholder="e.g. 3-bhk-luxury-apartment-in-patia"
               value={form.slug}
               error={errors.slug}
               onChange={(e) => { slugTouched.current = true; set("slug", slugify(e.target.value)); }}
@@ -1237,7 +1435,7 @@ const Property = () => {
           <Icon name="eye" size={19} /> Preview
         </button>
         <button type="button" className="PropertyButton PropertyButton--primary" onClick={onPublishClick} disabled={!!busy}>
-          {busy === "publish" ? <span className="PropertyButton__spinner" /> : <Icon name="send" size={19} />} Publish Property
+          {busy === "publish" ? <span className="PropertyButton__spinner" /> : <Icon name="send" size={19} />} {isEdit ? "Update Property" : "Publish Property"}
         </button>
       </footer>
 
@@ -1245,11 +1443,20 @@ const Property = () => {
       <PropertyModal
         open={modal.type === "draft"}
         onClose={closeModal}
-        title="Draft Saved"
+        title="Draft Saved Successfully"
         icon="save"
-        footer={<button className="PropertyButton PropertyButton--primary PropertyButton--sm" onClick={closeModal}>Continue Editing</button>}
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="PropertyButton PropertyButton--outline PropertyButton--sm" onClick={() => navigate("/properties")}>
+              View All Properties
+            </button>
+            <button className="PropertyButton PropertyButton--primary PropertyButton--sm" onClick={closeModal}>
+              Continue Editing
+            </button>
+          </div>
+        }
       >
-        <p>Your property <b>“{form.title}”</b> has been saved as a draft. You can continue editing anytime.</p>
+        <p>Your property <b>“{form.title}”</b> has been successfully saved to the database as a draft.</p>
       </PropertyModal>
 
       <PropertyModal
@@ -1272,30 +1479,39 @@ const Property = () => {
       <PropertyModal
         open={modal.type === "confirm"}
         onClose={closeModal}
-        title="Publish this property?"
+        title={isEdit ? "Update this property?" : "Publish this property?"}
         icon="send"
         footer={
           <>
             <button className="PropertyButton PropertyButton--outline PropertyButton--sm" onClick={closeModal}>Cancel</button>
             <button className="PropertyButton PropertyButton--primary PropertyButton--sm" onClick={() => { closeModal(); onConfirmPublish(); }}>
-              Yes, Publish
+              {isEdit ? "Yes, Update" : "Yes, Publish"}
             </button>
           </>
         }
       >
         <p>
-          <b>{form.title}</b> will go live on Utkal Property and become visible to all visitors.
+          <b>{form.title}</b> will {isEdit ? "be updated in the database with the changes made." : "go live on Utkal Property and become visible to all visitors."}
         </p>
       </PropertyModal>
 
       <PropertyModal
         open={modal.type === "success"}
         onClose={closeModal}
-        title="Property Published!"
+        title={isEdit ? "Property Updated Successfully!" : "Property Published Successfully!"}
         icon="checkCircle"
-        footer={<button className="PropertyButton PropertyButton--primary PropertyButton--sm" onClick={closeModal}>Done</button>}
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="PropertyButton PropertyButton--outline PropertyButton--sm" onClick={closeModal}>
+              Done
+            </button>
+            <button className="PropertyButton PropertyButton--primary PropertyButton--sm" onClick={() => navigate("/properties")}>
+              View All Properties
+            </button>
+          </div>
+        }
       >
-        <p>Your property is now live at</p>
+        <p>{isEdit ? "Your property changes have been successfully saved into the database!" : "Your property has been successfully saved into the database and is now live!"}</p>
         <p className="PropertyModal__url">utkalproperty.com/property/{form.slug}</p>
       </PropertyModal>
 

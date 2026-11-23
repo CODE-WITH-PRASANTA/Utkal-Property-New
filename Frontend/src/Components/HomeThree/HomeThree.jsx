@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, getMediaUrl } from "../../config/api";
 import "./HomeThree.css";
 
 // IMAGES
@@ -10,9 +12,6 @@ import featured5 from "../../assets/featured-5.jpg";
 import featured6 from "../../assets/featured-6.jpg";
 
 // ================= COUNT UP =================
-// Starts only when `start` is true (section is visible).
-// Restarts whenever `resetKey` changes (filter click).
-
 const CountUp = ({ end, duration = 2000, delay = 0, start, resetKey }) => {
   const [count, setCount] = useState(0);
 
@@ -50,9 +49,6 @@ const CountUp = ({ end, duration = 2000, delay = 0, start, resetKey }) => {
 };
 
 // ================= FILTERS =================
-// `label` is the button text, `type` matches property.type
-// (type: null means "show everything")
-
 const filters = [
   { label: "All Properties", type: null },
   { label: "For Buy", type: "buy" },
@@ -66,87 +62,99 @@ const STATUS_LABEL = {
   rent: "FOR RENT",
 };
 
-// ================= PROPERTY DATA =================
+// Fallback image helper
+const fallbackImages = [featured1, featured2, featured3, featured4, featured5, featured6];
 
-const properties = [
-  {
-    id: 1,
-    title: "Archer House",
-    type: "rent",
-    featured: true,
-    image: featured1,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-  {
-    id: 2,
-    title: "Villa One Hyde Park",
-    type: "sale",
-    image: featured2,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-  {
-    id: 3,
-    title: "Home Pitt Street",
-    type: "buy",
-    image: featured3,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-  {
-    id: 4,
-    title: "Villa on Hollywood Boulevard",
-    type: "sale",
-    image: featured4,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-  {
-    id: 5,
-    title: "House on the beverly hills",
-    type: "buy",
-    image: featured5,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-  {
-    id: 6,
-    title: "Office Space at Northwest",
-    type: "rent",
-    image: featured6,
-    price: 815000,
-    location: "148-37 88th Ave, Jamaica, NY 11435",
-    beds: 4,
-    baths: 3,
-    area: 2660,
-  },
-];
+// Helper to categorize real properties into buy/sale/rent
+const detectPropertyType = (p, index) => {
+  const s = String(p.status || "").toLowerCase();
+  const c = String(p.category || "").toLowerCase();
+  if (s.includes("rent") || c.includes("rent")) return "rent";
+  if (s.includes("buy") || c.includes("buy")) return "buy";
+  if (s.includes("sale") || c.includes("sale")) return "sale";
+  // Alternating distribution for real properties without explicit rent flag
+  return index % 3 === 0 ? "rent" : index % 3 === 1 ? "sale" : "buy";
+};
 
 // ================= MAIN COMPONENT =================
 
 const HomeThree = () => {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All Properties");
   const [animationKey, setAnimationKey] = useState(0);
   const [inView, setInView] = useState(false);
 
+  const navigate = useNavigate();
   const sectionRef = useRef(null);
   const gridRef = useRef(null);
+
+  // Fetch only properties where Featured button is ACTIVE (isFeatured: true)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFeaturedProperties = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_ENDPOINTS.PROPERTIES}?isFeatured=true&limit=12`);
+        const json = await res.json();
+        if (isMounted && json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const featuredList = json.data
+            .filter((p) => p.isFeatured === true)
+            .map((p, idx) => {
+              const imageSrc =
+                Array.isArray(p.images) && p.images.length > 0
+                  ? getMediaUrl(p.images[0])
+                  : fallbackImages[idx % fallbackImages.length];
+
+              const beds =
+                typeof p.bedrooms === "number"
+                  ? p.bedrooms
+                  : parseInt(p.bedrooms, 10) || 3;
+
+              const baths =
+                typeof p.bathrooms === "number"
+                  ? p.bathrooms
+                  : parseInt(p.bathrooms, 10) || 3;
+
+              const area =
+                typeof p.superArea === "number"
+                  ? p.superArea
+                  : parseInt(p.superArea, 10) || (2200 + idx * 300);
+
+              return {
+                id: p._id,
+                slug: p.slug || p._id,
+                title: p.title,
+                type: detectType(p, idx),
+                featured: true,
+                image: imageSrc,
+                price: Number(p.price) || 8500000,
+                location: p.location || "Bhubaneswar, Odisha",
+                beds,
+                baths,
+                area,
+              };
+            });
+          setProperties(featuredList);
+        } else if (isMounted) {
+          setProperties([]);
+        }
+      } catch (err) {
+        console.error("Failed to load featured properties from API:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchFeaturedProperties();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function detectType(p, idx) {
+    return detectPropertyType(p, idx);
+  }
 
   // after the first load (any filter click) everything runs faster
   const fast = animationKey > 0;
@@ -181,21 +189,12 @@ const HomeThree = () => {
   // FILTER BUTTON CLICK
   const handleFilter = (label) => {
     setActiveFilter(label);
-    // replay the card + counting animation on every click
     setAnimationKey((prev) => prev + 1);
   };
 
   // SEE ALL LISTINGS
   const handleSeeAll = () => {
-    setActiveFilter("All Properties");
-    setAnimationKey((prev) => prev + 1);
-
-    setTimeout(() => {
-      gridRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 100);
+    navigate("/properties");
   };
 
   return (
@@ -204,7 +203,6 @@ const HomeThree = () => {
       className={`ht3-section ${inView ? "ht3-visible" : ""}`}
     >
       {/* HEADER */}
-
       <div className="ht3-header">
         <span className="ht3-subtitle ht3-h-anim" style={{ "--hd": "0s" }}>
           DISCOVER YOUR NEXT HOME
@@ -215,11 +213,10 @@ const HomeThree = () => {
         </h2>
 
         <p className="ht3-h-anim" style={{ "--hd": "0.24s" }}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          Explore our handpicked verified properties with premium amenities and prime locations.
         </p>
 
         {/* FILTER BUTTONS */}
-
         <div className="ht3-filters">
           {filters.map((filter, i) => (
             <button
@@ -238,165 +235,166 @@ const HomeThree = () => {
       </div>
 
       {/* PROPERTY GRID */}
-
       <div
         className={`ht3-grid ${fast ? "ht3-fast" : ""}`}
         ref={gridRef}
         key={animationKey}
       >
-        {displayedProperties.length === 0 && (
-          <p className="ht3-empty">No properties found in this category.</p>
-        )}
+        {loading ? (
+          <p className="ht3-empty">Loading featured properties...</p>
+        ) : displayedProperties.length === 0 ? (
+          <p className="ht3-empty">No featured properties found in this category.</p>
+        ) : (
+          displayedProperties.map((property, index) => {
+            const cardDelay = fast ? index * 60 : 500 + index * 130; // ms
+            const countDelay = cardDelay + (fast ? 100 : 300);
 
-        {displayedProperties.map((property, index) => {
-          const cardDelay = fast ? index * 60 : 500 + index * 130; // ms
-          const countDelay = cardDelay + (fast ? 100 : 300);
+            return (
+              <article
+                className="ht3-card"
+                key={`${property.id}-${animationKey}`}
+                style={{ animationDelay: `${cardDelay}ms` }}
+              >
+                {/* IMAGE */}
+                <div className="ht3-image">
+                  <Link to={`/properties/${property.slug}`} style={{ display: "block", width: "100%", height: "100%" }}>
+                    <img src={property.image} alt={property.title} loading="lazy" />
+                    <div className="ht3-overlay"></div>
+                  </Link>
 
-          return (
-            <article
-              className="ht3-card"
-              key={`${property.id}-${animationKey}`}
-              style={{ animationDelay: `${cardDelay}ms` }}
-            >
-              {/* IMAGE */}
+                  {/* BADGES */}
+                  <div className="ht3-badges">
+                    <span className="ht3-status">
+                      {STATUS_LABEL[property.type]}
+                    </span>
 
-              <div className="ht3-image">
-                <img src={property.image} alt={property.title} loading="lazy" />
-                <div className="ht3-overlay"></div>
-
-                {/* BADGES */}
-
-                <div className="ht3-badges">
-                  <span className="ht3-status">
-                    {STATUS_LABEL[property.type]}
-                  </span>
-
-                  {property.featured && (
-                    <span className="ht3-featured">FEATURED</span>
-                  )}
-                </div>
-              </div>
-
-              {/* CARD INFORMATION */}
-
-              <div className="ht3-info">
-                <h3>{property.title}</h3>
-
-                {/* LOCATION */}
-
-                <div className="ht3-location">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                  >
-                    <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                    <circle cx="12" cy="10" r="2.5" />
-                  </svg>
-
-                  <span>{property.location}</span>
+                    {property.featured && (
+                      <span className="ht3-featured">FEATURED</span>
+                    )}
+                  </div>
                 </div>
 
-                {/* PRICE AND DETAILS */}
+                {/* CARD INFORMATION */}
+                <div className="ht3-info">
+                  <h3>
+                    <Link
+                      to={`/properties/${property.slug}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {property.title}
+                    </Link>
+                  </h3>
 
-                <div className="ht3-bottom">
-                  <span className="ht3-price">
-                    ₹
-                    <CountUp
-                      end={property.price}
-                      duration={speed(2400)}
-                      delay={countDelay}
-                      start={inView}
-                      resetKey={animationKey}
-                    />
-                  </span>
+                  {/* LOCATION */}
+                  <div className="ht3-location">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                      <circle cx="12" cy="10" r="2.5" />
+                    </svg>
 
-                  <div className="ht3-features">
-                    {/* BEDROOMS */}
+                    <span>{property.location}</span>
+                  </div>
 
-                    <div className="ht3-feature-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      >
-                        <path d="M3 18V5h2v7h14a2 2 0 0 1 2 2v4M3 15h18M5 12V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
-                      </svg>
+                  {/* PRICE AND DETAILS */}
+                  <div className="ht3-bottom">
+                    <span className="ht3-price">
+                      ₹
+                      <CountUp
+                        end={property.price}
+                        duration={speed(2400)}
+                        delay={countDelay}
+                        start={inView}
+                        resetKey={animationKey}
+                      />
+                    </span>
 
-                      <span>
-                        <CountUp
-                          end={property.beds}
-                          duration={speed(1800)}
-                          delay={countDelay}
-                          start={inView}
-                          resetKey={animationKey}
-                        />
-                      </span>
-                    </div>
+                    <div className="ht3-features">
+                      {/* BEDROOMS */}
+                      <div className="ht3-feature-item">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                        >
+                          <path d="M3 18V5h2v7h14a2 2 0 0 1 2 2v4M3 15h18M5 12V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
+                        </svg>
 
-                    <span className="ht3-divider"></span>
+                        <span>
+                          <CountUp
+                            end={property.beds}
+                            duration={speed(1800)}
+                            delay={countDelay}
+                            start={inView}
+                            resetKey={animationKey}
+                          />
+                        </span>
+                      </div>
 
-                    {/* BATHROOMS */}
+                      <span className="ht3-divider"></span>
 
-                    <div className="ht3-feature-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      >
-                        <path d="M4 12h16l-1 7H5l-1-7ZM7 12V6a2 2 0 0 1 4 0v2M5 19v2M19 19v2M4 12V9M20 12V9" />
-                        <circle cx="15" cy="7" r="2" />
-                      </svg>
+                      {/* BATHROOMS */}
+                      <div className="ht3-feature-item">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                        >
+                          <path d="M4 12h16l-1 7H5l-1-7ZM7 12V6a2 2 0 0 1 4 0v2M5 19v2M19 19v2M4 12V9M20 12V9" />
+                          <circle cx="15" cy="7" r="2" />
+                        </svg>
 
-                      <span>
-                        <CountUp
-                          end={property.baths}
-                          duration={speed(1800)}
-                          delay={countDelay}
-                          start={inView}
-                          resetKey={animationKey}
-                        />
-                      </span>
-                    </div>
+                        <span>
+                          <CountUp
+                            end={property.baths}
+                            duration={speed(1800)}
+                            delay={countDelay}
+                            start={inView}
+                            resetKey={animationKey}
+                          />
+                        </span>
+                      </div>
 
-                    <span className="ht3-divider"></span>
+                      <span className="ht3-divider"></span>
 
-                    {/* AREA */}
+                      {/* AREA */}
+                      <div className="ht3-feature-item">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                        >
+                          <rect x="3" y="3" width="15" height="15" rx="1" />
+                          <path d="M7 21h14V7M7 17h10" />
+                        </svg>
 
-                    <div className="ht3-feature-item">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      >
-                        <rect x="3" y="3" width="15" height="15" rx="1" />
-                        <path d="M7 21h14V7M7 17h10" />
-                      </svg>
-
-                      <span>
-                        <CountUp
-                          end={property.area}
-                          duration={speed(2200)}
-                          delay={countDelay}
-                          start={inView}
-                          resetKey={animationKey}
-                        />
-                      </span>
+                        <span>
+                          <CountUp
+                            end={property.area}
+                            duration={speed(2200)}
+                            delay={countDelay}
+                            start={inView}
+                            resetKey={animationKey}
+                          />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          );
-        })}
+              </article>
+            );
+          })
+        )}
       </div>
 
       {/* SEE ALL LISTINGS */}
-
       <div className="ht3-see-all-wrapper">
         <button
           className="ht3-see-all-btn"

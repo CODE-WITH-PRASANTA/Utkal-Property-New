@@ -1,0 +1,244 @@
+.blog-cat {
+  padding: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+  font-family: inherit;
+}
+
+.blog-cat__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.blog-cat__heading h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.blog-cat__heading p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.blog-cat__layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+  .blog-cat__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blog-cat__card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.blog-cat__card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blog-cat__field {
+  margin-bottom: 16px;
+}
+
+.blog-cat__field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.blog-cat__input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.blog-cat__input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.blog-cat__textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.blog-cat__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.blog-cat__btn--primary {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.blog-cat__btn--primary:hover {
+  background: #059669;
+}
+
+.blog-cat__btn--light {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.blog-cat__btn--light:hover {
+  background: #e2e8f0;
+}
+
+.blog-cat__btn--danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.blog-cat__btn--danger:hover {
+  background: #dc2626;
+}
+
+.blog-cat__btn--block {
+  width: 100%;
+}
+
+.blog-cat__search-wrap {
+  margin-bottom: 16px;
+}
+
+.blog-cat__table-wrap {
+  overflow-x: auto;
+}
+
+.blog-cat__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.blog-cat__table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.blog-cat__table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.blog-cat__table tr:hover td {
+  background: #f8fafc;
+}
+
+.blog-cat__slug-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.blog-cat__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.blog-cat__icon-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.blog-cat__icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.blog-cat__icon-btn--del:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.blog-cat__empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: #94a3b8;
+}
+
+.blog-cat__toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0f172a;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  z-index: 9999;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

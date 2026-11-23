@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { API_ENDPOINTS } from "../../config/api";
 import "./BlogPost.css";
 
 /* ---------------------------------- Icons --------------------------------- */
@@ -59,17 +60,6 @@ const Icon = ({ name, size = 18, className = "" }) => (
 );
 
 /* ---------------------------------- Config -------------------------------- */
-const CATEGORIES = [
-  "Residential Properties",
-  "Commercial Properties",
-  "Plots & Land",
-  "Apartments & Flats",
-  "Independent Houses & Villas",
-  "Rental & Lease",
-  "Real Estate Investment",
-  "Legal, Vastu & Home Loans",
-];
-
 const BLOCKS = [
   { v: "p", l: "Paragraph" },
   { v: "h1", l: "Heading 1" },
@@ -100,7 +90,10 @@ const INITIAL = {
   category: "",
   location: "",
   desc: "",
-  tags: ["Utkal Property", "Odisha Real Estate", "Property Guide"],
+  metaTitle: "",
+  metaDescription: "",
+  metaKeywords: "",
+  tags: [],
   mode: "now",
   schedule: "",
 };
@@ -208,6 +201,28 @@ const BlogPost = () => {
   const [stats, setStats] = useState({ words: 0, chars: 0 });
   const [result, setResult] = useState(null);
   const [previewHtml, setPreviewHtml] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const res = await fetch(API_ENDPOINTS.CATEGORIES);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setCategories(json.data.map((c) => c.name));
+      }
+    } catch (e) {
+      console.error("Failed to fetch dynamic categories:", e);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   // Modal inputs
   const [linkUrl, setLinkUrl] = useState("");
@@ -383,7 +398,7 @@ const BlogPost = () => {
     if (file.size > MAX_IMG) {
       return setErrors((e) => ({ ...e, image: "Image must be 5MB or smaller." }));
     }
-    setImage({ url: URL.createObjectURL(file), name: file.name, size: file.size });
+    setImage({ file, url: URL.createObjectURL(file), name: file.name, size: file.size });
     setErrors((e) => ({ ...e, image: undefined }));
   };
 
@@ -450,20 +465,93 @@ const BlogPost = () => {
     if (editorRef.current) editorRef.current.innerHTML = "";
   };
 
-  const publish = () => {
+  const publish = async () => {
     if (!validate(true)) return notify("Please fix the highlighted fields", "danger");
-    setResult({
-      kind: form.mode === "later" ? "scheduled" : "published",
-      title: form.title.trim(),
-      category: form.category,
-      when: form.schedule,
-    });
-    setModal("success");
+    if (submitting) return;
+
+    try {
+      setSubmitting(true);
+      const formData = new FormData();
+      formData.append("title", form.title.trim());
+      formData.append("category", form.category);
+      formData.append("location", form.location || "");
+      formData.append("desc", form.desc.trim());
+      formData.append("content", editorRef.current?.innerHTML || "");
+      formData.append("tags", JSON.stringify(form.tags));
+      formData.append("metaTitle", form.metaTitle || "");
+      formData.append("metaDescription", form.metaDescription || "");
+      formData.append("metaKeywords", form.metaKeywords || "");
+      formData.append("status", form.mode === "later" ? "Scheduled" : "Published");
+      if (form.mode === "later" && form.schedule) {
+        formData.append("scheduleDate", form.schedule);
+      }
+      formData.append("readTime", `${readMins} min read`);
+      if (image?.file) {
+        formData.append("image", image.file);
+      }
+
+      const res = await fetch(API_ENDPOINTS.BLOGS, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to publish blog post");
+      }
+
+      setResult({
+        kind: form.mode === "later" ? "scheduled" : "published",
+        title: form.title.trim(),
+        category: form.category,
+        when: form.schedule,
+      });
+      setModal("success");
+    } catch (err) {
+      notify(err.message || "Failed to publish blog post", "danger");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const saveDraft = () => {
+  const saveDraft = async () => {
     if (!validate(false)) return notify("Add a blog title to save a draft", "danger");
-    notify("Draft saved successfully");
+    if (submitting) return;
+
+    try {
+      setSubmitting(true);
+      const formData = new FormData();
+      formData.append("title", form.title.trim());
+      formData.append("category", form.category || "General");
+      formData.append("location", form.location || "");
+      formData.append("desc", form.desc || "");
+      formData.append("content", editorRef.current?.innerHTML || "");
+      formData.append("tags", JSON.stringify(form.tags));
+      formData.append("metaTitle", form.metaTitle || "");
+      formData.append("metaDescription", form.metaDescription || "");
+      formData.append("metaKeywords", form.metaKeywords || "");
+      formData.append("status", "Draft");
+      formData.append("readTime", `${readMins} min read`);
+      if (image?.file) {
+        formData.append("image", image.file);
+      }
+
+      const res = await fetch(API_ENDPOINTS.BLOGS, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to save draft");
+      }
+
+      notify("Draft saved successfully");
+    } catch (err) {
+      notify(err.message || "Failed to save draft", "danger");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const openPreview = () => {
@@ -569,9 +657,9 @@ const BlogPost = () => {
               </label>
               <Select
                 value={form.category}
-                options={CATEGORIES}
+                options={categories}
                 onChange={(v) => set("category", v)}
-                placeholder="Select property category"
+                placeholder={loadingCategories ? "Loading categories..." : "Select property category"}
                 icon="grid"
                 invalid={!!errors.category}
               />
@@ -677,6 +765,63 @@ const BlogPost = () => {
             </div>
             {errors.content && <span className="blog-post__error">{errors.content}</span>}
           </div>
+
+          {/* SEO Meta Information */}
+          <div style={{ marginTop: "28px", paddingTop: "24px", borderTop: "1px solid #e2e8f0" }}>
+            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Icon name="globe" size={18} /> SEO &amp; Meta Information
+            </h4>
+
+            <div className="blog-post__field">
+              <div className="blog-post__label-row">
+                <label htmlFor="bp-meta-title">Meta Title</label>
+                <span className="blog-post__hint">
+                  {form.metaTitle.length}/60 characters
+                </span>
+              </div>
+              <div className="blog-post__input">
+                <input
+                  id="bp-meta-title"
+                  type="text"
+                  maxLength={70}
+                  placeholder="e.g., Top 5 Residential Corridors in Bhubaneswar | Utkal Property"
+                  value={form.metaTitle}
+                  onChange={(e) => set("metaTitle", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="blog-post__field">
+              <div className="blog-post__label-row">
+                <label htmlFor="bp-meta-desc">Meta Description</label>
+                <span className="blog-post__hint">
+                  {form.metaDescription.length}/160 characters
+                </span>
+              </div>
+              <textarea
+                id="bp-meta-desc"
+                className="blog-post__input"
+                style={{ minHeight: "75px", resize: "vertical", padding: "10px 12px" }}
+                maxLength={160}
+                placeholder="Brief meta description shown in search engine results..."
+                value={form.metaDescription}
+                onChange={(e) => set("metaDescription", e.target.value)}
+              />
+            </div>
+
+            <div className="blog-post__field">
+              <label htmlFor="bp-meta-keywords">Meta Keywords</label>
+              <div className="blog-post__input">
+                <input
+                  id="bp-meta-keywords"
+                  type="text"
+                  placeholder="e.g., bhubaneswar property, luxury apartments, real estate odisha"
+                  value={form.metaKeywords}
+                  onChange={(e) => set("metaKeywords", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* RIGHT SIDEBAR */}
@@ -759,27 +904,43 @@ const BlogPost = () => {
                 {form.tags.length}/{MAX_TAGS}
               </small>
             </h4>
-            <div className="blog-post__input blog-post__input--plain">
-              <input
-                type="text"
-                placeholder="Type tag & press Enter..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={onTagKey}
-                onBlur={() => addTags(tagInput)}
-                disabled={form.tags.length >= MAX_TAGS}
-              />
+            <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+              <div className="blog-post__input blog-post__input--plain" style={{ flex: 1 }}>
+                <input
+                  type="text"
+                  placeholder="Enter tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={onTagKey}
+                  disabled={form.tags.length >= MAX_TAGS}
+                />
+              </div>
+              <button
+                type="button"
+                className="blog-post__btn blog-post__btn--primary"
+                style={{ padding: "0 16px", minWidth: "60px", flexShrink: 0 }}
+                onClick={() => addTags(tagInput)}
+                disabled={!tagInput.trim() || form.tags.length >= MAX_TAGS}
+              >
+                Add
+              </button>
             </div>
-            <div className="blog-post__tags">
-              {form.tags.map((t) => (
-                <span key={t} className="blog-post__tag">
-                  #{t}
-                  <button type="button" onClick={() => removeTag(t)} aria-label={`Remove ${t}`}>
-                    <Icon name="x" size={12} />
-                  </button>
-                </span>
-              ))}
-            </div>
+            {form.tags.length === 0 ? (
+              <p style={{ fontSize: "12px", color: "#94a3b8", margin: "4px 0 0" }}>
+                No tags added yet. Type a tag and click Add.
+              </p>
+            ) : (
+              <div className="blog-post__tags">
+                {form.tags.map((t) => (
+                  <span key={t} className="blog-post__tag">
+                    #{t}
+                    <button type="button" onClick={() => removeTag(t)} aria-label={`Remove ${t}`}>
+                      <Icon name="x" size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Publish Options */}
@@ -834,15 +995,25 @@ const BlogPost = () => {
             {errors.schedule && <span className="blog-post__error">{errors.schedule}</span>}
 
             <div className="blog-post__actions">
-              <button type="button" className="blog-post__btn blog-post__btn--primary blog-post__btn--block" onClick={publish}>
+              <button
+                type="button"
+                className="blog-post__btn blog-post__btn--primary blog-post__btn--block"
+                disabled={submitting}
+                onClick={publish}
+              >
                 <Icon name="send" size={16} />
-                {form.mode === "later" ? "Schedule Blog Post" : "Publish Blog Post"}
+                {submitting ? "Publishing..." : form.mode === "later" ? "Schedule Blog Post" : "Publish Blog Post"}
               </button>
               <div className="blog-post__actions-sub">
-                <button type="button" className="blog-post__btn blog-post__btn--light" onClick={saveDraft}>
-                  <Icon name="save" size={16} /> Save Draft
+                <button
+                  type="button"
+                  className="blog-post__btn blog-post__btn--light"
+                  disabled={submitting}
+                  onClick={saveDraft}
+                >
+                  <Icon name="save" size={16} /> {submitting ? "Saving..." : "Save Draft"}
                 </button>
-                <button type="button" className="blog-post__btn blog-post__btn--ghost" onClick={onCancel}>
+                <button type="button" className="blog-post__btn blog-post__btn--ghost" disabled={submitting} onClick={onCancel}>
                   <Icon name="x" size={16} /> Discard
                 </button>
               </div>

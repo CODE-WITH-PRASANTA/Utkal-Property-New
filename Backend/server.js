@@ -47,6 +47,15 @@ app.get("/", (req, res) => {
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/properties", require("./routes/propertyRoutes"));
+app.use("/api/blogs", require("./routes/blogRoutes"));
+app.use("/api/categories", require("./routes/categoryRoutes"));
+app.use("/api/blog-categories", require("./routes/categoryRoutes"));
+app.use("/api/galleries", require("./routes/galleryRoutes"));
+app.use("/api/team", require("./routes/teamRoutes"));
+app.use("/api/enquiry", require("./routes/enquiryRoutes"));
+app.use("/api/enquiries", require("./routes/enquiryRoutes"));
+app.use("/api/property-reviews", require("./routes/propertyReviewRoutes"));
+app.use("/api/reviews", require("./routes/propertyReviewRoutes"));
 
 // Server
 const PORT = process.env.PORT || 5000;

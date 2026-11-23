@@ -14,6 +14,7 @@ import TeamMember from './Components/TeamMember/TeamMember';
 // Content Management
 import BlogManagement from './Components/BlogManagement/BlogManagement';
 import BlogPost from './Components/BlogPost/BlogPost';
+import BlogCategory from './Components/BlogCategory/BlogCategory';
 import ManageGallery from './Components/ManageGallery/ManageGallery';
 import AddGallery from './Components/AddGallery/AddGallery';
 
@@ -24,6 +25,7 @@ import RentManagement from './Components/RentManagement/RentManagement';
 import Enquiry from './Components/Enquiry/Enquiry';
 import ColdLead from './Components/ColdLead/ColdLead';
 import Property from './Components/Property/Property';
+import PropertyReviews from './Components/PropertyReviews/PropertyReviews';
 
 const App = () => {
   return (
@@ -42,17 +44,21 @@ const App = () => {
             <Route path="blog">
               <Route index element={<BlogManagement />} />
               <Route path="new" element={<BlogPost />} />
+              <Route path="category" element={<BlogCategory />} />
             </Route>
 
             {/* Gallery */}
             <Route path="gallery">
               <Route index element={<ManageGallery />} />
               <Route path="add" element={<AddGallery />} />
+              <Route path="edit/:id" element={<AddGallery />} />
             </Route>
 
             {/* Properties & Listings */}
             <Route path="properties" element={<PropertyManagement />} />
             <Route path="/properties/add" element={<Property/>} />
+            <Route path="/properties/edit/:id" element={<Property/>} />
+            <Route path="/properties/reviews" element={<PropertyReviews />} />
             <Route path="sell" element={<SellManagement />} />
             <Route path="rent" element={<RentManagement />} />
 

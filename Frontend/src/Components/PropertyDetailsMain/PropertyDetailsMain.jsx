@@ -1,910 +1,1440 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useSearchParams, Link } from "react-router-dom";
+import { API_ENDPOINTS, getMediaUrl } from "../../config/api";
 import "./PropertyDetailsMain.css";
 
-import {
-  FiMapPin,
-  FiCalendar,
-  FiEye,
-  FiChevronLeft,
-  FiChevronRight,
-  FiCamera,
-  FiLink,
-  FiCheck,
-  FiCheckCircle,
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiPhoneCall,
-  FiEdit3,
-  FiArrowRight,
-  FiX,
-  FiNavigation,
-  FiTag,
-  FiSend,
-  FiHome,
-} from "react-icons/fi";
-import {
-  FaFacebookF,
-  FaWhatsapp,
-  FaBed,
-  FaBath,
-  FaRulerCombined,
-  FaCar,
-  FaHome,
-  FaBuilding,
-  FaCouch,
-  FaUtensils,
-  FaTree,
-  FaShieldAlt,
-  FaSwimmingPool,
-  FaDumbbell,
-  FaUsers,
-  FaChild,
-  FaBolt,
-  FaVideo,
-  FaSchool,
-  FaHospital,
-  FaShoppingBag,
-  FaTrain,
-  FaPlane,
-} from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+/* Asset images as fallbacks */
+import pImg1 from "../../assets/property-listing-1.jpg";
+import pImg2 from "../../assets/property-listing-2.jpg";
+import pImg3 from "../../assets/property-listing-3.jpg";
+import pImg4 from "../../assets/property-listing-4.jpg";
+import feat1 from "../../assets/featured-1.jpg";
+import feat2 from "../../assets/featured-2.jpg";
+import feat3 from "../../assets/featured-3.jpg";
+import feat4 from "../../assets/featured-4.jpg";
 
-/* ---------- images (add your own in src/assets) ---------- */
-import img1 from "../../assets/property-listing-1.jpg";
-import img2 from "../../assets/property-listing-2.jpg";
-import img3 from "../../assets/property-listing-3.jpg";
-import img4 from "../../assets/property-listing-4.jpg";
-import img5 from "../../assets/property-listing-1.jpg";
-import img6 from "../../assets/property-listing-2.jpg";
+/* ==========================================================================
+   DEFAULT / SERIAL DATA (Matches all 9 uploaded screenshots precisely)
+   ========================================================================== */
+const DEFAULT_PROPERTY = {
+  id: "royal-presidency",
+  title: "Royal Presidency",
+  subtitle: "Air View Living in Patia Raghunathpur | Bali Inspired Luxury Apartments",
+  location: "Nandankanan Road, Raghunathpur, Patia, Bhubaneswar, Odisha 751024",
+  fullAddress: "Nandankanan Road, Raghunathpur, Patia, Okinawa dealer Plot no 1003, infront of Punjab national bank Shabari Sahi, House No 729, 2939, Nandankanan Rd, Raghunathpur, Bhubaneswar, Raghunathpurjali, Odisha 751024, India",
+  builder: "SJ Developer",
+  priceRange: "₹ 2.15 Cr - ₹ 2.74 Cr",
+  pricePerSqft: "₹ 8,450 / Sqft",
+  type: "Apartment",
+  bookingAmount: "₹ 10.00 Lac",
+  furnishing: "Unfurnished",
+  sba: "2547 - 3245 sq.ft",
+  availableFrom: "03 Jul 2027",
+  status: "Under Construction",
+  reraNo: "RP/19/2025/01392",
+  viewsCount: 24,
+  images: [pImg1, pImg2, pImg3, pImg4],
 
-/* ---------- static data (edit freely) ---------- */
-const GALLERY = [
-  { src: img1, alt: "Archer House – front view" },
-  { src: img2, alt: "Archer House – living room" },
-  { src: img3, alt: "Archer House – exterior at dusk" },
-  { src: img4, alt: "Archer House – kitchen" },
-  { src: img5, alt: "Archer House – pool area" },
-];
+  /* Section 2: Project Overview */
+  overview: [
+    { label: "Project Area", value: "1.3 Acre", icon: "area" },
+    { label: "No. of Towers", value: "1", icon: "tower" },
+    { label: "Total Floors", value: "2B+S+27", icon: "floors" },
+    { label: "Number of Flats", value: "108", icon: "flats" },
+    { label: "Facing", value: "West, East", icon: "facing" },
+    { label: "Carpet Area (sq.ft.)", value: "1655-2058", icon: "carpet" },
+    { label: "Bedrooms", value: "3-4", icon: "bed" },
+    { label: "Bathrooms", value: "3-4", icon: "bath" },
+    { label: "Balconies", value: "3-5", icon: "balcony" },
+    { label: "Parking", value: "1", icon: "car" },
+    { label: "Transaction Type", value: "New property", icon: "key" },
+    { label: "Property Overlooking", value: "Pool, Road, Club, Garden, Park", icon: "overlook" },
+    { label: "Maintainance Per Month", value: "₹ 0.00", icon: "rupee" },
+    { label: "Expected Rental Return", value: "₹ 1.00 Lac", icon: "rental" },
+  ],
 
-const FLOOR_PLAN = [{ src: img6, alt: "Archer House – ground floor plan" }];
+  /* Section 3: Description & Location */
+  description: `Welcome to Royal Presidency, a premium residential destination thoughtfully crafted for modern families seeking elegance, comfort, and a refined lifestyle. Designed with contemporary architecture, spacious planning, and premium amenities, the project offers the perfect balance of luxury and convenience. Located in a fast-growing and well-connected neighborhood, Royal Presidency provides seamless access to schools, hospitals, shopping destinations, and major city landmarks. Every home is designed with ample natural light, ventilation, stylish interiors, and spacious balconies to create a peaceful and sophisticated living experience. With landscaped surroundings, quality construction, and a host of modern lifestyle features, Royal Presidency is more than just a home — it is a prestigious address crafted for elevated living.`,
+  locationDetails: `Strategically located in a fast-developing and well-connected neighborhood, Royal Presidency offers the perfect blend of convenience, accessibility, and peaceful living. The project enjoys seamless connectivity to major roads, schools, hospitals, shopping malls, business hubs, and daily lifestyle essentials, making everyday life comfortable and hassle-free. Surrounded by growing infrastructure and urban development, the location ensures excellent future appreciation while still providing a calm and family-friendly environment. Whether it is easy city access, smooth commuting, or proximity to key landmarks, Royal Presidency places you at the center of everything important while allowing you to enjoy a refined and peaceful lifestyle.`,
 
-const ADDRESS = "148-37 88th Ave, Jamaica, NY 11435";
-const MAP_QUERY = encodeURIComponent(ADDRESS);
+  /* Section 4: Amenities */
+  amenities: [
+    { name: "Swimming Pool", icon: "pool" },
+    { name: "Modular Kitchen", icon: "kitchen" },
+    { name: "Children Play Area", icon: "child" },
+    { name: "Conference Rooms", icon: "door" },
+    { name: "Coworking Space", icon: "laptop" },
+    { name: "Lift", icon: "elevator" },
+    { name: "Temple", icon: "temple" },
+    { name: "Kids' Play Area", icon: "tennis" },
+    { name: "Kids' Pool", icon: "swimmer" },
+    { name: "Reserved Parking", icon: "parking" },
+    { name: "Intercom", icon: "intercom" },
+    { name: "EV Charging", icon: "ev" },
+    { name: "Multipurpose Hall", icon: "hall" },
+    { name: "Club House", icon: "check" },
+    { name: "Grand Entrance", icon: "arch" },
+    { name: "High Speed Lift", icon: "elevator" },
+    { name: "Earthquake-Resistant", icon: "check" },
+    { name: "Park", icon: "check" },
+    { name: "Society Office", icon: "check" },
+    { name: "Sky Lounge", icon: "cloud" },
+    { name: "Rainwater Harvesting", icon: "rain" },
+    { name: "Sewage Treatment Plant", icon: "recycle" },
+    { name: "Gym", icon: "dumbbell" },
+    { name: "Banquet Hall", icon: "gazebo" },
+  ],
 
-const STATS = [
-  { icon: FaBed, label: "4 Beds" },
-  { icon: FaBath, label: "3 Baths" },
-  { icon: FaRulerCombined, label: "2,660 Sqft" },
-  { icon: FaCar, label: "2 Garages" },
-  { icon: FaHome, label: "Villa / House" },
-];
+  /* Section 5: Key Features */
+  keyFeatures: [
+    "Modular Kitchen",
+    "Panoramic View",
+    "Low Density Society",
+    "3 Side Open",
+    "Double-Height Entrance Lobbies",
+    "Open Space",
+    "Earthquake-Resistant Structure",
+    "Mivan Construction Technology",
+    "Piling Construction",
+    "Advanced Fire Safety",
+  ],
 
-const KEY_FEATURES = [
-  { icon: FaBuilding, label: "Modern Architecture" },
-  { icon: FaCouch, label: "Spacious Living" },
-  { icon: FaUtensils, label: "Modular Kitchen" },
-  { icon: FaTree, label: "Private Garden" },
-  { icon: FaCar, label: "Car Parking" },
-  { icon: FaShieldAlt, label: "24x7 Security" },
-];
+  /* Section 5: Floor plans */
+  floorPlans: [
+    { label: "3BHK", title: "3 BHK Luxury Unit - 1655 Sq.ft", img: pImg1 },
+    { label: "3BHK Large", title: "3 BHK Premium Unit - 1850 Sq.ft", img: pImg2 },
+    { label: "4BHK", title: "4 BHK Royal Penthouse - 2058 Sq.ft", img: pImg3 },
+    { label: "Masterplan", title: "Royal Presidency Master Layout Plan", img: pImg4 },
+    { label: "Floorplan", title: "1st Floor Typical Cluster Plan", img: pImg1 },
+  ],
 
-const AMENITIES = [
-  { icon: FaSwimmingPool, label: "Swimming Pool" },
-  { icon: FaDumbbell, label: "Gym" },
-  { icon: FaUsers, label: "Club House" },
-  { icon: FaChild, label: "Kids Play Area" },
-  { icon: FaBolt, label: "Power Backup" },
-  { icon: FaVideo, label: "CCTV Security" },
-];
+  /* Section 6: Walkthrough video */
+  videoUrl: "https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=0",
 
-const NEARBY = [
-  { icon: FaSchool, name: "Jamaica High School", distance: "1.2 km" },
-  { icon: FaHospital, name: "Queens Hospital", distance: "2.1 km" },
-  { icon: FaShoppingBag, name: "Jamaica Shopping Mall", distance: "2.8 km" },
-  { icon: FaTrain, name: "Jamaica Train Station", distance: "3.4 km" },
-  { icon: FaPlane, name: "John F. Kennedy Airport", distance: "8.5 km" },
-];
+  /* Section 7: Explore Neighbourhood */
+  neighbourhood: [
+    { name: "Airport", dist: "18 Km" },
+    { name: "Bank", dist: "100 Meter" },
+    { name: "Bus Stop", dist: "0 Meter" },
+    { name: "Railway Station", dist: "15 Km" },
+    { name: "ATM", dist: "100 Meter" },
+    { name: "School", dist: "3 Km" },
+    { name: "Shopping Mall", dist: "3 Km" },
+    { name: "Hospital", dist: "5 Km" },
+    { name: "Restaurant", dist: "1 Km" },
+    { name: "Business Hubs", dist: "3 Km" },
+    { name: "College", dist: "3 Km" },
+  ],
 
-const FLOOR_POINTS = [
-  "Spacious Living Room",
-  "Open Kitchen with Dining",
-  "1 Bedroom with Attached Bath",
-  "Utility & Storage Area",
-];
+  /* Section 8: Similar Projects */
+  similarProjects: [
+    { id: 1, title: "Utkal Heights", price: "₹ 1.85 Cr", location: "Patia, Bhubaneswar", image: feat1, tag: "Featured" },
+    { id: 2, title: "Royal Crown Residences", price: "₹ 2.40 Cr", location: "Raghunathpur, Bhubaneswar", image: feat2, tag: "Featured" },
+    { id: 3, title: "Skyline Green Towers", price: "₹ 1.95 Cr", location: "Infocity, Bhubaneswar", image: feat3, tag: "Featured" },
+    { id: 4, title: "Grand Horizon Villas", price: "₹ 3.10 Cr", location: "Kalarahanga, Bhubaneswar", image: feat4, tag: "Featured" },
+  ],
 
-const HIGHLIGHTS = [
-  { label: "Property ID", value: "UTK-PR-2045" },
-  { label: "Property Type", value: "Villa / House" },
-  { label: "Status", value: "For Sale", pill: true },
-  { label: "Built-up Area", value: "2,660 Sqft" },
-  { label: "Land Area", value: "3,200 Sqft" },
-  { label: "Furnishing", value: "Semi Furnished" },
-  { label: "Possession", value: "Ready to Move" },
-];
-
-const RELATED = [
-  {
-    id: 1,
-    img: img3,
-    tag: "For Sale",
-    tagType: "sale",
-    title: "Villa One Hyde Park",
-    price: "₹6,75,00,000",
-    beds: 4,
-    baths: 3,
-    area: "2,660 Sqft",
-  },
-  {
-    id: 2,
-    img: img4,
-    tag: "For Rent",
-    tagType: "rent",
-    title: "Home Pitt Street",
-    price: "₹6,80,00,000",
-    beds: 3,
-    baths: 3,
-    area: "2,660 Sqft",
-  },
-  {
-    id: 3,
-    img: img5,
-    tag: "Featured",
-    tagType: "featured",
-    title: "Relaxing Villa",
-    price: "₹6,75,00,000",
-    beds: 4,
-    baths: 3,
-    area: "2,660 Sqft",
-  },
-];
-
-const AGENT = {
-  name: "Rakesh Patnaik",
-  role: "Property Consultant",
-  initials: "RP",
-  phone: "+917077606668",
-  whatsapp: "917077606668",
+  /* Section 9: Customer Reviews */
+  reviews: [
+    {
+      id: 1,
+      name: "Bichitra Nayak",
+      date: "30th June 2026",
+      stars: 5,
+      comment: "Utkal Property / Sand2Sky is one of the best property consultants in Bhubaneswar. Their knowledge of luxury apartments and premium properties helped us make the right investment decision. Highly recommended!",
+      initial: "B",
+    },
+    {
+      id: 2,
+      name: "Devayoni Services",
+      date: "1st July 2026",
+      stars: 5,
+      comment: "Very professional real estate company. They offer excellent options for luxury homes, villas, and premium apartments in Bhubaneswar. The team is responsive, knowledgeable, and customer-focused.",
+      initial: "D",
+    },
+    {
+      id: 3,
+      name: "Ankita Swain",
+      date: "6th July 2026",
+      stars: 5,
+      comment: "If you're looking for premium properties in Bhubaneswar, this is the right choice. Professional team, transparent advice, and excellent property options. Very satisfied with the guidance provided.",
+      initial: "A",
+    },
+    {
+      id: 4,
+      name: "Debaraj Sahoo",
+      date: "7th July 2026",
+      stars: 5,
+      comment: "Excellent experience! They helped me find the perfect luxury apartment with transparent pricing and great support throughout the property buying process. Truly reliable property advisors.",
+      initial: "D",
+    },
+  ],
 };
 
-const INITIAL_FORM = { name: "", email: "", phone: "", date: "", message: "" };
+/* SVG Icons Helper */
+const SvgIcon = ({ name, size = 18 }) => {
+  const s = { width: size, height: size };
+  switch (name) {
+    case "pin":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      );
+    case "phone":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        </svg>
+      );
+    case "eye":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      );
+    case "area":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
+          <rect x="7" y="7" width="10" height="10" rx="1.5" strokeDasharray="2 2" />
+        </svg>
+      );
+    case "tower":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17" />
+          <path d="M10 7h1M13 7h1M10 11h1M13 11h1M10 15h1M13 15h1M10 19h1M13 19h1M3 22h18" />
+        </svg>
+      );
+    case "floors":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2" />
+          <path d="M8 6h2M14 6h2M8 10h2M14 10h2M8 14h2M14 14h2M10 22v-4h4v4" />
+        </svg>
+      );
+    case "flats":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2" />
+          <polyline points="2 12 12 17 22 12" />
+          <polyline points="2 17 12 22 22 17" />
+        </svg>
+      );
+    case "facing":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 4v16a1 1 0 0 0 1 1h5V3H4a1 1 0 0 0-1 1zM21 4v16a1 1 0 0 1-1 1h-5V3h5a1 1 0 0 1 1 1z" />
+          <circle cx="7" cy="12" r="1.2" fill="currentColor" />
+          <circle cx="17" cy="12" r="1.2" fill="currentColor" />
+        </svg>
+      );
+    case "carpet":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="4" x2="3" y2="20" />
+          <line x1="21" y1="4" x2="21" y2="20" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <polyline points="8 8 4 12 8 16" />
+          <polyline points="16 8 20 12 16 16" />
+        </svg>
+      );
+    case "bed":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 4v16M2 10h20a2 2 0 0 1 2 2v8M2 18h20" />
+          <path d="M6 10V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3" />
+          <circle cx="8.5" cy="7.5" r="1" fill="currentColor" />
+          <circle cx="15.5" cy="7.5" r="1" fill="currentColor" />
+        </svg>
+      );
+    case "bath":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12h16a1 1 0 0 1 1 1v2a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-2a1 1 0 0 1 1-1z" />
+          <path d="M6 12V5a2 2 0 0 1 2-2h1M5 20v2M19 20v2" />
+        </svg>
+      );
+    case "balcony":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="1.5" />
+          <line x1="3" y1="15" x2="21" y2="15" />
+          <line x1="7.5" y1="15" x2="7.5" y2="21" />
+          <line x1="12" y1="15" x2="12" y2="21" />
+          <line x1="16.5" y1="15" x2="16.5" y2="21" />
+          <path d="M6 11V6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v5" />
+        </svg>
+      );
+    case "car":
+    case "parking":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11" />
+          <rect x="3" y="11" width="18" height="7" rx="2" />
+          <circle cx="7" cy="14.5" r="1.5" fill="currentColor" />
+          <circle cx="17" cy="14.5" r="1.5" fill="currentColor" />
+        </svg>
+      );
+    case "key":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="7.5" cy="15.5" r="4.5" />
+          <path d="m11 12 8.5-8.5a1.5 1.5 0 0 1 2 2L20 7l-2-2-2 2 2 2-1.5 1.5" />
+          <circle cx="7.5" cy="15.5" r="1.5" fill="currentColor" />
+        </svg>
+      );
+    case "overlook":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+          <circle cx="12" cy="12" r="1" fill="currentColor" />
+        </svg>
+      );
+    case "rupee":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z" />
+          <path d="M9.5 9h5M9.5 12h5M9.5 15h2.5a2 2 0 0 0 0-4M12 15l2.5 3.5" strokeWidth="1.8" />
+        </svg>
+      );
+    case "rental":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="10" width="7" height="11" rx="1" />
+          <path d="M5 13h3M5 17h3" />
+          <polyline points="13 11 16 8 21 8" />
+          <polyline points="18 5 21 8 18 11" />
+          <line x1="13" y1="21" x2="13" y2="15" />
+          <line x1="17" y1="21" x2="17" y2="13" />
+          <line x1="21" y1="21" x2="21" y2="11" />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+    case "pool":
+    case "swimmer":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 20c2 0 3-1 5-1s3 1 5 1 3-1 5-1 3 1 5 1M2 16c2 0 3-1 5-1s3 1 5 1 3-1 5-1 3 1 5 1M14 6a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM12 10v4" />
+        </svg>
+      );
+    case "kitchen":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 3v18M20 3v18M4 11h16M4 6h16M10 11v10M14 11v10" />
+        </svg>
+      );
+    case "elevator":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="2" width="18" height="20" rx="2" />
+          <polyline points="9 9 12 6 15 9" />
+          <polyline points="9 15 12 18 15 15" />
+        </svg>
+      );
+    case "temple":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v3M4 9h16M6 9l6-5 6 5M5 9v11h14V9M9 20v-5a3 3 0 0 1 6 0v5" />
+        </svg>
+      );
+    case "child":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="5" r="2.5" />
+          <path d="M6 10h12M12 7.5v8.5M8 21l4-5 4 5" />
+        </svg>
+      );
+    case "laptop":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="12" rx="2" />
+          <path d="M2 20h20" />
+        </svg>
+      );
+    case "ev":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      );
+    case "hall":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 21V9l8-6 8 6v12M9 21v-6h6v6M2 21h20" />
+        </svg>
+      );
+    case "arch":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16M3 7h18M7 21V11a5 5 0 0 1 10 0v10" />
+        </svg>
+      );
+    case "dumbbell":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6.5 6.5 11 11M3 8l3-3M16 21l3-3M2 13l3-3 3 3-3 3zM16 7l3-3 3 3-3 3z" />
+        </svg>
+      );
+    case "cloud":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+        </svg>
+      );
+    case "rain":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M8 19v2M8 13v2M12 21v2M12 15v2M16 19v2M16 13v2" />
+        </svg>
+      );
+    case "recycle":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12M14 16l3 3-3 3M8.293 13.596 5.5 9.5 8.5 4.5M15.5 4.5h4.195a1.83 1.83 0 0 1 1.571.88 1.785 1.785 0 0 1 .005 1.785L19 11M11 4.5 8 7.5 5 4.5" />
+        </svg>
+      );
+    case "intercom":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="3" />
+          <circle cx="12" cy="7" r="2" />
+          <line x1="9" y1="13" x2="15" y2="13" />
+          <line x1="9" y1="16" x2="15" y2="16" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      );
+    default:
+      return (
+        <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 14 14" />
+        </svg>
+      );
+  }
+};
 
-const FORM_FIELDS = [
-  { name: "name", type: "text", placeholder: "Your Name", icon: FiUser },
-  { name: "email", type: "email", placeholder: "Email Address", icon: FiMail },
-  { name: "phone", type: "tel", placeholder: "Phone Number", icon: FiPhone },
-  {
-    name: "date",
-    type: "date",
-    placeholder: "Preferred Visit Date",
-    icon: FiCalendar,
-  },
-];
-
-/* ============================================================= */
-
+/* ==========================================================================
+   MAIN COMPONENT
+   ========================================================================== */
 const PropertyDetailsMain = () => {
-  /* ---------- gallery ---------- */
-  const [current, setCurrent] = useState(0);
-  const thumbsRef = useRef(null);
-  const touchStartX = useRef(null);
+  const { id, slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetIdOrSlug = id || slug || searchParams.get("id") || searchParams.get("slug");
 
-  const goPrev = () =>
-    setCurrent((i) => (i - 1 + GALLERY.length) % GALLERY.length);
-  const goNext = () => setCurrent((i) => (i + 1) % GALLERY.length);
+  const [propData, setPropData] = useState(DEFAULT_PROPERTY);
+  const [loading, setLoading] = useState(false);
 
-  // keep the active thumbnail centred inside the strip
-  useEffect(() => {
-    const strip = thumbsRef.current;
-    if (!strip) return;
-    const el = strip.children[current];
-    if (!el) return;
-    strip.scrollTo({
-      left: el.offsetLeft - (strip.clientWidth - el.clientWidth) / 2,
-      behavior: "smooth",
-    });
-  }, [current]);
+  /* Slider states */
+  const [activeSlide, setActiveSlide] = useState(0);
 
-  const onTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const onTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const diff = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(diff) > 50) (diff > 0 ? goPrev : goNext)();
-    touchStartX.current = null;
-  };
+  /* Floorplan active tab */
+  const [activePlanTab, setActivePlanTab] = useState(0);
 
-  /* ---------- lightbox ---------- */
-  const [lb, setLb] = useState(null); // { list, index }
-  const lbOpen = lb !== null;
+  /* Modals */
+  const [lightboxImg, setLightboxImg] = useState(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [brochureModalOpen, setBrochureModalOpen] = useState(false);
 
-  const openLightbox = (list, index = 0) => setLb({ list, index });
-  const closeLightbox = () => setLb(null);
-  const lbNext = useCallback(
-    () =>
-      setLb((p) => p && { ...p, index: (p.index + 1) % p.list.length }),
-    []
-  );
-  const lbPrev = useCallback(
-    () =>
-      setLb(
-        (p) => p && { ...p, index: (p.index - 1 + p.list.length) % p.list.length }
-      ),
-    []
-  );
+  /* Sidebar Lead Form State */
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", mobile: "", captchaInput: "" });
+  const [captchaCode, setCaptchaCode] = useState("JwmJJP");
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
 
-  useEffect(() => {
-    if (!lbOpen) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") setLb(null);
-      if (e.key === "ArrowRight") lbNext();
-      if (e.key === "ArrowLeft") lbPrev();
-    };
-    window.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [lbOpen, lbNext, lbPrev]);
+  /* Sidebar Review State */
+  const [reviewForm, setReviewForm] = useState({ name: "", email: "", phone: "", text: "", stars: 5 });
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [publishedReviews, setPublishedReviews] = useState([]);
 
-  /* ---------- share ---------- */
-  const [copied, setCopied] = useState(false);
-  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
-  const shareText = "Archer House – Modern Villa in Jamaica, NY";
+  /* Reviews Carousel */
+  const [reviewSlide, setReviewSlide] = useState(0);
 
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(pageUrl);
-    } catch {
-      const t = document.createElement("textarea");
-      t.value = pageUrl;
-      document.body.appendChild(t);
-      t.select();
-      document.execCommand("copy");
-      document.body.removeChild(t);
+  /* Generate random captcha */
+  const refreshCaptcha = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+    setCaptchaCode(code);
   };
 
-  /* ---------- enquiry form ---------- */
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState("idle"); // idle | sending | sent
-  const today = new Date().toISOString().split("T")[0];
+  /* Fetch dynamic property from backend API if an ID or slug is supplied */
+  useEffect(() => {
+    if (!targetIdOrSlug) return;
+    let isMounted = true;
+    const fetchProperty = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_ENDPOINTS.PROPERTIES}/${targetIdOrSlug}`);
+        const json = await res.json();
+        if (isMounted && json.success && json.data) {
+          const d = json.data;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
-    if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+          const mapAmenityIcon = (name) => {
+            const n = String(name || "").toLowerCase();
+            if (n.includes("pool") || n.includes("swim")) return "pool";
+            if (n.includes("kitchen")) return "kitchen";
+            if (n.includes("gym") || n.includes("fitness")) return "dumbbell";
+            if (n.includes("play") || n.includes("child")) return "child";
+            if (n.includes("lift") || n.includes("elevator")) return "elevator";
+            if (n.includes("park")) return "parking";
+            if (n.includes("temple")) return "temple";
+            if (n.includes("ev") || n.includes("charg")) return "ev";
+            if (n.includes("hall") || n.includes("banquet")) return "hall";
+            if (n.includes("intercom")) return "intercom";
+            if (n.includes("cowork") || n.includes("work")) return "laptop";
+            if (n.includes("rain") || n.includes("water")) return "rain";
+            if (n.includes("waste") || n.includes("sewage")) return "recycle";
+            if (n.includes("lounge") || n.includes("sky")) return "cloud";
+            if (n.includes("gate") || n.includes("entrance")) return "arch";
+            return "check";
+          };
+
+          const dynamicAmenities = Array.isArray(d.amenities) && d.amenities.length > 0
+            ? d.amenities.map((a) => ({ name: a, icon: mapAmenityIcon(a) }))
+            : DEFAULT_PROPERTY.amenities;
+
+          const dynamicSpecs = [
+            { label: "Project Area", value: d.projectArea || "1.3 Acre", icon: "area" },
+            { label: "No. of Towers", value: d.houses ? Math.max(1, Math.ceil(d.houses / 100)).toString() : "1", icon: "tower" },
+            { label: "Total Floors", value: d.floors || "2B+S+27", icon: "floors" },
+            { label: "Number of Flats", value: d.houses ? String(d.houses) : "108", icon: "flats" },
+            { label: "Facing", value: d.facing || "West, East", icon: "facing" },
+            { label: "Carpet Area (sq.ft.)", value: d.superArea || "1655-2058", icon: "carpet" },
+            { label: "Bedrooms", value: d.bedrooms || "3-4", icon: "bed" },
+            { label: "Bathrooms", value: d.bathrooms || "3-4", icon: "bath" },
+            { label: "Balconies", value: d.balconies || "3-5", icon: "balcony" },
+            { label: "Parking", value: d.parking || "1", icon: "car" },
+            { label: "Transaction Type", value: d.category || "New property", icon: "key" },
+            { label: "Property Overlooking", value: d.overlooking || "Pool, Road, Club, Garden, Park", icon: "overlook" },
+            { label: "Maintainance Per Month", value: d.maintenance !== undefined ? `₹ ${Number(d.maintenance).toLocaleString("en-IN")}` : "₹ 0.00", icon: "rupee" },
+            { label: "Expected Rental Return", value: d.rental !== undefined ? `₹ ${Number(d.rental).toLocaleString("en-IN")}` : "₹ 1.00 Lac", icon: "rental" },
+          ];
+
+          const dynamicNeighbourhood = Array.isArray(d.nearbyPlaces) && d.nearbyPlaces.length > 0
+            ? d.nearbyPlaces.map((np) => ({ name: np.name, dist: np.distance }))
+            : DEFAULT_PROPERTY.neighbourhood;
+
+          // Fetch similar real properties
+          let similarMapped = DEFAULT_PROPERTY.similarProjects;
+          try {
+            const simRes = await fetch(`${API_ENDPOINTS.PROPERTIES}?limit=6`);
+            const simJson = await simRes.json();
+            if (simJson.success && Array.isArray(simJson.data)) {
+              const others = simJson.data.filter((p) => p.slug !== targetIdOrSlug && p._id !== targetIdOrSlug);
+              if (others.length > 0) {
+                similarMapped = others.slice(0, 4).map((op) => ({
+                  id: op._id,
+                  slug: op.slug,
+                  title: op.title,
+                  price: op.price
+                    ? `₹ ${(op.price >= 10000000 ? (op.price / 10000000).toFixed(2) + " Cr" : (op.price / 100000).toFixed(2) + " Lac")}`
+                    : "Price on Request",
+                  location: op.location || "Bhubaneswar",
+                  image: Array.isArray(op.images) && op.images.length > 0 ? getMediaUrl(op.images[0]) : feat1,
+                  tag: op.isFeatured ? "Featured" : op.status || "Residential",
+                }));
+              }
+            }
+          } catch (e) {
+            console.warn("Could not load similar properties", e);
+          }
+
+          setPropData({
+            ...DEFAULT_PROPERTY,
+            id: d._id || d.slug,
+            title: d.title || DEFAULT_PROPERTY.title,
+            subtitle: d.metaTitle || DEFAULT_PROPERTY.subtitle,
+            location: d.location || DEFAULT_PROPERTY.location,
+            fullAddress: d.location || DEFAULT_PROPERTY.fullAddress,
+            builder: d.builder || DEFAULT_PROPERTY.builder,
+            priceRange: d.price
+              ? `₹ ${(d.price >= 10000000 ? (d.price / 10000000).toFixed(2) + " Cr" : (d.price / 100000).toFixed(2) + " Lac")}`
+              : DEFAULT_PROPERTY.priceRange,
+            pricePerSqft: d.pricePerSqft ? `₹ ${d.pricePerSqft.toLocaleString("en-IN")} / Sqft` : DEFAULT_PROPERTY.pricePerSqft,
+            type: d.propertyType || DEFAULT_PROPERTY.type,
+            furnishing: d.furnishing || DEFAULT_PROPERTY.furnishing,
+            sba: d.superArea || DEFAULT_PROPERTY.sba,
+            status: d.status || DEFAULT_PROPERTY.status,
+            reraNo: d.rera || DEFAULT_PROPERTY.reraNo,
+            overviewSpecs: dynamicSpecs,
+            amenities: dynamicAmenities,
+            keyFeatures: Array.isArray(d.amenities) && d.amenities.length > 0 ? d.amenities.slice(0, 10) : DEFAULT_PROPERTY.keyFeatures,
+            neighbourhood: dynamicNeighbourhood,
+            similarProjects: similarMapped,
+            description: d.description || DEFAULT_PROPERTY.description,
+            locationDetails: d.location
+              ? `Strategically located in ${d.location}. The project enjoys seamless connectivity to major roads, schools, hospitals, shopping malls, business hubs, and daily lifestyle essentials.`
+              : DEFAULT_PROPERTY.locationDetails,
+            images: Array.isArray(d.images) && d.images.length > 0 ? d.images.map((img) => getMediaUrl(img)) : DEFAULT_PROPERTY.images,
+            floorPlans: Array.isArray(d.floorPlans) && d.floorPlans.length > 0
+              ? d.floorPlans.map((fp, i) => ({ label: `Plan ${i + 1}`, title: `Floor Plan ${i + 1}`, img: getMediaUrl(fp) }))
+              : DEFAULT_PROPERTY.floorPlans,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load property details from API:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchProperty();
+    return () => {
+      isMounted = false;
+    };
+  }, [targetIdOrSlug]);
+
+  /* Fetch live published reviews for this property */
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPublishedReviews = async () => {
+      try {
+        const propSlugOrId = slug || targetIdOrSlug || "royal-presidency";
+        const res = await fetch(`${API_ENDPOINTS.PROPERTY_REVIEWS}?propertySlug=${propSlugOrId}&status=Published`);
+        const json = await res.json();
+        if (isMounted && json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const mapped = json.data.map((r) => {
+            const d = new Date(r.createdAt || Date.now());
+            return {
+              id: r._id,
+              name: r.name,
+              stars: r.rating || 5,
+              comment: r.comment,
+              date: d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+              initial: r.name ? r.name.charAt(0).toUpperCase() : "U",
+            };
+          });
+          setPublishedReviews(mapped);
+        } else if (isMounted) {
+          setPublishedReviews([]);
+        }
+      } catch (err) {
+        console.warn("Could not fetch published reviews", err);
+      }
+    };
+    fetchPublishedReviews();
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, targetIdOrSlug]);
+
+  const slideCount = propData.images.length;
+  const nextSlide = () => setActiveSlide((prev) => (prev + 1) % slideCount);
+  const prevSlide = () => setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
+
+  const activeReviews = publishedReviews.length > 0 ? publishedReviews : propData.reviews;
+  const avgRating = (
+    activeReviews.reduce((sum, r) => sum + (r.stars || 5), 0) / (activeReviews.length || 1)
+  ).toFixed(1);
+
+  const nextReviews = () => {
+    setReviewSlide((prev) => (prev + 2 < activeReviews.length ? prev + 2 : 0));
+  };
+  const prevReviews = () => {
+    setReviewSlide((prev) => (prev - 2 >= 0 ? prev - 2 : Math.max(0, activeReviews.length - 2)));
   };
 
-  const validate = () => {
-    const err = {};
-    if (!form.name.trim() || form.name.trim().length < 2)
-      err.name = "Please enter your name";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
-      err.email = "Enter a valid email address";
-    if (!/^\+?[\d\s-]{10,14}$/.test(form.phone.trim()))
-      err.phone = "Enter a valid phone number";
-    return err;
-  };
-
-  const handleSubmit = (e) => {
+  const handleLeadSubmit = async (e) => {
     e.preventDefault();
-    const found = validate();
-    setErrors(found);
-    if (Object.keys(found).length) return;
+    if (!leadForm.name || !leadForm.mobile) return alert("Please fill your Name and Mobile Number");
+    if (leadForm.captchaInput.trim() !== captchaCode.trim()) {
+      alert("Captcha does not match. Please try again.");
+      refreshCaptcha();
+      return;
+    }
 
-    setStatus("sending");
-    // TODO: replace this timeout with your real API call (fetch / axios)
-    setTimeout(() => {
-      setStatus("sent");
-      setForm(INITIAL_FORM);
-    }, 1000);
+    try {
+      await fetch(API_ENDPOINTS.ENQUIRY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: leadForm.name.trim(),
+          email: leadForm.email ? leadForm.email.trim() : `${leadForm.mobile}@lead.utkalproperty.com`,
+          phone: leadForm.mobile.trim(),
+          location: propData.location || "Bhubaneswar",
+          service: "Residential Properties",
+          interest: "View Contact Number",
+          message: `Inquired on property: ${propData.title}`,
+          source: `Property Details (${propData.title})`,
+        }),
+      });
+    } catch (err) {
+      console.warn("Could not save lead enquiry to database:", err);
+    }
+
+    setLeadSubmitted(true);
   };
 
-  /* ============================================================= */
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.name || !reviewForm.text) {
+      return alert("Please enter your Name and Review");
+    }
+    if (!reviewForm.email) {
+      return alert("Please enter your Email address");
+    }
+
+    setReviewSubmitting(true);
+    setReviewError(null);
+
+    try {
+      const res = await fetch(API_ENDPOINTS.PROPERTY_REVIEWS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId: propData.id,
+          propertySlug: slug || propData.slug || propData.id || "royal-presidency",
+          propertyTitle: propData.title,
+          name: reviewForm.name.trim(),
+          email: reviewForm.email.trim(),
+          phone: reviewForm.phone ? reviewForm.phone.trim() : "",
+          rating: reviewForm.stars || 5,
+          comment: reviewForm.text.trim(),
+        }),
+      });
+
+      const json = await res.json();
+      if (json && json.success) {
+        setReviewSubmitted(true);
+        setReviewError(null);
+        setTimeout(() => {
+          setReviewForm({ name: "", email: "", phone: "", text: "", stars: 5 });
+          setReviewSubmitted(false);
+        }, 4000);
+      } else {
+        const errorMsg = json.message || "Failed to submit review.";
+        setReviewError(errorMsg);
+        alert(errorMsg);
+      }
+    } catch (err) {
+      console.error("Review submission error:", err);
+      setReviewError("Network error. Please try again later.");
+      alert("Network error. Please try again later.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   return (
-    <section className="PropertyDetailsMain">
-      <div className="PropertyDetailsMain__container">
-        <div className="PropertyDetailsMain__layout">
-          {/* ===================== MAIN COLUMN ===================== */}
-          <div className="PropertyDetailsMain__main">
-            {/* ----- header ----- */}
-            <div className="PropertyDetailsMain__header">
-              <div className="PropertyDetailsMain__badges">
-                <span className="PropertyDetailsMain__badge PropertyDetailsMain__badge--sale">
-                  For Sale
-                </span>
-                <span className="PropertyDetailsMain__badge PropertyDetailsMain__badge--featured">
-                  Featured
-                </span>
-              </div>
+    <div className="pdm-page">
+      <div className="pdm-container">
 
-              <h1 className="PropertyDetailsMain__title">
-                Archer House – Modern Villa in Jamaica, NY
-              </h1>
-
-              <div className="PropertyDetailsMain__metaRow">
-                <div className="PropertyDetailsMain__meta">
-                  <span className="PropertyDetailsMain__metaItem">
-                    <FiMapPin /> {ADDRESS}
-                  </span>
-                  <span className="PropertyDetailsMain__metaItem">
-                    <FiCalendar /> April 26, 2024
-                  </span>
-                  <span className="PropertyDetailsMain__metaItem">
-                    <FiEye /> 2,345 views
-                  </span>
-                </div>
-
-                <div className="PropertyDetailsMain__share">
-                  <span className="PropertyDetailsMain__shareLabel">Share:</span>
-                  <a
-                    className="PropertyDetailsMain__shareBtn"
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Share on Facebook"
-                  >
-                    <FaFacebookF />
-                  </a>
-                  <a
-                    className="PropertyDetailsMain__shareBtn"
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(shareText)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Share on X"
-                  >
-                    <FaXTwitter />
-                  </a>
-                  <a
-                    className="PropertyDetailsMain__shareBtn"
-                    href={`https://wa.me/?text=${encodeURIComponent(shareText + " " + pageUrl)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Share on WhatsApp"
-                  >
-                    <FaWhatsapp />
-                  </a>
-                  <button
-                    type="button"
-                    className="PropertyDetailsMain__shareBtn"
-                    onClick={copyLink}
-                    aria-label="Copy link"
-                  >
-                    {copied ? <FiCheck /> : <FiLink />}
-                  </button>
-                  {copied && (
-                    <span className="PropertyDetailsMain__copied">
-                      Link copied!
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ----- gallery ----- */}
-            <div className="PropertyDetailsMain__gallery">
-              <div
-                className="PropertyDetailsMain__galleryMain"
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
+        {/* =================================================================
+            SERIAL 1: TOP HERO SPLIT CARD (Matches Image 1)
+           ================================================================= */}
+        <section className="pdm-hero-section">
+          {/* Left: Image Slider */}
+          <div className="pdm-slider-wrap">
+            <div className="pdm-slider-main" onClick={() => setLightboxImg(propData.images[activeSlide])}>
+              <img
+                src={propData.images[activeSlide]}
+                alt={propData.title}
+                className="pdm-slider-img"
+              />
+              <button
+                type="button"
+                className="pdm-nav-btn pdm-nav-prev"
+                onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+                aria-label="Previous image"
               >
-                <img
-                  key={current}
-                  className="PropertyDetailsMain__galleryImg"
-                  src={GALLERY[current].src}
-                  alt={GALLERY[current].alt}
-                  onClick={() => openLightbox(GALLERY, current)}
-                />
+                ‹
+              </button>
+              <button
+                type="button"
+                className="pdm-nav-btn pdm-nav-next"
+                onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+              <span className="pdm-slider-count">
+                {activeSlide + 1} / {slideCount}
+              </span>
+            </div>
+            {/* Slider Dots/Thumbs */}
+            <div className="pdm-slider-thumbs">
+              {propData.images.map((img, i) => (
                 <button
+                  key={i}
                   type="button"
-                  className="PropertyDetailsMain__galleryNav PropertyDetailsMain__galleryNav--prev"
-                  onClick={goPrev}
-                  aria-label="Previous image"
+                  className={`pdm-thumb-btn ${activeSlide === i ? "is-active" : ""}`}
+                  onClick={() => setActiveSlide(i)}
                 >
-                  <FiChevronLeft />
+                  <img src={img} alt="" />
                 </button>
-                <button
-                  type="button"
-                  className="PropertyDetailsMain__galleryNav PropertyDetailsMain__galleryNav--next"
-                  onClick={goNext}
-                  aria-label="Next image"
-                >
-                  <FiChevronRight />
-                </button>
-                <button
-                  type="button"
-                  className="PropertyDetailsMain__galleryCount"
-                  onClick={() => openLightbox(GALLERY, current)}
-                  aria-label="Open full screen gallery"
-                >
-                  <FiCamera /> {current + 1} / {GALLERY.length}
-                </button>
-              </div>
-
-              <div className="PropertyDetailsMain__thumbs" ref={thumbsRef}>
-                {GALLERY.map((g, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`PropertyDetailsMain__thumb ${
-                      i === current ? "PropertyDetailsMain__thumb--active" : ""
-                    }`}
-                    onClick={() => setCurrent(i)}
-                    aria-label={`Show image ${i + 1}`}
-                  >
-                    <img src={g.src} alt={g.alt} loading="lazy" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* ----- quick stats ----- */}
-            <div className="PropertyDetailsMain__stats">
-              {STATS.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <div className="PropertyDetailsMain__stat" key={s.label}>
-                    <Icon />
-                    <span>{s.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* ----- description ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">
-                Property Description
-              </h2>
-              <div className="PropertyDetailsMain__descGrid">
-                <p className="PropertyDetailsMain__descText">
-                  Archer House is a beautifully designed modern home offering the
-                  perfect blend of comfort, style, and functionality. Located in a
-                  prime neighborhood of Jamaica, NY, this property features
-                  spacious living areas, a contemporary kitchen, well-designed
-                  bedrooms, and a private outdoor space.
-                </p>
-                <button
-                  type="button"
-                  className="PropertyDetailsMain__descImg"
-                  onClick={() => openLightbox([GALLERY[1]], 0)}
-                  aria-label="View living room image"
-                >
-                  <img src={img2} alt="Living room" loading="lazy" />
-                </button>
-              </div>
-            </div>
-
-            {/* ----- key features ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">Key Features</h2>
-              <div className="PropertyDetailsMain__features">
-                {KEY_FEATURES.map((f) => {
-                  const Icon = f.icon;
-                  return (
-                    <div className="PropertyDetailsMain__feature" key={f.label}>
-                      <span className="PropertyDetailsMain__featureIcon">
-                        <Icon />
-                      </span>
-                      {f.label}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----- amenities ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">Amenities</h2>
-              <div className="PropertyDetailsMain__amenities">
-                {AMENITIES.map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <div className="PropertyDetailsMain__amenity" key={a.label}>
-                      <span className="PropertyDetailsMain__amenityIcon">
-                        <Icon />
-                      </span>
-                      <span>{a.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----- location ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">
-                Location &amp; Nearby Places
-              </h2>
-              <div className="PropertyDetailsMain__locationGrid">
-                <div className="PropertyDetailsMain__map">
-                  <iframe
-                    title="Property location map"
-                    src={`https://www.google.com/maps?q=${MAP_QUERY}&z=14&output=embed`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                  />
-                  <a
-                    className="PropertyDetailsMain__mapBtn"
-                    href={`https://www.google.com/maps/search/?api=1&query=${MAP_QUERY}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FiNavigation /> View on Google Maps
-                  </a>
-                </div>
-
-                <div className="PropertyDetailsMain__nearby">
-                  <h3 className="PropertyDetailsMain__nearbyTitle">
-                    Nearby Places
-                  </h3>
-                  <ul className="PropertyDetailsMain__nearbyList">
-                    {NEARBY.map((n) => {
-                      const Icon = n.icon;
-                      return (
-                        <li className="PropertyDetailsMain__nearbyItem" key={n.name}>
-                          <span className="PropertyDetailsMain__nearbyIcon">
-                            <Icon />
-                          </span>
-                          <span className="PropertyDetailsMain__nearbyName">
-                            {n.name}
-                          </span>
-                          <span className="PropertyDetailsMain__nearbyDist">
-                            {n.distance}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* ----- floor plan ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">Floor Plan</h2>
-              <div className="PropertyDetailsMain__floorGrid">
-                <button
-                  type="button"
-                  className="PropertyDetailsMain__floorImg"
-                  onClick={() => openLightbox(FLOOR_PLAN, 0)}
-                  aria-label="Open floor plan"
-                >
-                  <img src={img6} alt="Ground floor plan" loading="lazy" />
-                </button>
-
-                <div className="PropertyDetailsMain__floorInfo">
-                  <h3 className="PropertyDetailsMain__floorTitle">
-                    Floor Plan – Ground Floor
-                  </h3>
-                  <ul className="PropertyDetailsMain__floorList">
-                    {FLOOR_POINTS.map((p) => (
-                      <li key={p}>
-                        <FiCheckCircle /> {p}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    className="PropertyDetailsMain__floorBtn"
-                    onClick={() => openLightbox(FLOOR_PLAN, 0)}
-                  >
-                    View Full Floor Plan
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ----- related ----- */}
-            <div className="PropertyDetailsMain__section">
-              <h2 className="PropertyDetailsMain__sectionTitle">
-                Related Properties
-              </h2>
-              <div className="PropertyDetailsMain__related">
-                {RELATED.map((r) => (
-                  <Link
-                    to="/properties-details"
-                    className="PropertyDetailsMain__relCard"
-                    key={r.id}
-                  >
-                    <div className="PropertyDetailsMain__relImg">
-                      <img src={r.img} alt={r.title} loading="lazy" />
-                      <span
-                        className={`PropertyDetailsMain__relTag PropertyDetailsMain__relTag--${r.tagType}`}
-                      >
-                        {r.tag}
-                      </span>
-                    </div>
-                    <div className="PropertyDetailsMain__relBody">
-                      <h4 className="PropertyDetailsMain__relTitle">{r.title}</h4>
-                      <p className="PropertyDetailsMain__relPrice">{r.price}</p>
-                      <div className="PropertyDetailsMain__relMeta">
-                        <span><FaBed /> {r.beds} Beds</span>
-                        <span><FaBath /> {r.baths} Baths</span>
-                        <span><FaRulerCombined /> {r.area}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* ===================== SIDEBAR ===================== */}
-          <aside className="PropertyDetailsMain__sidebar">
-            {/* price */}
-            <div className="PropertyDetailsMain__card PropertyDetailsMain__priceCard">
-              <p className="PropertyDetailsMain__priceLabel">
-                <FiTag /> Property Price
-              </p>
-              <div className="PropertyDetailsMain__priceRow">
-                <span className="PropertyDetailsMain__price">₹6,78,50,000</span>
+          {/* Right: Info Card */}
+          <div className="pdm-hero-card">
+            <h1 className="pdm-hero-title">{propData.title}</h1>
+            <p className="pdm-hero-sub">{propData.subtitle}</p>
+
+            <div className="pdm-hero-loc">
+              <span className="pdm-hero-loc-icon"><SvgIcon name="pin" size={16} /></span>
+              <span>{propData.location}</span>
+            </div>
+
+            {/* Builder pill */}
+            <div className="pdm-builder-pill">
+              <div className="pdm-builder-avatar">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
               </div>
-              <div className="PropertyDetailsMain__priceRow">
-                <span className="PropertyDetailsMain__priceOld">₹7,30,00,000</span>
-                <span className="PropertyDetailsMain__priceSave">Save 4%</span>
+              <div className="pdm-builder-text">
+                <span className="pdm-builder-tag">Builder :</span>
+                <span className="pdm-builder-name">{propData.builder}</span>
               </div>
             </div>
 
-            {/* highlights */}
-            <div className="PropertyDetailsMain__card">
-              <h3 className="PropertyDetailsMain__cardTitle">
-                <FiHome /> Property Highlights
-              </h3>
-              <dl className="PropertyDetailsMain__highlights">
-                {HIGHLIGHTS.map((h) => (
-                  <div className="PropertyDetailsMain__hlRow" key={h.label}>
-                    <dt>{h.label}</dt>
-                    <dd>
-                      {h.pill ? (
-                        <span className="PropertyDetailsMain__hlPill">{h.value}</span>
-                      ) : (
-                        h.value
-                      )}
-                    </dd>
+            {/* Price Box */}
+            <div className="pdm-price-row">
+              <span className="pdm-price-main">{propData.priceRange}</span>
+              <span className="pdm-price-sqft">{propData.pricePerSqft}</span>
+            </div>
+
+            {/* Specs 2-Column Grid */}
+            <div className="pdm-specs-grid">
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">🏬</div>
+                <div>
+                  <div className="pdm-spec-label">Type</div>
+                  <div className="pdm-spec-val">{propData.type}</div>
+                </div>
+              </div>
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">📝</div>
+                <div>
+                  <div className="pdm-spec-label">Booking Amount</div>
+                  <div className="pdm-spec-val">{propData.bookingAmount}</div>
+                </div>
+              </div>
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">🛋️</div>
+                <div>
+                  <div className="pdm-spec-label">Furnishing</div>
+                  <div className="pdm-spec-val">{propData.furnishing}</div>
+                </div>
+              </div>
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">↔️</div>
+                <div>
+                  <div className="pdm-spec-label">SBA</div>
+                  <div className="pdm-spec-val">{propData.sba}</div>
+                </div>
+              </div>
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">📅</div>
+                <div>
+                  <div className="pdm-spec-label">Available From</div>
+                  <div className="pdm-spec-val">{propData.availableFrom}</div>
+                </div>
+              </div>
+              <div className="pdm-spec-item">
+                <div className="pdm-spec-icon">✔️</div>
+                <div>
+                  <div className="pdm-spec-label">Status</div>
+                  <div className="pdm-spec-val">{propData.status}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pdm-hero-actions">
+              <button
+                type="button"
+                className="pdm-btn pdm-btn-contact"
+                onClick={() => setContactModalOpen(true)}
+              >
+                <SvgIcon name="phone" size={17} />
+                <span>Contact</span>
+              </button>
+
+              <button
+                type="button"
+                className="pdm-btn pdm-btn-brochure"
+                onClick={() => setBrochureModalOpen(true)}
+              >
+                <SvgIcon name="download" size={17} />
+                <span>Download Brochure</span>
+              </button>
+            </div>
+
+            {/* RERA and Views */}
+            <div className="pdm-hero-footer">
+              <span className="pdm-rera">RERA NO: {propData.reraNo}</span>
+              <span className="pdm-views">
+                <SvgIcon name="eye" size={16} />
+                <span>{propData.viewsCount}</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================================================
+            SERIAL 2: PROJECT OVERVIEW (Matches Image 2)
+           ================================================================= */}
+        <section className="pdm-card pdm-section-overview">
+          <div className="pdm-section-head-row">
+            <h2 className="pdm-sec-title">Project Overview</h2>
+
+            {/* Social Share Icons */}
+            <div className="pdm-social-shares">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="pdm-share-btn pdm-share-fb" title="Share on Facebook">f</a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="pdm-share-btn pdm-share-tw" title="Share on Twitter">𝕏</a>
+              <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="pdm-share-btn pdm-share-wa" title="Share on WhatsApp">W</a>
+              <a href="https://telegram.org" target="_blank" rel="noreferrer" className="pdm-share-btn pdm-share-tg" title="Share on Telegram">✈</a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="pdm-share-btn pdm-share-in" title="Share on LinkedIn">in</a>
+              <a href="mailto:info@utkalproperty.com" className="pdm-share-btn pdm-share-mail" title="Share via Email">✉</a>
+              <button type="button" className="pdm-share-btn pdm-share-plus" title="More Options">+</button>
+            </div>
+          </div>
+
+          <div className="pdm-overview-grid">
+            {propData.overview.map((item, i) => (
+              <div key={i} className="pdm-overview-item">
+                <div className="pdm-overview-icon">
+                  <SvgIcon name={item.icon} size={26} />
+                </div>
+                <div className="pdm-overview-info">
+                  <span className="pdm-ov-label">{item.label}</span>
+                  <span className="pdm-ov-val">{item.value}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* =================================================================
+              SERIAL 3: DESCRIPTION & LOCATION DETAILS (Matches Image 3)
+             ================================================================= */}
+          <div className="pdm-prose-block">
+            <h3 className="pdm-gold-heading">Description</h3>
+            <span className="pdm-gold-bar" />
+            <p className="pdm-prose-text">{propData.description}</p>
+          </div>
+
+          <div className="pdm-prose-block">
+            <h3 className="pdm-gold-heading">Location</h3>
+            <span className="pdm-gold-bar" />
+            <p className="pdm-prose-text">{propData.locationDetails}</p>
+          </div>
+        </section>
+
+        {/* =================================================================
+            SERIAL 4 & 5: AMENITIES + KEY FEATURES + FLOOR PLANS + SIDEBAR
+            (Matches Image 4 & Image 5)
+           ================================================================= */}
+        <div className="pdm-two-col-layout">
+          {/* Main Left Column */}
+          <div className="pdm-col-main">
+
+            {/* Serial 4: Amenities */}
+            <div className="pdm-card">
+              <h3 className="pdm-gold-heading">Amenities {propData.title}</h3>
+              <span className="pdm-gold-bar" />
+
+              <div className="pdm-amenities-grid">
+                {propData.amenities.map((am, i) => (
+                  <div key={i} className="pdm-amenity-card">
+                    <div className="pdm-amenity-icon">
+                      <SvgIcon name={am.icon} size={24} />
+                    </div>
+                    <span className="pdm-amenity-name">{am.name}</span>
                   </div>
                 ))}
-              </dl>
+              </div>
             </div>
 
-            {/* enquiry */}
-            <div className="PropertyDetailsMain__card PropertyDetailsMain__enquiry">
-              <h3 className="PropertyDetailsMain__cardTitle">
-                <FiSend /> Get Property Enquiry
-              </h3>
-              <p className="PropertyDetailsMain__cardSub">
-                Fill out the form and our team will get in touch with you shortly.
-              </p>
+            {/* Serial 5: Key Features */}
+            <div className="pdm-card">
+              <h3 className="pdm-gold-heading">Key Features {propData.title}</h3>
+              <span className="pdm-gold-bar" />
 
-              {status === "sent" ? (
-                <div className="PropertyDetailsMain__success" role="status">
-                  <span className="PropertyDetailsMain__successIcon">
-                    <FiCheck />
+              <div className="pdm-features-wrap">
+                {propData.keyFeatures.map((kf, i) => (
+                  <span key={i} className="pdm-feature-pill">
+                    <SvgIcon name="star" size={14} />
+                    <span>{kf}</span>
                   </span>
-                  <h4>Enquiry sent!</h4>
-                  <p>Thank you. Our team will contact you shortly.</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Serial 5: Floor Plans & Documents */}
+            <div className="pdm-card">
+              <h3 className="pdm-gold-heading">Floor Plans &amp; Documents</h3>
+              <span className="pdm-gold-bar" />
+
+              {/* Tabs */}
+              <div className="pdm-floorplan-tabs">
+                {propData.floorPlans.map((fp, i) => (
                   <button
+                    key={i}
                     type="button"
-                    className="PropertyDetailsMain__successBtn"
-                    onClick={() => setStatus("idle")}
+                    className={`pdm-fp-tab ${activePlanTab === i ? "is-active" : ""}`}
+                    onClick={() => setActivePlanTab(i)}
                   >
-                    Send another enquiry
+                    {fp.label}
                   </button>
+                ))}
+              </div>
+
+              {/* Floor Plan Display */}
+              <div
+                className="pdm-floorplan-viewer"
+                onClick={() => setLightboxImg(propData.floorPlans[activePlanTab]?.img)}
+                title="Click to view full plan"
+              >
+                <div className="pdm-fp-meta-tag">
+                  {propData.floorPlans[activePlanTab]?.title}
+                </div>
+                <img
+                  src={propData.floorPlans[activePlanTab]?.img}
+                  alt={propData.floorPlans[activePlanTab]?.title}
+                  className="pdm-fp-img"
+                />
+                <span className="pdm-fp-zoom-hint">🔍 Click to zoom blueprint</span>
+              </div>
+            </div>
+
+            {/* =================================================================
+                SERIAL 6: WALKTHROUGH VIDEO (Matches Image 6)
+               ================================================================= */}
+            <div className="pdm-card">
+              <h3 className="pdm-gold-heading">Walkthrough video of {propData.title}</h3>
+              <span className="pdm-gold-bar" />
+
+              <div className="pdm-video-wrap">
+                <iframe
+                  src={propData.videoUrl}
+                  title={`Walkthrough video of ${propData.title}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* =================================================================
+                SERIAL 7: EXPLORE NEIGHBOURHOOD (Matches Image 7)
+               ================================================================= */}
+            <div className="pdm-card">
+              <h3 className="pdm-gold-heading">Explore Neighbourhood - {propData.title}</h3>
+              <span className="pdm-gold-bar" />
+
+              <div className="pdm-neighbour-grid">
+                {propData.neighbourhood.map((item, i) => (
+                  <div key={i} className="pdm-neighbour-card">
+                    <span className="pdm-nb-name">{item.name}</span>
+                    <span className="pdm-nb-dist">{item.dist}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* =================================================================
+                SERIAL 8: LOCATION MAP (Matches Image 8)
+               ================================================================= */}
+            <div className="pdm-card">
+              <p className="pdm-map-address">
+                <strong>Location:</strong> {propData.fullAddress}
+              </p>
+              <div className="pdm-map-wrap">
+                <iframe
+                  title="Google Map Location"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(propData.fullAddress)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Sidebar */}
+          <aside className="pdm-col-sidebar">
+
+            {/* Serial 4 Right Widget: Rate & Review */}
+            <div className="pdm-card pdm-sidebar-widget">
+              <h3 className="pdm-widget-title">Rate &amp; Review</h3>
+              
+              <div className="pdm-star-picker">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`pdm-star-btn ${reviewForm.stars >= star ? "is-filled" : ""}`}
+                    onClick={() => setReviewForm({ ...reviewForm, stars: star })}
+                    aria-label={`Rate ${star} stars`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleReviewSubmit} className="pdm-widget-form">
+                <input
+                  type="text"
+                  placeholder="Enter Your Name"
+                  value={reviewForm.name}
+                  onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Enter Your Email"
+                  value={reviewForm.email}
+                  onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Enter Your Phone"
+                  value={reviewForm.phone}
+                  onChange={(e) => setReviewForm({ ...reviewForm, phone: e.target.value })}
+                />
+                <textarea
+                  placeholder="Write your review..."
+                  rows={3}
+                  value={reviewForm.text}
+                  onChange={(e) => setReviewForm({ ...reviewForm, text: e.target.value })}
+                  required
+                />
+                <button type="submit" className="pdm-btn-teal" disabled={reviewSubmitting}>
+                  {reviewSubmitting ? "Submitting..." : "Submit"}
+                </button>
+                {reviewSubmitted && (
+                  <p className="pdm-form-success">Thank you! Your review has been submitted for moderation.</p>
+                )}
+                {reviewError && (
+                  <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px' }}>{reviewError}</p>
+                )}
+              </form>
+            </div>
+
+            {/* Serial 5 Right Widget: Kindly fill in your details to view contact */}
+            <div className="pdm-card pdm-sidebar-widget">
+              <h3 className="pdm-lead-title">
+                Kindly fill in your details to view the contact number.
+              </h3>
+
+              {leadSubmitted ? (
+                <div className="pdm-lead-revealed">
+                  <span className="pdm-lead-badge">✓ Verified Buyer</span>
+                  <h4>Contact Details:</h4>
+                  <a href="tel:+917077606668" className="pdm-revealed-number">
+                    📞 +91 70776 06668
+                  </a>
+                  <a href="tel:+919861234567" className="pdm-revealed-number">
+                    📞 +91 98612 34567
+                  </a>
+                  <p className="pdm-lead-note">Our senior property consultant will call you shortly.</p>
                 </div>
               ) : (
-                <form
-                  className="PropertyDetailsMain__form"
-                  onSubmit={handleSubmit}
-                  noValidate
-                >
-                  {FORM_FIELDS.map((f) => {
-                    const Icon = f.icon;
-                    const isDate = f.type === "date";
-                    return (
-                      <div className="PropertyDetailsMain__field" key={f.name}>
-                        <span className="PropertyDetailsMain__fieldIcon">
-                          <Icon />
-                        </span>
-                        <input
-                          className={`PropertyDetailsMain__input ${
-                            isDate && !form.date
-                              ? "PropertyDetailsMain__input--emptyDate"
-                              : ""
-                          } ${errors[f.name] ? "PropertyDetailsMain__input--error" : ""}`}
-                          type={f.type}
-                          name={f.name}
-                          value={form[f.name]}
-                          onChange={handleChange}
-                          placeholder={f.placeholder}
-                          min={isDate ? today : undefined}
-                          aria-label={f.placeholder}
-                        />
-                        {isDate && !form.date && (
-                          <span className="PropertyDetailsMain__datePlaceholder">
-                            {f.placeholder}
-                          </span>
-                        )}
-                        {errors[f.name] && (
-                          <small className="PropertyDetailsMain__error">
-                            {errors[f.name]}
-                          </small>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  <div className="PropertyDetailsMain__field PropertyDetailsMain__field--area">
-                    <span className="PropertyDetailsMain__fieldIcon">
-                      <FiEdit3 />
-                    </span>
-                    <textarea
-                      className="PropertyDetailsMain__input PropertyDetailsMain__textarea"
-                      name="message"
-                      value={form.message}
-                      onChange={handleChange}
-                      placeholder="Your Message"
-                      rows={4}
-                      aria-label="Your message"
+                <form onSubmit={handleLeadSubmit} className="pdm-widget-form">
+                  <div className="pdm-field-group">
+                    <label>Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter your name"
+                      value={leadForm.name}
+                      onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                      required
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="PropertyDetailsMain__submit"
-                    disabled={status === "sending"}
-                  >
-                    {status === "sending" ? (
-                      <>
-                        <span className="PropertyDetailsMain__spinner" /> Sending...
-                      </>
-                    ) : (
-                      <>
-                        Send Enquiry <FiArrowRight />
-                      </>
-                    )}
+                  <div className="pdm-field-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={leadForm.email}
+                      onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="pdm-field-group">
+                    <label>Mobile</label>
+                    <input
+                      type="tel"
+                      placeholder="Enter your contact number"
+                      value={leadForm.mobile}
+                      onChange={(e) => setLeadForm({ ...leadForm, mobile: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  {/* Captcha */}
+                  <div className="pdm-field-group">
+                    <label>Captcha</label>
+                    <div className="pdm-captcha-row">
+                      <div className="pdm-captcha-badge">{captchaCode}</div>
+                      <button
+                        type="button"
+                        className="pdm-btn-captcha-refresh"
+                        onClick={refreshCaptcha}
+                      >
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pdm-field-group">
+                    <label>Enter Captcha</label>
+                    <input
+                      type="text"
+                      placeholder="Enter the text"
+                      value={leadForm.captchaInput}
+                      onChange={(e) => setLeadForm({ ...leadForm, captchaInput: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" className="pdm-btn-teal">
+                    Submit
                   </button>
                 </form>
               )}
             </div>
 
-            {/* agent */}
-            <div className="PropertyDetailsMain__card PropertyDetailsMain__agent">
-              <h3 className="PropertyDetailsMain__cardTitle">
-                <FiUser /> Contact Agent
-              </h3>
-              <div className="PropertyDetailsMain__agentRow">
-                <div className="PropertyDetailsMain__avatar">
-                  {AGENT.initials}
-                  <span className="PropertyDetailsMain__avatarDot" />
-                </div>
-                <div className="PropertyDetailsMain__agentInfo">
-                  <h4 className="PropertyDetailsMain__agentName">{AGENT.name}</h4>
-                  <p className="PropertyDetailsMain__agentRole">{AGENT.role}</p>
-                  <div className="PropertyDetailsMain__agentBtns">
-                    <a
-                      className="PropertyDetailsMain__callBtn"
-                      href={`tel:${AGENT.phone}`}
-                    >
-                      <FiPhoneCall /> Call Now
-                    </a>
-                    <a
-                      className="PropertyDetailsMain__waBtn"
-                      href={`https://wa.me/${AGENT.whatsapp}?text=${encodeURIComponent(
-                        "Hi, I'm interested in Archer House (UTK-PR-2045)."
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Chat on WhatsApp"
-                    >
-                      <FaWhatsapp />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="PropertyDetailsMain__cta">
-              <svg
-                className="PropertyDetailsMain__ctaArt"
-                viewBox="0 0 120 100"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M10 52 L60 12 L110 52" />
-                <path d="M22 44 V92 H98 V44" />
-                <path d="M48 92 V68 A12 12 0 0 1 72 68 V92" />
-              </svg>
-              <div className="PropertyDetailsMain__ctaBody">
-                <h3 className="PropertyDetailsMain__ctaTitle">
-                  Looking to Buy or Sell a Property?
-                </h3>
-                <p className="PropertyDetailsMain__ctaText">
-                  Get expert guidance and the best deals from Utkal Property.
-                </p>
-                <Link to="/contact" className="PropertyDetailsMain__ctaBtn">
-                  Contact Us <FiArrowRight />
-                </Link>
-              </div>
-            </div>
           </aside>
         </div>
+
+        {/* =================================================================
+            SERIAL 8: SIMILAR PROJECTS (Matches Image 8)
+           ================================================================= */}
+        <section className="pdm-similar-section">
+          <h2 className="pdm-gold-heading">Similar Project</h2>
+          <span className="pdm-gold-bar" />
+
+          <div className="pdm-similar-grid">
+            {propData.similarProjects.map((sp) => (
+              <article key={sp.id} className="pdm-similar-card">
+                <div className="pdm-sim-img-wrap">
+                  <span className="pdm-sim-tag">{sp.tag}</span>
+                  <img src={sp.image} alt={sp.title} />
+                </div>
+                <div className="pdm-sim-content">
+                  <h4 className="pdm-sim-title">{sp.title}</h4>
+                  <p className="pdm-sim-loc">📍 {sp.location}</p>
+                  <p className="pdm-sim-price">{sp.price}</p>
+                  <Link to={sp.slug ? `/properties/${sp.slug}` : "/properties"} className="pdm-sim-link">
+                    View Project Details →
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* =================================================================
+            SERIAL 9: WHAT PEOPLE SAY ABOUT US / GOOGLE REVIEWS (Matches Image 9)
+           ================================================================= */}
+        <section className="pdm-reviews-section">
+          <div className="pdm-reviews-header">
+            <div>
+              <h2 className="pdm-reviews-title">What People Say About Us</h2>
+              <div className="pdm-rating-summary">
+                <span className="pdm-rate-big">{avgRating}</span>
+                <span className="pdm-rate-stars">
+                  {"★".repeat(Math.round(Number(avgRating)) || 5)}
+                  {"☆".repeat(Math.max(0, 5 - (Math.round(Number(avgRating)) || 5)))}
+                </span>
+                <span className="pdm-rate-count">({activeReviews.length} Reviews)</span>
+              </div>
+            </div>
+
+            {/* Google Reviews Badge */}
+            <div className="pdm-google-badge">
+              <span className="pdm-google-logo">
+                <span style={{ color: "#4285F4" }}>G</span>
+                <span style={{ color: "#EA4335" }}>o</span>
+                <span style={{ color: "#FBBC05" }}>o</span>
+                <span style={{ color: "#4285F4" }}>g</span>
+                <span style={{ color: "#34A853" }}>l</span>
+                <span style={{ color: "#EA4335" }}>e</span>
+              </span>
+              <span className="pdm-google-sub">Reviews</span>
+            </div>
+          </div>
+
+          {/* Review Cards Grid / Slider */}
+          <div className="pdm-reviews-grid">
+            {activeReviews.slice(reviewSlide, reviewSlide + 2).map((rev) => (
+              <div key={rev.id} className="pdm-review-card">
+                <div className="pdm-rev-user-row">
+                  <div className="pdm-rev-avatar">{rev.initial}</div>
+                  <div>
+                    <h4 className="pdm-rev-name">{rev.name}</h4>
+                    <div className="pdm-rev-date-row">
+                      <span className="pdm-rev-stars">
+                        {"★".repeat(rev.stars || 5)}
+                        {"☆".repeat(Math.max(0, 5 - (rev.stars || 5)))}
+                      </span>
+                      <span className="pdm-rev-date">{rev.date}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="pdm-rev-comment">{rev.comment}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Slider navigation arrows */}
+          <div className="pdm-reviews-nav">
+            <button
+              type="button"
+              className="pdm-rev-nav-btn"
+              onClick={prevReviews}
+              aria-label="Previous reviews"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="pdm-rev-nav-btn"
+              onClick={nextReviews}
+              aria-label="Next reviews"
+            >
+              ›
+            </button>
+          </div>
+        </section>
+
       </div>
 
-      {/* ===================== LIGHTBOX ===================== */}
-      {lbOpen && (
-        <div
-          className="PropertyDetailsMain__lightbox"
-          onClick={closeLightbox}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image viewer"
-        >
-          <button
-            type="button"
-            className="PropertyDetailsMain__lbClose"
-            onClick={closeLightbox}
-            aria-label="Close"
-          >
-            <FiX />
-          </button>
-
-          {lb.list.length > 1 && (
+      {/* =================================================================
+          LIGHTBOX MODAL
+         ================================================================= */}
+      {lightboxImg && (
+        <div className="pdm-lightbox" onClick={() => setLightboxImg(null)}>
+          <div className="pdm-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={lightboxImg} alt="Preview" />
             <button
               type="button"
-              className="PropertyDetailsMain__lbNav PropertyDetailsMain__lbNav--prev"
-              onClick={(e) => {
-                e.stopPropagation();
-                lbPrev();
-              }}
-              aria-label="Previous image"
+              className="pdm-lightbox-close"
+              onClick={() => setLightboxImg(null)}
             >
-              <FiChevronLeft />
+              ✕
             </button>
-          )}
-
-          <img
-            className="PropertyDetailsMain__lbImg"
-            src={lb.list[lb.index].src}
-            alt={lb.list[lb.index].alt}
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {lb.list.length > 1 && (
-            <button
-              type="button"
-              className="PropertyDetailsMain__lbNav PropertyDetailsMain__lbNav--next"
-              onClick={(e) => {
-                e.stopPropagation();
-                lbNext();
-              }}
-              aria-label="Next image"
-            >
-              <FiChevronRight />
-            </button>
-          )}
-
-          {lb.list.length > 1 && (
-            <span className="PropertyDetailsMain__lbCount">
-              {lb.index + 1} / {lb.list.length}
-            </span>
-          )}
+          </div>
         </div>
       )}
-    </section>
+
+      {/* =================================================================
+          CONTACT MODAL
+         ================================================================= */}
+      {contactModalOpen && (
+        <div className="pdm-lightbox" onClick={() => setContactModalOpen(false)}>
+          <div className="pdm-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="pdm-modal-head">
+              <h3>Contact Property Advisor</h3>
+              <button type="button" onClick={() => setContactModalOpen(false)}>✕</button>
+            </div>
+            <div className="pdm-modal-body">
+              <p>Get in touch directly with our dedicated real estate advisor for <strong>{propData.title}</strong>.</p>
+              <div className="pdm-contact-links">
+                <a href="tel:+917077606668" className="pdm-modal-phone">
+                  📞 Call: +91 70776 06668
+                </a>
+                <a href="tel:+919861234567" className="pdm-modal-phone">
+                  📞 Call: +91 98612 34567
+                </a>
+                <a
+                  href={`https://wa.me/917077606668?text=Hello%20Utkal%20Property,%20I%20am%20interested%20in%20${encodeURIComponent(propData.title)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="pdm-modal-wa"
+                >
+                  💬 WhatsApp Us
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContactModalOpen(false);
+                    window.dispatchEvent(
+                      new CustomEvent("open-enquiry-modal", {
+                        detail: {
+                          location: propData.location || "Bhubaneswar",
+                          interest: "Buy a Property",
+                          message: `Hi, I am interested in ${propData.title}. Please provide more details.`
+                        }
+                      })
+                    );
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    width: "100%",
+                    padding: "12px",
+                    background: "linear-gradient(135deg, #1b8d44 0%, #0d5d2b 100%)",
+                    color: "#fff",
+                    borderRadius: "10px",
+                    border: "none",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    marginTop: "8px"
+                  }}
+                >
+                  ✉ Fill Property Enquiry Form
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================
+          BROCHURE MODAL
+         ================================================================= */}
+      {brochureModalOpen && (
+        <div className="pdm-lightbox" onClick={() => setBrochureModalOpen(false)}>
+          <div className="pdm-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="pdm-modal-head">
+              <h3>Download Official Brochure</h3>
+              <button type="button" onClick={() => setBrochureModalOpen(false)}>✕</button>
+            </div>
+            <div className="pdm-modal-body">
+              <p>Enter your email or phone to receive the high-resolution architectural plans and pricing breakdown for <strong>{propData.title}</strong>.</p>
+              <form onSubmit={(e) => { e.preventDefault(); alert("Brochure has been sent to your details!"); setBrochureModalOpen(false); }}>
+                <input type="text" placeholder="Your Name" required className="pdm-modal-input" />
+                <input type="tel" placeholder="Your Phone Number" required className="pdm-modal-input" />
+                <button type="submit" className="pdm-btn-teal" style={{ width: "100%", marginTop: "12px" }}>
+                  Download Now
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 };
 

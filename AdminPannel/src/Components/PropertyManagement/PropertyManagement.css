@@ -386,3 +386,100 @@
   .PropertyManagement-viewHero { flex-direction: column; align-items: flex-start; }
   .PropertyManagement-toast { left: 16px; right: 16px; bottom: 16px; max-width: none; }
 }
+
+/* =========================================================
+   TOGGLE SWITCHES FOR BEST PROPERTY & FEATURED
+========================================================= */
+.PropertyToggleSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.PropertyToggleSwitch:hover {
+  background: #f1f5f9;
+}
+
+.PropertyToggleSwitch__track {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  background-color: #cbd5e1;
+  border-radius: 20px;
+  transition: background-color 0.25s ease;
+}
+
+.PropertyToggleSwitch.is-active .PropertyToggleSwitch__track {
+  background-color: #10b981;
+}
+
+.PropertyToggleSwitch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.PropertyToggleSwitch.is-active .PropertyToggleSwitch__thumb {
+  transform: translateX(16px);
+}
+
+.PropertyToggleSwitch__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 22px;
+  text-align: left;
+}
+
+.PropertyToggleSwitch.is-active .PropertyToggleSwitch__label {
+  color: #0d5d2b;
+}
+
+.PropertyToggleSwitch--sm .PropertyToggleSwitch__track {
+  width: 30px;
+  height: 16px;
+}
+
+.PropertyToggleSwitch--sm .PropertyToggleSwitch__thumb {
+  width: 12px;
+  height: 12px;
+}
+
+.PropertyToggleSwitch--sm.is-active .PropertyToggleSwitch__thumb {
+  transform: translateX(14px);
+}
+
+.PropertyManagement-gridToggles {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #edf2f7;
+}
+
+.PropertyManagement-thumb--real {
+  display: inline-flex;
+  width: 52px;
+  height: 38px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}

@@ -1,116 +1,60 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, getMediaUrl } from "../../config/api";
 import "./property.css";
 
-/* ---------- images from src/assets ---------- */
+/* ---------- fallback images from src/assets ---------- */
 import img1 from "../../assets/property-listing-1.jpg";
 import img2 from "../../assets/property-listing-2.jpg";
 import img3 from "../../assets/property-listing-3.jpg";
 import img4 from "../../assets/property-listing-4.jpg";
 
 const IMAGES = [img1, img2, img3, img4];
-
-/* each card gets all 4 images, starting from a different one */
 const rotate = (arr, n) => arr.map((_, i) => arr[(i + n) % arr.length]);
 
 /* ---------- Indian Rupee (INR) formatter ---------- */
-const formatINR = (amount) =>
-  new Intl.NumberFormat("en-IN", {
+const formatINR = (amount) => {
+  if (!amount || isNaN(amount)) return "Price on Request";
+  if (amount >= 10000000) {
+    return `₹ ${(amount / 10000000).toFixed(2)} Cr`;
+  }
+  if (amount >= 100000) {
+    return `₹ ${(amount / 100000).toFixed(2)} Lac`;
+  }
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount);
-
-/* ---------- demo data (localized for India) ---------- */
-const LISTINGS = [
-  {
-    title: "Oberoi Sky City",
-    status: "FOR RENT",
-    featured: true,
-    price: 85000, // ₹85,000/mo
-    address: "Western Express Hwy, Borivali East, Mumbai, MH 400066",
-    beds: 3,
-    baths: 3,
-    sqft: 1850,
-  },
-  {
-    title: "Prestige Lakeside Villa",
-    status: "FOR SALE",
-    featured: false,
-    price: 24500000, // ₹2,45,00,000 (2.45 Cr)
-    address: "Varthur Hubli, Whitefield, Bengaluru, KA 560066",
-    beds: 4,
-    baths: 4,
-    sqft: 3200,
-  },
-  {
-    title: "DLF Camellias Residence",
-    status: "FOR SALE",
-    featured: false,
-    price: 75000000, // ₹7,50,00,000 (7.50 Cr)
-    address: "Golf Course Road, Sector 42, Gurugram, HR 122002",
-    beds: 4,
-    baths: 5,
-    sqft: 4500,
-  },
-  {
-    title: "Palm Meadows Villa",
-    status: "FOR SALE",
-    featured: false,
-    price: 18500000, // ₹1,85,00,000 (1.85 Cr)
-    address: "Jubilee Hills, Road No. 36, Hyderabad, TS 500033",
-    beds: 4,
-    baths: 3,
-    sqft: 2660,
-  },
-  {
-    title: "Lodha World Towers",
-    status: "FOR RENT",
-    featured: true,
-    price: 150000, // ₹1,50,000/mo
-    address: "Senapati Bapat Marg, Lower Parel, Mumbai, MH 400013",
-    beds: 3,
-    baths: 3,
-    sqft: 2100,
-  },
-  {
-    title: "Hiranandani Heritage",
-    status: "FOR SALE",
-    featured: false,
-    price: 12500000, // ₹1,25,00,000 (1.25 Cr)
-    address: "Powai Vihar Complex, Powai, Mumbai, MH 400076",
-    beds: 2,
-    baths: 2,
-    sqft: 1280,
-  },
-];
-
-const PROPERTIES = LISTINGS.map((item, i) => ({
-  id: i + 1,
-  ...item,
-  formattedPrice:
-    item.status === "FOR RENT"
-      ? `${formatINR(item.price)} / mo`
-      : formatINR(item.price),
-  images: rotate(IMAGES, i),
-}));
+};
 
 const FILTERS = [
-  { key: "status", label: "All Status", options: ["All Status", "For Rent", "For Sale"] },
-  { key: "type", label: "Home Type", options: ["Home Type", "Flat / Apartment", "Independent House", "Villa", "Penthouse", "Plot"] },
-  { key: "location", label: "City", options: ["City", "Mumbai", "Bengaluru", "Delhi NCR", "Hyderabad", "Pune", "Bhubaneswar"] },
+  { key: "status", label: "All Status", options: ["All Status", "Active", "Under Construction", "Ready to Move", "Upcoming"] },
+  { key: "type", label: "Home Type", options: ["Home Type", "Apartment", "Villa", "Independent House", "Penthouse", "Plot", "Commercial"] },
+  { key: "category", label: "Category", options: ["Category", "Residential", "Commercial", "Industrial"] },
   { key: "beds", label: "BHK", options: ["BHK", "1 BHK", "2 BHK", "3 BHK", "4+ BHK"] },
-  { key: "baths", label: "Baths", options: ["Baths", "1+", "2+", "3+", "4+"] },
-  { key: "parking", label: "Parking", options: ["Parking", "1 Covered", "2 Covered", "Open Parking"] },
 ];
 
 const PRICES = [
-  "₹25,00,000",
-  "₹50,00,000",
-  "₹1,00,00,000",
-  "₹2,50,00,000",
-  "₹5,00,00,000",
-  "₹10,00,00,000",
+  "No Budget",
+  "₹ 50 Lac",
+  "₹ 1 Cr",
+  "₹ 1.5 Cr",
+  "₹ 2 Cr",
+  "₹ 2.5 Cr",
+  "₹ 3 Cr",
+  "₹ 5 Cr",
+  "₹ 10 Cr+",
 ];
+
+const parsePriceVal = (str) => {
+  if (!str || str.startsWith("No")) return 0;
+  const num = parseFloat(str.replace(/[^\d.]/g, ""));
+  if (isNaN(num)) return 0;
+  if (str.includes("Cr")) return num * 10000000;
+  if (str.includes("Lac")) return num * 100000;
+  return num;
+};
 
 /* ---------- icons ---------- */
 const Svg = ({ children, size = 22 }) => (
@@ -134,7 +78,6 @@ const IconHeart = ({ filled }) => (
 const IconLeft = () => <Svg size={18}><path d="m15 18-6-6 6-6" /></Svg>;
 const IconRight = () => <Svg size={18}><path d="m9 18 6-6-6-6" /></Svg>;
 const IconArrow = () => <Svg size={20}><path d="M5 12h14M13 6l6 6-6 6" /></Svg>;
-const IconUp = () => <Svg size={24}><path d="M12 19V5M5 12l7-7 7 7" /></Svg>;
 const IconPlus = () => <Svg size={16}><path d="M12 5v14M5 12h14" /></Svg>;
 
 /* ---------- custom select with popup menu ---------- */
@@ -181,18 +124,30 @@ function PropertyCard({ item, index }) {
   const [slide, setSlide] = useState(0);
   const [liked, setLiked] = useState(false);
   const [pop, setPop] = useState(false);
-  const total = item.images.length;
+  const total = item.images && item.images.length > 0 ? item.images.length : 1;
+  const navigate = useNavigate();
 
-  const go = (dir) => setSlide((s) => (s + dir + total) % total);
-  const like = () => {
+  const go = (e, dir) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSlide((s) => (s + dir + total) % total);
+  };
+
+  const like = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setLiked(!liked);
     setPop(true);
     setTimeout(() => setPop(false), 450);
   };
 
+  const handleCardClick = () => {
+    navigate(`/properties/${item.slug || item.id}`);
+  };
+
   return (
     <article className="pl-card" style={{ "--i": index }}>
-      <div className="pl-card__media">
+      <div className="pl-card__media" onClick={handleCardClick} style={{ cursor: "pointer" }}>
         <div className="pl-card__track" style={{ transform: `translateX(-${slide * 100}%)` }}>
           {item.images.map((src, i) => (
             <img key={i} src={src} alt={`${item.title} ${i + 1}`} loading="lazy" />
@@ -200,8 +155,13 @@ function PropertyCard({ item, index }) {
         </div>
 
         <div className="pl-card__badges">
-          <span className="pl-badge pl-badge--dark">{item.status}</span>
+          {item.status && <span className="pl-badge pl-badge--dark">{item.status}</span>}
           {item.featured && <span className="pl-badge pl-badge--gold">FEATURED</span>}
+          {item.best && (
+            <span className="pl-badge" style={{ background: "#2563eb", color: "#ffffff" }}>
+              BEST
+            </span>
+          )}
         </div>
 
         <button type="button" className={`pl-heart ${liked ? "is-liked" : ""} ${pop ? "is-pop" : ""}`}
@@ -209,31 +169,51 @@ function PropertyCard({ item, index }) {
           <IconHeart filled={liked} />
         </button>
 
-        <button type="button" className="pl-arrow pl-arrow--prev" onClick={() => go(-1)} aria-label="Previous image">
-          <IconLeft />
-        </button>
-        <button type="button" className="pl-arrow pl-arrow--next" onClick={() => go(1)} aria-label="Next image">
-          <IconRight />
-        </button>
+        {total > 1 && (
+          <>
+            <button type="button" className="pl-arrow pl-arrow--prev" onClick={(e) => go(e, -1)} aria-label="Previous image">
+              <IconLeft />
+            </button>
+            <button type="button" className="pl-arrow pl-arrow--next" onClick={(e) => go(e, 1)} aria-label="Next image">
+              <IconRight />
+            </button>
 
-        <div className="pl-dots">
-          {item.images.map((_, i) => (
-            <button key={i} type="button" className={i === slide ? "is-active" : ""}
-              onClick={() => setSlide(i)} aria-label={`Go to image ${i + 1}`} />
-          ))}
-        </div>
+            <div className="pl-dots">
+              {item.images.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={i === slide ? "is-active" : ""}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSlide(i);
+                  }}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="pl-card__body">
         <div className="pl-card__top">
-          <h3>{item.title}</h3>
+          <h3>
+            <Link
+              to={`/properties/${item.slug || item.id}`}
+              style={{ color: "inherit", textDecoration: "none" }}
+            >
+              {item.title}
+            </Link>
+          </h3>
           <span className="pl-card__price">{item.formattedPrice}</span>
         </div>
         <p className="pl-card__addr"><IconPin /> {item.address}</p>
         <ul className="pl-card__meta">
-          <li><IconBed /> {item.beds} BHK</li>
-          <li><IconBath /> {item.baths} Baths</li>
-          <li><IconArea /> {item.sqft.toLocaleString("en-IN")} Sqft</li>
+          <li><IconBed /> {item.beds}</li>
+          <li><IconBath /> {item.baths}</li>
+          <li><IconArea /> {item.sqft}</li>
         </ul>
       </div>
     </article>
@@ -242,36 +222,163 @@ function PropertyCard({ item, index }) {
 
 /* ---------- main page ---------- */
 const Property = () => {
-  const [query, setQuery] = useState("Mumbai, Maharashtra homes");
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({});
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minSqft, setMinSqft] = useState("");
+  const [maxSqft, setMaxSqft] = useState("");
   const [sort, setSort] = useState("Newest listings");
-  const [page, setPage] = useState(2);
-  const [showTop, setShowTop] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // Fetch properties from Database API
   useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      setShowTop(window.scrollY > 300);
-      setProgress(max > 0 ? (window.scrollY / max) * 100 : 0);
+    let isMounted = true;
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_ENDPOINTS.PROPERTIES}?isDraft=false&limit=100`);
+        const json = await res.json();
+        if (isMounted) {
+          if (json.success && Array.isArray(json.data)) {
+            setProperties(json.data);
+          } else {
+            setProperties([]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load properties:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    fetchProperties();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const setFilter = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
-  const pages = [1, 2, 3, 4, "...", 20];
+
+  const toggleAmenity = (name) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]
+    );
+  };
+
+  // Format properties from API
+  const formattedProperties = useMemo(() => {
+    return properties.map((p, i) => {
+      const imgs =
+        Array.isArray(p.images) && p.images.length > 0
+          ? p.images.map((img) => getMediaUrl(img))
+          : rotate(IMAGES, i);
+
+      const priceFormatted = formatINR(p.price);
+
+      const beds = p.bedrooms
+        ? String(p.bedrooms).toLowerCase().includes("bhk")
+          ? p.bedrooms
+          : `${p.bedrooms} BHK`
+        : "3 BHK";
+
+      const baths = p.bathrooms
+        ? String(p.bathrooms).toLowerCase().includes("bath")
+          ? p.bathrooms
+          : `${p.bathrooms} Baths`
+        : "3 Baths";
+
+      const sqft = p.superArea
+        ? String(p.superArea).toLowerCase().includes("sq")
+          ? p.superArea
+          : `${p.superArea} Sqft`
+        : p.projectArea
+        ? `${p.projectArea}`
+        : "1,850 Sqft";
+
+      return {
+        id: p._id,
+        slug: p.slug || p._id,
+        title: p.title,
+        status: p.status || "Active",
+        category: p.category || "Residential",
+        propertyType: p.propertyType || "Apartment",
+        featured: Boolean(p.isFeatured),
+        best: Boolean(p.isBestProperty),
+        price: p.price || 0,
+        formattedPrice: priceFormatted,
+        address: p.location || "Patia, Bhubaneswar, Odisha",
+        beds,
+        baths,
+        sqft,
+        images: imgs,
+        amenities: Array.isArray(p.amenities) ? p.amenities : [],
+        createdAt: p.createdAt ? new Date(p.createdAt).getTime() : 0,
+      };
+    });
+  }, [properties]);
+
+  // Client-side filtering & sorting
+  const filteredProperties = useMemo(() => {
+    return formattedProperties
+      .filter((p) => {
+        if (query.trim()) {
+          const q = query.toLowerCase();
+          const matchTitle = p.title.toLowerCase().includes(q);
+          const matchAddr = p.address.toLowerCase().includes(q);
+          const matchType = p.propertyType.toLowerCase().includes(q);
+          if (!matchTitle && !matchAddr && !matchType) return false;
+        }
+
+        if (filters.status && filters.status !== "All Status") {
+          if (!p.status.toLowerCase().includes(filters.status.toLowerCase())) return false;
+        }
+
+        if (filters.type && filters.type !== "Home Type") {
+          if (!p.propertyType.toLowerCase().includes(filters.type.toLowerCase())) return false;
+        }
+
+        if (filters.category && filters.category !== "Category") {
+          if (!p.category.toLowerCase().includes(filters.category.toLowerCase())) return false;
+        }
+
+        if (filters.beds && filters.beds !== "BHK") {
+          const num = filters.beds.replace(/[^\d]/g, "");
+          if (num && !p.beds.includes(num)) return false;
+        }
+
+        const minP = parsePriceVal(minPrice);
+        if (minP > 0 && p.price > 0 && p.price < minP) return false;
+
+        const maxP = parsePriceVal(maxPrice);
+        if (maxP > 0 && p.price > 0 && p.price > maxP) return false;
+
+        if (selectedAmenities.length > 0) {
+          const hasAll = selectedAmenities.every((amenity) =>
+            p.amenities.some((a) => a.toLowerCase().includes(amenity.toLowerCase()))
+          );
+          if (!hasAll) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sort === "Price: Low to High") return a.price - b.price;
+        if (sort === "Price: High to Low") return b.price - a.price;
+        return b.createdAt - a.createdAt;
+      });
+  }, [formattedProperties, query, filters, minPrice, maxPrice, selectedAmenities, sort]);
 
   return (
     <section className="pl">
       <header className="pl-hero">
-        <h1>Real Estate &amp; Properties in India</h1>
+        <h1>Properties &amp; Real Estate in Odisha</h1>
         <nav aria-label="Breadcrumb">
-          <a href="/">Home</a> <span>/</span> <em>Property List</em>
+          <Link to="/">Home</Link> <span>/</span> <em>Property List</em>
         </nav>
       </header>
 
@@ -280,44 +387,105 @@ const Property = () => {
         <aside className="pl-side">
           <form className="pl-form" onSubmit={(e) => e.preventDefault()}>
             <label className="pl-search">
-              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search city, locality, or project" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search project, location, or type..."
+              />
               <IconSearch />
             </label>
 
             {FILTERS.map((f) => (
-              <Select key={f.key} label={f.label} options={f.options}
-                value={filters[f.key]} onChange={(v) => setFilter(f.key, v)} />
+              <Select
+                key={f.key}
+                label={f.label}
+                options={f.options}
+                value={filters[f.key]}
+                onChange={(v) => setFilter(f.key, v)}
+              />
             ))}
 
             <div className="pl-row">
-              <input className="pl-input" type="number" placeholder="Min. Sqft" />
-              <input className="pl-input" type="number" placeholder="Max. Sqft" />
+              <input
+                className="pl-input"
+                type="number"
+                placeholder="Min. Sqft"
+                value={minSqft}
+                onChange={(e) => setMinSqft(e.target.value)}
+              />
+              <input
+                className="pl-input"
+                type="number"
+                placeholder="Max. Sqft"
+                value={maxSqft}
+                onChange={(e) => setMaxSqft(e.target.value)}
+              />
             </div>
 
             <div className="pl-row">
-              <Select label="Min. Budget" options={PRICES} value={minPrice} onChange={setMinPrice} />
-              <Select label="Max. Budget" options={PRICES} value={maxPrice} onChange={setMaxPrice} />
+              <Select
+                label="Min. Budget"
+                options={PRICES}
+                value={minPrice}
+                onChange={setMinPrice}
+              />
+              <Select
+                label="Max. Budget"
+                options={PRICES}
+                value={maxPrice}
+                onChange={setMaxPrice}
+              />
             </div>
 
-            <button type="button" className={`pl-more ${moreOpen ? "is-open" : ""}`}
-              onClick={() => setMoreOpen(!moreOpen)} aria-expanded={moreOpen}>
+            <button
+              type="button"
+              className={`pl-more ${moreOpen ? "is-open" : ""}`}
+              onClick={() => setMoreOpen(!moreOpen)}
+              aria-expanded={moreOpen}
+            >
               <span className="pl-more__icon"><IconPlus /></span>
               Amenities &amp; Features
             </button>
 
             <div className={`pl-features ${moreOpen ? "is-open" : ""}`}>
               <div>
-                {["Vastu Compliant", "Power Backup", "Swimming Pool", "Clubhouse & Gym", "24x7 Security"].map((x) => (
+                {[
+                  "Swimming Pool",
+                  "Club House",
+                  "Gym",
+                  "Kids' Play Area",
+                  "EV Charging",
+                  "Vastu Compliant",
+                  "Power Backup",
+                  "24x7 Security",
+                ].map((x) => (
                   <label key={x} className="pl-check">
-                    <input type="checkbox" /> <span>{x}</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedAmenities.includes(x)}
+                      onChange={() => toggleAmenity(x)}
+                    />
+                    <span>{x}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <button type="submit" className="pl-submit">
-              <span>Search Property</span> <IconArrow />
+            <button
+              type="button"
+              className="pl-submit"
+              onClick={() => {
+                setQuery("");
+                setFilters({});
+                setMinPrice("");
+                setMaxPrice("");
+                setMinSqft("");
+                setMaxSqft("");
+                setSelectedAmenities([]);
+              }}
+            >
+              <span>Reset Filters</span> <IconArrow />
             </button>
           </form>
         </aside>
@@ -325,35 +493,80 @@ const Property = () => {
         {/* ---------- results ---------- */}
         <main className="pl-main">
           <div className="pl-bar">
-            <span className="pl-count">9,998 properties found</span>
+            <span className="pl-count">
+              {loading
+                ? "Loading properties..."
+                : `${filteredProperties.length} ${filteredProperties.length === 1 ? "property" : "properties"} found`}
+            </span>
             <div className="pl-sort">
               <span>Sort by</span>
-              <Select label="Newest listings"
-                options={["Newest listings", "Price: Low to High", "Price: High to Low", "Largest area"]}
-                value={sort} onChange={setSort} />
+              <Select
+                label="Newest listings"
+                options={["Newest listings", "Price: Low to High", "Price: High to Low"]}
+                value={sort}
+                onChange={setSort}
+              />
             </div>
           </div>
 
-          <div className="pl-grid" key={page}>
-            {PROPERTIES.map((p, i) => (
-              <PropertyCard key={p.id} item={p} index={i} />
-            ))}
-          </div>
-
-          <nav className="pl-pages" aria-label="Pagination">
-            <button type="button" className="pl-pages__nav" disabled={page === 1}
-              onClick={() => setPage(page - 1)} aria-label="Previous page"><IconLeft /></button>
-            {pages.map((n, i) =>
-              n === "..." ? (
-                <span key={i} className="pl-pages__dots">...</span>
-              ) : (
-                <button key={i} type="button" className={`pl-pages__num ${page === n ? "is-active" : ""}`}
-                  onClick={() => setPage(n)}>{n}</button>
-              )
+          <div className="pl-grid">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: 380,
+                    borderRadius: 20,
+                    background: "#f1f5f9",
+                    animation: "pulse 1.5s infinite ease-in-out",
+                  }}
+                />
+              ))
+            ) : filteredProperties.length === 0 ? (
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  textAlign: "center",
+                  padding: "4rem 1rem",
+                  background: "#f8fafc",
+                  borderRadius: 16,
+                  border: "1px dashed #cbd5e1",
+                }}
+              >
+                <h3 style={{ fontSize: "1.4rem", color: "#1e293b", marginBottom: "0.5rem" }}>
+                  No Properties Found
+                </h3>
+                <p style={{ color: "#64748b", maxWidth: 450, margin: "0 auto 1.5rem" }}>
+                  We could not find any active properties matching your filter criteria. Try resetting filters or searching another keyword.
+                </p>
+                <button
+                  type="button"
+                  style={{
+                    padding: "10px 22px",
+                    background: "#0c715f",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                  onClick={() => {
+                    setQuery("");
+                    setFilters({});
+                    setMinPrice("");
+                    setMaxPrice("");
+                    setSelectedAmenities([]);
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              filteredProperties.map((p, i) => (
+                <PropertyCard key={p.id} item={p} index={i} />
+              ))
             )}
-            <button type="button" className="pl-pages__nav" disabled={page === 20}
-              onClick={() => setPage(page + 1)} aria-label="Next page"><IconRight /></button>
-          </nav>
+          </div>
         </main>
       </div>
     </section>

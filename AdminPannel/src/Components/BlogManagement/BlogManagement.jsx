@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { API_ENDPOINTS } from "../../config/api";
 import "./BlogManagement.css";
 
 /* ------------------------------- Icons ------------------------------- */
@@ -32,72 +33,30 @@ const Icon = ({ name, size = 18 }) => (
 );
 
 /* ------------------------------- Data -------------------------------- */
-const CATEGORIES = {
-  "Residential Properties": { emoji: "🏠", bg: "#dcf8e3", fg: "#15803d", a: "#86efac", b: "#16a34a" },
-  "Commercial Properties": { emoji: "🏢", bg: "#cffafe", fg: "#0e7490", a: "#67e8f9", b: "#0891b2" },
-  "Plots & Land": { emoji: "🗺️", bg: "#fef3c7", fg: "#b45309", a: "#fcd34d", b: "#d97706" },
-  "Apartments & Flats": { emoji: "🏬", bg: "#dbeafe", fg: "#1d4ed8", a: "#93c5fd", b: "#2563eb" },
-  "Independent Houses & Villas": { emoji: "🏡", bg: "#ede4ff", fg: "#6d28d9", a: "#c4b5fd", b: "#7c3aed" },
-  "Rental & Lease": { emoji: "🔑", bg: "#ffe0e3", fg: "#be123c", a: "#fda4af", b: "#e11d48" },
-  "Real Estate Investment": { emoji: "📈", bg: "#d1fae5", fg: "#047857", a: "#6ee7b7", b: "#059669" },
-  "Legal, Vastu & Home Loans": { emoji: "⚖️", bg: "#f3e8ff", fg: "#7e22ce", a: "#d8b4fe", b: "#9333ea" },
-};
-const CATEGORY_LIST = Object.keys(CATEGORIES);
 const LOCATIONS = ["Bhubaneswar", "Cuttack", "Puri", "Khordha", "Sambalpur", "Rourkela"];
 const STATUSES = ["Published", "Draft", "Unpublished"];
 const STATUS_ICON = { Published: "check", Draft: "clock", Unpublished: "eyeoff" };
-const PER_PAGE = 5;
+const PER_PAGE = 8;
 
-const FIRST = [
-  ["Top 5 Emerging Residential Corridors in Bhubaneswar", "Explore high-growth localities for buying your dream home in Odisha.", "Residential Properties", "Bhubaneswar", "Utkal Property, Bhubaneswar", "Published"],
-  ["Complete Guide to Buying BDA & RERA Approved Plots", "Key legal checks and documentation before investing in land.", "Plots & Land", "Cuttack", "Plots, RERA Odisha", "Published"],
-  ["3BHK Luxury Apartments vs Independent Villas", "Compare amenities, maintenance, and long-term appreciation.", "Apartments & Flats", "Bhubaneswar", "Apartments, Villas", "Draft"],
-  ["Commercial Office Space Trends in Smart City", "Why retail and IT hubs are booming across prime Odisha locations.", "Commercial Properties", "Khordha", "Commercial, Investment", "Unpublished"],
-  ["Essential Vastu & Home Loan Tips for First-Time Buyers", "Maximize loan eligibility and ensure Vastu compliance effortlessly.", "Legal, Vastu & Home Loans", "Puri", "Vastu, Home Loan", "Published"],
-];
-
-const iso = (back) => {
-  const d = new Date(2026, 10, 15);
-  d.setDate(d.getDate() - back);
-  return d.toISOString().slice(0, 10);
-};
-
-const buildData = () => {
-  const topics = [
-    "NRI Real Estate Investment Guide",
-    "Rental Yield Hotspots in Odisha",
-    "Property Registration & Stamp Duty Checklist",
-    "Modern Villa Architecture Trends",
-    "Best Family Neighborhoods in Twin City",
-    "Commercial Lease Agreement Essentials",
-  ];
-  const drafts = [4, 10, 16, 22, 28];
-  const rest = Array.from({ length: 31 }, (_, i) => {
-    const cat = CATEGORY_LIST[i % CATEGORY_LIST.length];
-    return [
-      `${topics[i % topics.length]}${i >= topics.length ? ` Part ${Math.floor(i / topics.length) + 1}` : ""}`,
-      `Expert insights on ${cat.toLowerCase()} from Utkal Property advisors.`,
-      cat,
-      LOCATIONS[(i + 2) % LOCATIONS.length],
-      "Utkal Property, Real Estate",
-      drafts.includes(i) ? "Draft" : i === 13 ? "Unpublished" : "Published",
-    ];
-  });
-  return [...FIRST, ...rest].map(([title, desc, category, location, tags, status], i) => ({
-    id: i + 1, title, desc, category, location, status,
-    tags: tags.split(",").map((t) => t.trim()),
-    date: iso(i + 1),
-  }));
+const getCategoryStyle = (catName = "") => {
+  const hash = Array.from(catName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hues = [160, 200, 240, 280, 320, 30, 45, 140];
+  const hue = hues[hash % hues.length];
+  return {
+    bg: `hsl(${hue}, 85%, 94%)`,
+    fg: `hsl(${hue}, 80%, 25%)`,
+    emoji: "🏷️",
+  };
 };
 
 const fmt = (d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-const EMPTY = { title: "", desc: "", category: CATEGORY_LIST[0], location: LOCATIONS[0], tags: "", status: "Published" };
+const EMPTY = { title: "", desc: "", category: "", location: LOCATIONS[0], tags: "", status: "Published" };
 
 /* ----------------------------- Small parts --------------------------- */
 const Thumb = ({ category, size }) => {
-  const c = CATEGORIES[category] || CATEGORIES[CATEGORY_LIST[0]];
+  const c = getCategoryStyle(category);
   return (
-    <span className={`blog-management__thumb blog-management__thumb--${size}`} style={{ background: `linear-gradient(135deg, ${c.a}, ${c.b})` }}>
+    <span className={`blog-management__thumb blog-management__thumb--${size}`} style={{ background: c.bg, color: c.fg }}>
       {c.emoji}
     </span>
   );
@@ -156,7 +115,9 @@ const Modal = ({ title, subtitle, onClose, footer, children, wide }) => {
 
 /* ------------------------------ Component ---------------------------- */
 const BlogManagement = () => {
-  const [blogs, setBlogs] = useState(buildData);
+  const [blogs, setBlogs] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -167,6 +128,50 @@ const BlogManagement = () => {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_ENDPOINTS.BLOGS}?limit=200`);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const loaded = json.data.map((b) => ({
+          id: b._id,
+          _id: b._id,
+          title: b.title,
+          desc: b.desc,
+          category: b.category,
+          location: b.location || "Odisha",
+          status: b.status,
+          tags: b.tags || [],
+          date: (b.createdAt || new Date().toISOString()).slice(0, 10),
+          isBackend: true,
+        }));
+        setBlogs(loaded);
+      }
+    } catch (e) {
+      console.error("Failed to fetch blogs for management:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.CATEGORIES);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setCategories(json.data.map((c) => c.name));
+      }
+    } catch (e) {
+      console.error("Failed to fetch categories:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogs();
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -239,11 +244,20 @@ const BlogManagement = () => {
     close();
   };
 
-  const remove = () => {
-    const del = modal.type === "bulk" ? selected : [modal.item.id];
-    setBlogs((list) => list.filter((b) => !del.includes(b.id)));
-    setSelected((s) => s.filter((id) => !del.includes(id)));
-    setToast(del.length > 1 ? `${del.length} blogs deleted` : "Blog deleted");
+  const remove = async () => {
+    const delList = modal.type === "bulk" ? selected : [modal.item.id];
+    for (const id of delList) {
+      if (typeof id === "string" && id.length === 24) {
+        try {
+          await fetch(`${API_ENDPOINTS.BLOGS}/${id}`, { method: "DELETE" });
+        } catch (e) {
+          console.error("Failed to delete blog:", e);
+        }
+      }
+    }
+    setBlogs((list) => list.filter((b) => !delList.includes(b.id)));
+    setSelected((s) => s.filter((id) => !delList.includes(id)));
+    setToast(delList.length > 1 ? `${delList.length} blogs deleted` : "Blog deleted");
     close();
   };
 
@@ -286,7 +300,7 @@ const BlogManagement = () => {
           <Icon name="search" size={18} />
           <input type="text" placeholder="Search property blog by title..." value={search} onChange={(e) => change(setSearch)(e.target.value)} />
         </label>
-        <Select value={category} options={CATEGORY_LIST} allLabel="All Property Categories" onChange={change(setCategory)} />
+        <Select value={category} options={categories} allLabel="All Property Categories" onChange={change(setCategory)} />
         <Select value={status} options={STATUSES} allLabel="All Status" onChange={change(setStatus)} />
         <Select value={location} options={LOCATIONS} allLabel="All Locations" onChange={change(setLocation)} />
         <button type="button" className="blog-management__btn blog-management__btn--reset" onClick={reset} disabled={!hasFilter}>
@@ -326,7 +340,7 @@ const BlogManagement = () => {
             </thead>
             <tbody>
               {rows.map((b, i) => {
-                const c = CATEGORIES[b.category] || CATEGORIES[CATEGORY_LIST[0]];
+                const c = getCategoryStyle(b.category);
                 return (
                   <tr key={b.id} className={selected.includes(b.id) ? "is-selected" : ""}>
                     <td className="c-check"><input type="checkbox" className="blog-management__check" checked={selected.includes(b.id)} onChange={() => toggleOne(b.id)} aria-label="Select row" /></td>
@@ -401,7 +415,7 @@ const BlogManagement = () => {
             </div>
             <div className="blog-management__field">
               <label>Property Category</label>
-              <Select value={form.category} options={CATEGORY_LIST} onChange={(v) => setForm({ ...form, category: v })} />
+              <Select value={form.category} options={categories} onChange={(v) => setForm({ ...form, category: v })} />
             </div>
             <div className="blog-management__field">
               <label>Location</label>
@@ -442,7 +456,7 @@ const BlogManagement = () => {
           <div className="blog-management__view">
             <Thumb category={modal.item.category} size="hero" />
             <div className="blog-management__view-meta">
-              <span className="blog-management__badge" style={{ background: (CATEGORIES[modal.item.category] || CATEGORIES[CATEGORY_LIST[0]]).bg, color: (CATEGORIES[modal.item.category] || CATEGORIES[CATEGORY_LIST[0]]).fg }}>{(CATEGORIES[modal.item.category] || CATEGORIES[CATEGORY_LIST[0]]).emoji} {modal.item.category}</span>
+              <span className="blog-management__badge" style={{ background: getCategoryStyle(modal.item.category).bg, color: getCategoryStyle(modal.item.category).fg }}>{getCategoryStyle(modal.item.category).emoji} {modal.item.category}</span>
               <span className={`blog-management__status blog-management__status--${modal.item.status.toLowerCase()}`}><Icon name={STATUS_ICON[modal.item.status]} size={14} /> {modal.item.status}</span>
               <span className="blog-management__meta"><Icon name="pin" size={15} /> {modal.item.location}</span>
               <span className="blog-management__meta"><Icon name="cal" size={15} /> {fmt(modal.item.date)}</span>

@@ -4,14 +4,18 @@ const propertySchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    location: { type: String, trim: true },
+    location: { type: String, trim: true, default: "" },
     description: { type: String, default: "" },
 
-    category: { type: String, enum: ["Residential", "Commercial", "Rental"], default: "Residential" },
+    category: {
+      type: String,
+      default: "Residential",
+      trim: true,
+    },
     propertyType: {
       type: String,
-      enum: ["Duplex / Independent House", "Plot / Land", "Apartment", "Villa", "Flat"],
       default: "Apartment",
+      trim: true,
     },
     status: {
       type: String,
@@ -21,16 +25,16 @@ const propertySchema = new mongoose.Schema(
 
     price: { type: Number },
     pricePerSqft: { type: Number },
-    rera: { type: String, trim: true },
-    projectArea: { type: String },
-    superArea: { type: String },
+    rera: { type: String, trim: true, default: "" },
+    projectArea: { type: String, default: "" },
+    superArea: { type: String, default: "" },
     houses: { type: Number },
-    floors: { type: String },
-    bedrooms: { type: String },
-    bathrooms: { type: String },
-    parking: { type: String },
-    facing: { type: String },
-    overlooking: { type: String },
+    floors: { type: String, default: "" },
+    bedrooms: { type: String, default: "" },
+    bathrooms: { type: String, default: "" },
+    parking: { type: String, default: "" },
+    facing: { type: String, default: "" },
+    overlooking: { type: String, default: "" },
     maintenance: { type: Number },
     rental: { type: Number },
     possession: { type: Date },
@@ -38,10 +42,18 @@ const propertySchema = new mongoose.Schema(
     amenities: [{ type: String }],
     images: [{ type: String }],
     floorPlans: [{ type: String }],
-    nearbyPlaces: [{ name: String, distance: String }],
+    nearbyPlaces: [
+      {
+        name: { type: String, default: "" },
+        distance: { type: String, default: "" },
+      },
+    ],
 
-    metaTitle: { type: String, maxlength: 60 },
-    metaDescription: { type: String, maxlength: 160 },
+    metaTitle: { type: String, maxlength: 120, default: "" },
+    metaDescription: { type: String, maxlength: 300, default: "" },
+
+    isFeatured: { type: Boolean, default: false },
+    isBestProperty: { type: Boolean, default: false },
 
     isDraft: { type: Boolean, default: false },
   },

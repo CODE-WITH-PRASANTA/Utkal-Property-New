@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { API_ENDPOINTS } from "../../config/api";
 import "./Enquiry.css";
 import {
   FiUser,
@@ -53,9 +54,17 @@ const Enquiry = () => {
   const closeTimer = useRef(null);
 
   /* ---------- open / close ---------- */
-  const openModal = () => {
+  const openModal = (details) => {
     clearTimeout(closeTimer.current);
     setClosing(false);
+    if (details) {
+      setForm((p) => ({
+        ...p,
+        ...(details.location ? { location: details.location } : {}),
+        ...(details.interest ? { interest: details.interest } : {}),
+        ...(details.message ? { message: details.message } : {}),
+      }));
+    }
     setOpen(true);
   };
 
@@ -69,7 +78,16 @@ const Enquiry = () => {
     }, 260);
   };
 
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(() => {
+    const handleOpenEnquiry = (e) => {
+      openModal(e?.detail);
+    };
+    window.addEventListener("open-enquiry-modal", handleOpenEnquiry);
+    return () => {
+      window.removeEventListener("open-enquiry-modal", handleOpenEnquiry);
+      clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   /* ---------- Esc key, scroll lock, focus ---------- */
   useEffect(() => {
@@ -115,18 +133,44 @@ const Enquiry = () => {
     return err;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length) return;
 
     setStatus("sending");
-    // TODO: replace this timeout with your real API call (fetch / axios / emailjs)
-    setTimeout(() => {
-      setStatus("sent");
-      setForm(INITIAL_FORM);
-    }, 1100);
+    try {
+      const res = await fetch(API_ENDPOINTS.ENQUIRY, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          location: form.location,
+          interest: form.interest,
+          service: form.interest || "Residential Properties",
+          message: form.message.trim(),
+          source: "Property Enquiry Popup",
+        }),
+      });
+
+      const data = await res.json();
+      if (data && data.success) {
+        setStatus("sent");
+        setForm(INITIAL_FORM);
+      } else {
+        setStatus("idle");
+        alert(data.message || "Failed to submit enquiry. Please check your details.");
+      }
+    } catch (err) {
+      console.error("Enquiry submission error:", err);
+      setStatus("idle");
+      alert("Network error. Please try again later.");
+    }
   };
 
   /* ---------- small helper for the text fields ---------- */

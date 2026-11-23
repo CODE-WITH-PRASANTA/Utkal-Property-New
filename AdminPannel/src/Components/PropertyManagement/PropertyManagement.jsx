@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import {
   FiHome, FiCheckCircle, FiClock, FiXCircle, FiGrid, FiList, FiLayers, FiActivity,
@@ -6,25 +7,47 @@ import {
   FiChevronsLeft, FiEye, FiEdit, FiCopy, FiTrash2, FiMapPin, FiCalendar, FiX, FiCheck,
   FiAlertTriangle, FiInbox, FiInfo, FiTag, FiFileText,
 } from 'react-icons/fi'
+import { API_ENDPOINTS, getMediaUrl } from '../../config/api'
 import './PropertyManagement.css'
 
 /* ------------------------------------------------------------------ */
 /*  Constants & helpers                                               */
 /* ------------------------------------------------------------------ */
-const CATEGORIES = ['Residential', 'Commercial']
+const CATEGORIES = ['Residential', 'Commercial', 'Rental']
 const TYPES_BY_CATEGORY = {
-  Residential: ['Flat', 'Villa', 'House', 'Plot / Land'],
+  Residential: ['Flat', 'Villa', 'Duplex / Independent House', 'House', 'Plot / Land', 'Apartment'],
   Commercial: ['Office', 'Shop', 'Showroom', 'Warehouse'],
+  Rental: ['Flat', 'Villa', 'House', 'Office', 'Shop'],
 }
-const ALL_TYPES = [...TYPES_BY_CATEGORY.Residential, ...TYPES_BY_CATEGORY.Commercial]
-const STATUSES = ['Active', 'Pending', 'Inactive']
+const ALL_TYPES = Array.from(new Set([
+  ...TYPES_BY_CATEGORY.Residential,
+  ...TYPES_BY_CATEGORY.Commercial,
+  ...TYPES_BY_CATEGORY.Rental,
+]))
+const STATUSES = ['Active', 'Pending', 'Inactive', 'Under Construction', 'Sold', 'Ready to Move', 'Upcoming']
 
 const CATEGORY_OPTIONS = ['All Category', ...CATEGORIES]
 const STATUS_OPTIONS = ['All Status', ...STATUSES]
 const PER_PAGE_OPTIONS = ['10 per page', '20 per page', '50 per page']
 
-const STATUS_CLASS = { Active: 'active', Pending: 'pending', Inactive: 'inactive' }
-const STATUS_DOT = { Active: '#16a34a', Pending: '#f59e0b', Inactive: '#ef4444' }
+const STATUS_CLASS = {
+  Active: 'active',
+  Pending: 'pending',
+  Inactive: 'inactive',
+  'Under Construction': 'pending',
+  Sold: 'inactive',
+  'Ready to Move': 'active',
+  Upcoming: 'pending',
+}
+const STATUS_DOT = {
+  Active: '#16a34a',
+  Pending: '#f59e0b',
+  Inactive: '#ef4444',
+  'Under Construction': '#0284c7',
+  Sold: '#64748b',
+  'Ready to Move': '#10b981',
+  Upcoming: '#8b5cf6',
+}
 const DEFAULT_FILTERS = { category: 'All Category', type: 'All Type', status: 'All Status', search: '' }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -32,63 +55,13 @@ const pad = (n) => String(n).padStart(2, '0')
 const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 const formatDate = (iso) => {
   if (!iso) return '—'
-  const [y, m, d] = iso.split('-')
-  return `${d} ${MONTHS[Number(m) - 1]} ${y}`
+  const parts = String(iso).split('T')[0].split('-')
+  if (parts.length < 3) return iso
+  const [y, m, d] = parts
+  return `${d} ${MONTHS[Number(m) - 1] || m} ${y}`
 }
-const formatPrice = (n) => `₹ ${Number(n).toLocaleString('en-IN')}`
-const typeList = (category) => (category === 'All Category' ? ALL_TYPES : TYPES_BY_CATEGORY[category])
-const categoryOf = (type) => (TYPES_BY_CATEGORY.Commercial.includes(type) ? 'Commercial' : 'Residential')
-
-/* ------------------------------------------------------------------ */
-/*  Sample data: 248 listings (118 active, 36 pending, 94 inactive)   */
-/* ------------------------------------------------------------------ */
-const SEED = [
-  ['3 BHK Luxury Apartment', 'OD/2024/000123', 'Flat', 'Patia, Bhubaneswar', 8500000, 'Active', '2026-11-17'],
-  ['2 BHK Residential Flat', 'OD/2024/000124', 'Flat', 'Khandagiri, Bhubaneswar', 5200000, 'Pending', '2026-11-16'],
-  ['4 BHK Duplex Villa', 'OD/2024/000125', 'Villa', 'Infocity, Bhubaneswar', 13500000, 'Active', '2026-11-15'],
-  ['Commercial Office Space', 'OD/2024/000126', 'Office', 'Saheed Nagar, Bhubaneswar', 21000000, 'Active', '2026-11-14'],
-  ['Residential Plot for Sale', 'NA', 'Plot / Land', 'Rasulgarh, Bhubaneswar', 4800000, 'Inactive', '2026-11-12'],
-]
-const AREAS = ['Patia', 'Khandagiri', 'Infocity', 'Saheed Nagar', 'Rasulgarh', 'Nayapalli', 'Jaydev Vihar', 'Chandrasekharpur', 'Kharvel Nagar', 'Old Town', 'Baramunda', 'Pokhariput', 'Sailashree Vihar', 'Mancheswar']
-const TITLES = {
-  Flat: ['1 BHK Compact Flat', '2 BHK Residential Flat', '3 BHK Luxury Apartment', 'Premium 4 BHK Flat'],
-  Villa: ['4 BHK Duplex Villa', '3 BHK Independent Villa', 'Luxury Garden Villa'],
-  House: ['Independent House', '2 Storey Family House', 'Row House'],
-  'Plot / Land': ['Residential Plot for Sale', 'Corner Plot for Sale', 'Gated Community Plot'],
-  Office: ['Commercial Office Space', 'Corporate Office Floor', 'Co-working Office'],
-  Shop: ['Retail Shop', 'Corner Shop', 'Mall Shop Space'],
-  Showroom: ['Showroom on Main Road', 'Car Showroom Space'],
-  Warehouse: ['Warehouse Space', 'Storage Godown'],
-}
-const PRICE_BASE = {
-  Flat: [2500000, 350000], Villa: [9000000, 900000], House: [4500000, 500000], 'Plot / Land': [1500000, 300000],
-  Office: [7000000, 1500000], Shop: [3500000, 800000], Showroom: [9000000, 1200000], Warehouse: [6000000, 1000000],
-}
-
-const buildInitialData = () => {
-  const pool = [...Array(115).fill('Active'), ...Array(35).fill('Pending'), ...Array(93).fill('Inactive')]
-  const rows = SEED.map((s, i) => ({
-    id: `PM-${i + 1}`, title: s[0], rera: s[1], type: s[2], category: categoryOf(s[2]),
-    location: s[3], price: s[4], status: s[5], date: s[6],
-  }))
-  for (let k = 0; k < 243; k += 1) {
-    const type = ALL_TYPES[(k * 3 + 1) % ALL_TYPES.length]
-    const titles = TITLES[type]
-    const [base, step] = PRICE_BASE[type]
-    rows.push({
-      id: `PM-${k + 6}`,
-      title: titles[k % titles.length],
-      rera: type === 'Plot / Land' && k % 2 === 0 ? 'NA' : `OD/2024/${String(127 + k).padStart(6, '0')}`,
-      type,
-      category: categoryOf(type),
-      location: `${AREAS[(k * 5 + 2) % AREAS.length]}, Bhubaneswar`,
-      price: base + ((k * 13) % 14) * step,
-      status: pool[(k * 7) % 243],
-      date: toISO(new Date(2026, 10, 11 - k)),
-    })
-  }
-  return rows
-}
+const formatPrice = (n) => (n ? `₹ ${Number(n).toLocaleString('en-IN')}` : '—')
+const typeList = (category) => (category === 'All Category' ? ALL_TYPES : TYPES_BY_CATEGORY[category] || ALL_TYPES)
 
 const getPageList = (current, total) => {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
@@ -126,7 +99,19 @@ const THUMB = {
   Warehouse: { kind: 'shed', body: '#8a97a3' },
 }
 
-const PropertyThumb = ({ type }) => {
+const PropertyThumb = ({ type, image }) => {
+  if (image) {
+    return (
+      <span className="PropertyManagement-thumb PropertyManagement-thumb--real" aria-hidden="true">
+        <img
+          src={image}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      </span>
+    );
+  }
   const { kind, body } = THUMB[type] || THUMB.Flat
   return (
     <span className="PropertyManagement-thumb" aria-hidden="true">
@@ -367,26 +352,91 @@ const PropertyForm = ({ initial, onSubmit, onCancel }) => {
 /*  Main component                                                    */
 /* ------------------------------------------------------------------ */
 const PropertyManagement = () => {
-  const [rows, setRows] = useState(buildInitialData)
-  const [draft, setDraft] = useState(DEFAULT_FILTERS)
-  const [applied, setApplied] = useState(DEFAULT_FILTERS)
-  const [page, setPage] = useState(1)
-  const [perPage, setPerPage] = useState(10)
-  const [view, setView] = useState('list')
-  const [selected, setSelected] = useState(() => new Set())
-  const [modal, setModal] = useState(null) // { type: 'view' | 'form' | 'delete' | 'bulkDelete', row? }
-  const [toast, setToast] = useState(null)
-  const toastTimer = useRef(null)
-  const topCheckRef = useRef(null)
-  const headCheckRef = useRef(null)
+  const navigate = useNavigate();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState(DEFAULT_FILTERS);
+  const [applied, setApplied] = useState(DEFAULT_FILTERS);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [view, setView] = useState('list');
+  const [selected, setSelected] = useState(() => new Set());
+  const [modal, setModal] = useState(null); // { type: 'view' | 'form' | 'delete' | 'bulkDelete', row? }
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const topCheckRef = useRef(null);
+  const headCheckRef = useRef(null);
 
   const showToast = useCallback((message, tone = 'success') => {
-    clearTimeout(toastTimer.current)
-    setToast({ message, tone, id: Date.now() })
-    toastTimer.current = setTimeout(() => setToast(null), 3200)
-  }, [])
-  useEffect(() => () => clearTimeout(toastTimer.current), [])
-  const closeModal = useCallback(() => setModal(null), [])
+    clearTimeout(toastTimer.current);
+    setToast({ message, tone, id: Date.now() });
+    toastTimer.current = setTimeout(() => setToast(null), 3200);
+  }, []);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  const closeModal = useCallback(() => setModal(null), []);
+
+  const loadProperties = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_ENDPOINTS.PROPERTIES}?limit=300`);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const liveRows = json.data.map((p) => ({
+          id: p._id,
+          title: p.title,
+          slug: p.slug,
+          rera: p.rera || 'NA',
+          type: p.propertyType || 'Apartment',
+          category: p.category || 'Residential',
+          location: p.location || 'Odisha',
+          price: p.price || 0,
+          status: p.status || 'Active',
+          date: p.createdAt ? toISO(new Date(p.createdAt)) : toISO(new Date()),
+          image: p.images && p.images.length > 0 ? getMediaUrl(p.images[0]) : null,
+          isBestProperty: Boolean(p.isBestProperty),
+          isFeatured: Boolean(p.isFeatured),
+        }));
+        setRows(liveRows);
+      } else {
+        setRows([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch properties from API:', err);
+      showToast('Could not load properties from database', 'error');
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    loadProperties();
+  }, [loadProperties]);
+
+  const toggleFlag = async (id, field, nextValue) => {
+    setRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: nextValue } : r))
+    );
+
+    try {
+      const res = await fetch(`${API_ENDPOINTS.PROPERTIES}/${id}/toggle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field, value: nextValue }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Failed to update toggle');
+      }
+      const label = field === 'isFeatured' ? 'Featured' : 'Best Property';
+      showToast(`${label} ${nextValue ? 'enabled' : 'disabled'} for listing.`);
+    } catch (err) {
+      setRows((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, [field]: !nextValue } : r))
+      );
+      showToast(err.message || 'Failed to update toggle', 'error');
+    }
+  };
 
   /* ---- derived data ---- */
   const stats = useMemo(() => ({
@@ -458,20 +508,42 @@ const PropertyManagement = () => {
     showToast('Property duplicated as pending listing.')
   }
 
-  const deleteRows = (ids) => {
-    const set = new Set(ids)
-    setRows((prev) => prev.filter((r) => !set.has(r.id)))
-    setSelected((prev) => { const n = new Set(prev); ids.forEach((id) => n.delete(id)); return n })
-    setModal(null)
-    showToast(ids.length > 1 ? `${ids.length} properties deleted.` : 'Property deleted.')
-  }
+  const deleteRows = async (ids) => {
+    const set = new Set(ids);
+    for (const id of ids) {
+      if (/^[a-f\d]{24}$/i.test(id)) {
+        try {
+          await fetch(`${API_ENDPOINTS.PROPERTIES}/${id}`, { method: 'DELETE' });
+        } catch (e) {
+          console.error('Failed to delete property from API:', id, e);
+        }
+      }
+    }
+    setRows((prev) => prev.filter((r) => !set.has(r.id)));
+    setSelected((prev) => { const n = new Set(prev); ids.forEach((id) => n.delete(id)); return n });
+    setModal(null);
+    showToast(ids.length > 1 ? `${ids.length} properties deleted.` : 'Property deleted.');
+  };
 
-  const onBulkAction = (key) => {
+  const onBulkAction = async (key) => {
     if (selected.size === 0) { showToast('Select at least one property first.', 'error'); return }
     if (key === 'delete') { setModal({ type: 'bulkDelete' }); return }
-    setRows((prev) => prev.map((r) => (selected.has(r.id) ? { ...r, status: key } : r)))
-    showToast(`${selected.size} ${selected.size > 1 ? 'properties' : 'property'} marked as ${key.toLowerCase()}.`)
-  }
+    for (const id of selected) {
+      if (/^[a-f\d]{24}$/i.test(id)) {
+        try {
+          await fetch(`${API_ENDPOINTS.PROPERTIES}/${id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: key }),
+          });
+        } catch (e) {
+          console.error('Failed to update status on API:', id, e);
+        }
+      }
+    }
+    setRows((prev) => prev.map((r) => (selected.has(r.id) ? { ...r, status: key } : r)));
+    showToast(`${selected.size} ${selected.size > 1 ? 'properties' : 'property'} marked as ${key.toLowerCase()}.`);
+  };
 
   const statCards = [
     { label: 'Total Properties', value: stats.total, Icon: FiHome, Mark: FiHome, tone: 'green' },
@@ -482,10 +554,24 @@ const PropertyManagement = () => {
 
   const ActionButtons = ({ r }) => (
     <div className="PropertyManagement-actions">
-      <button type="button" className="PropertyManagement-actionBtn PropertyManagement-actionBtn--view" title="View" aria-label={`View ${r.title}`} onClick={() => setModal({ type: 'view', row: r })}><FiEye /></button>
-      <button type="button" className="PropertyManagement-actionBtn PropertyManagement-actionBtn--edit" title="Edit" aria-label={`Edit ${r.title}`} onClick={() => setModal({ type: 'form', row: r })}><FiEdit /></button>
-      <button type="button" className="PropertyManagement-actionBtn PropertyManagement-actionBtn--copy" title="Duplicate" aria-label={`Duplicate ${r.title}`} onClick={() => duplicateRow(r)}><FiCopy /></button>
-      <button type="button" className="PropertyManagement-actionBtn PropertyManagement-actionBtn--delete" title="Delete" aria-label={`Delete ${r.title}`} onClick={() => setModal({ type: 'delete', row: r })}><FiTrash2 /></button>
+      <button
+        type="button"
+        className="PropertyManagement-actionBtn PropertyManagement-actionBtn--edit"
+        title="Edit Property"
+        aria-label={`Edit ${r.title}`}
+        onClick={() => navigate(`/properties/add?id=${r.id}`)}
+      >
+        <FiEdit />
+      </button>
+      <button
+        type="button"
+        className="PropertyManagement-actionBtn PropertyManagement-actionBtn--delete"
+        title="Delete"
+        aria-label={`Delete ${r.title}`}
+        onClick={() => setModal({ type: 'delete', row: r })}
+      >
+        <FiTrash2 />
+      </button>
     </div>
   )
 
@@ -572,8 +658,16 @@ const PropertyManagement = () => {
     <div className="PropertyManagement-empty">
       <span><FiInbox /></span>
       <h4>No properties found</h4>
-      <p>Try changing or resetting the filters to see more listings.</p>
-      <button type="button" className="PropertyManagement-btn PropertyManagement-btn--primary PropertyManagement-btn--sm" onClick={resetFilters}>Reset filters</button>
+      <p>{rows.length === 0 ? "You have not added any properties to the database yet." : "Try changing or resetting the filters to see more listings."}</p>
+      {rows.length === 0 ? (
+        <Link to="/properties/add" className="PropertyManagement-btn PropertyManagement-btn--primary PropertyManagement-btn--sm">
+          <FiPlus /> Add First Property
+        </Link>
+      ) : (
+        <button type="button" className="PropertyManagement-btn PropertyManagement-btn--primary PropertyManagement-btn--sm" onClick={resetFilters}>
+          Reset filters
+        </button>
+      )}
     </div>
   )
 
@@ -585,9 +679,9 @@ const PropertyManagement = () => {
           <span className="PropertyManagement-headerIcon"><FiHome /></span>
           <h2 className="PropertyManagement-title">Property Management</h2>
         </div>
-        <button type="button" className="PropertyManagement-btn PropertyManagement-btn--primary PropertyManagement-addBtn" onClick={() => setModal({ type: 'form' })}>
+        <Link to="/properties/add" className="PropertyManagement-btn PropertyManagement-btn--primary PropertyManagement-addBtn">
           <FiPlus /> Add New Property
-        </button>
+        </Link>
       </header>
 
       <div className="PropertyManagement-stats">
@@ -658,38 +752,79 @@ const PropertyManagement = () => {
                   <th>Location</th>
                   <th>Price</th>
                   <th>Status</th>
+                  <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Best Property</th>
+                  <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Featured</th>
                   <th>Posted On</th>
                   <th className="PropertyManagement-colActions">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pageRows.length === 0 && (
-                  <tr className="PropertyManagement-emptyRow"><td colSpan={10}>{emptyState}</td></tr>
-                )}
-                {pageRows.map((r, i) => (
-                  <tr key={r.id} className={`PropertyManagement-row ${selected.has(r.id) ? 'is-selected' : ''}`}>
-                    <td className="PropertyManagement-cellCheck">
-                      <input type="checkbox" className="PropertyManagement-checkbox" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} aria-label={`Select ${r.title}`} />
+                {loading ? (
+                  <tr className="PropertyManagement-emptyRow">
+                    <td colSpan={12} style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
+                      Loading real properties from database...
                     </td>
-                    <td className="PropertyManagement-cellNo" data-label="No.">{pad(startIndex + i + 1)}</td>
-                    <td className="PropertyManagement-cellProperty">
-                      <div className="PropertyManagement-property">
-                        <PropertyThumb type={r.type} />
-                        <div>
-                          <strong className="PropertyManagement-propertyTitle">{r.title}</strong>
-                          <span className="PropertyManagement-propertyRera">RERA: {r.rera}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td data-label="Category"><CategoryBadge value={r.category} /></td>
-                    <td data-label="Type"><TypeBadge value={r.type} /></td>
-                    <td data-label="Location"><span className="PropertyManagement-location"><FiMapPin />{r.location}</span></td>
-                    <td data-label="Price"><span className="PropertyManagement-price">{formatPrice(r.price)}</span></td>
-                    <td data-label="Status"><StatusPill value={r.status} /></td>
-                    <td data-label="Posted On"><span className="PropertyManagement-date"><FiCalendar />{formatDate(r.date)}</span></td>
-                    <td className="PropertyManagement-cellActions"><ActionButtons r={r} /></td>
                   </tr>
-                ))}
+                ) : pageRows.length === 0 ? (
+                  <tr className="PropertyManagement-emptyRow"><td colSpan={12}>{emptyState}</td></tr>
+                ) : (
+                  pageRows.map((r, i) => (
+                    <tr key={r.id} className={`PropertyManagement-row ${selected.has(r.id) ? 'is-selected' : ''}`}>
+                      <td className="PropertyManagement-cellCheck">
+                        <input type="checkbox" className="PropertyManagement-checkbox" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} aria-label={`Select ${r.title}`} />
+                      </td>
+                      <td className="PropertyManagement-cellNo" data-label="No.">{pad(startIndex + i + 1)}</td>
+                      <td className="PropertyManagement-cellProperty">
+                        <div className="PropertyManagement-property">
+                          <PropertyThumb type={r.type} image={r.image} />
+                          <div>
+                            <strong className="PropertyManagement-propertyTitle">{r.title}</strong>
+                            <span className="PropertyManagement-propertyRera">RERA: {r.rera}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td data-label="Category"><CategoryBadge value={r.category} /></td>
+                      <td data-label="Type"><TypeBadge value={r.type} /></td>
+                      <td data-label="Location"><span className="PropertyManagement-location"><FiMapPin />{r.location}</span></td>
+                      <td data-label="Price"><span className="PropertyManagement-price">{formatPrice(r.price)}</span></td>
+                      <td data-label="Status"><StatusPill value={r.status} /></td>
+                      <td data-label="Best Property" style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className={`PropertyToggleSwitch ${r.isBestProperty ? 'is-active' : ''}`}
+                          onClick={() => toggleFlag(r.id, 'isBestProperty', !r.isBestProperty)}
+                          title={r.isBestProperty ? "Best Property Active (Click to turn off)" : "Mark as Best Property"}
+                          aria-label="Toggle Best Property"
+                        >
+                          <span className="PropertyToggleSwitch__track">
+                            <span className="PropertyToggleSwitch__thumb" />
+                          </span>
+                          <span className="PropertyToggleSwitch__label">
+                            {r.isBestProperty ? 'Yes' : 'No'}
+                          </span>
+                        </button>
+                      </td>
+                      <td data-label="Featured" style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className={`PropertyToggleSwitch ${r.isFeatured ? 'is-active' : ''}`}
+                          onClick={() => toggleFlag(r.id, 'isFeatured', !r.isFeatured)}
+                          title={r.isFeatured ? "Featured Active (Click to turn off)" : "Mark as Featured"}
+                          aria-label="Toggle Featured"
+                        >
+                          <span className="PropertyToggleSwitch__track">
+                            <span className="PropertyToggleSwitch__thumb" />
+                          </span>
+                          <span className="PropertyToggleSwitch__label">
+                            {r.isFeatured ? 'Yes' : 'No'}
+                          </span>
+                        </button>
+                      </td>
+                      <td data-label="Posted On"><span className="PropertyManagement-date"><FiCalendar />{formatDate(r.date)}</span></td>
+                      <td className="PropertyManagement-cellActions"><ActionButtons r={r} /></td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -701,7 +836,7 @@ const PropertyManagement = () => {
                 {pageRows.map((r) => (
                   <article key={r.id} className={`PropertyManagement-gridCard ${selected.has(r.id) ? 'is-selected' : ''}`}>
                     <div className="PropertyManagement-gridMedia">
-                      <PropertyThumb type={r.type} />
+                      <PropertyThumb type={r.type} image={r.image} />
                       <label className="PropertyManagement-gridCheck">
                         <input type="checkbox" className="PropertyManagement-checkbox" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} aria-label={`Select ${r.title}`} />
                       </label>
@@ -716,6 +851,34 @@ const PropertyManagement = () => {
                       <span className="PropertyManagement-propertyRera">RERA: {r.rera}</span>
                       <span className="PropertyManagement-location"><FiMapPin />{r.location}</span>
                       <strong className="PropertyManagement-price PropertyManagement-price--grid">{formatPrice(r.price)}</strong>
+
+                      {/* Toggles in Grid View */}
+                      <div className="PropertyManagement-gridToggles">
+                        <button
+                          type="button"
+                          className={`PropertyToggleSwitch PropertyToggleSwitch--sm ${r.isBestProperty ? 'is-active' : ''}`}
+                          onClick={() => toggleFlag(r.id, 'isBestProperty', !r.isBestProperty)}
+                          title={r.isBestProperty ? "Best Property Active" : "Click to mark as Best Property"}
+                        >
+                          <span className="PropertyToggleSwitch__track">
+                            <span className="PropertyToggleSwitch__thumb" />
+                          </span>
+                          <span className="PropertyToggleSwitch__label">Best</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`PropertyToggleSwitch PropertyToggleSwitch--sm ${r.isFeatured ? 'is-active' : ''}`}
+                          onClick={() => toggleFlag(r.id, 'isFeatured', !r.isFeatured)}
+                          title={r.isFeatured ? "Featured Active" : "Click to mark as Featured"}
+                        >
+                          <span className="PropertyToggleSwitch__track">
+                            <span className="PropertyToggleSwitch__thumb" />
+                          </span>
+                          <span className="PropertyToggleSwitch__label">Featured</span>
+                        </button>
+                      </div>
+
                       <div className="PropertyManagement-gridFoot">
                         <span className="PropertyManagement-date"><FiCalendar />{formatDate(r.date)}</span>
                         <ActionButtons r={r} />

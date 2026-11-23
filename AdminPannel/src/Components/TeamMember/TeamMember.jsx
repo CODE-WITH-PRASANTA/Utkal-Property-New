@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { API_ENDPOINTS, getMediaUrl } from '../../config/api';
 import './TeamMember.css';
 
 /* ------------------------------------------------------------------ */
@@ -99,29 +100,6 @@ const initials = (name) =>
     .slice(0, 2)
     .map((p) => p[0].toUpperCase())
     .join('');
-
-const INITIAL_MEMBERS = [
-  ['Rohit Kumar', 'Project Manager', 'rohit@utkalproperty.com', '98612 34567', '2025-01-10', 'Active'],
-  ['Priya Mohanty', 'Property Consultant', 'priya@utkalproperty.com', '93456 78901', '2025-01-15', 'Active'],
-  ['Amit Das', 'Sales Executive', 'amit@utkalproperty.com', '91234 56789', '2025-01-20', 'Active'],
-  ['Sneha Sahoo', 'Marketing Executive', 'sneha@utkalproperty.com', '72053 01234', '2025-01-22', 'Inactive'],
-  ['Binay Jena', 'Content Writer', 'binay@utkalproperty.com', '87654 32109', '2025-01-25', 'Active'],
-  ['Suman Nayak', 'Graphic Designer', 'suman@utkalproperty.com', '94321 09876', '2025-01-28', 'Active'],
-  ['Piyush Rout', 'SEO Executive', 'piyush@utkalproperty.com', '81123 45678', '2025-02-01', 'Active'],
-  ['Madhusmita Pal', 'Customer Support', 'madhu@utkalproperty.com', '96543 21098', '2025-02-05', 'Active'],
-  ['Sagar Behera', 'Site Supervisor', 'sagar@utkalproperty.com', '70088 99001', '2025-02-10', 'Inactive'],
-  ['Kiran Patra', 'Admin', 'kiran@utkalproperty.com', '93456 11223', '2025-02-12', 'Active'],
-  ['Anjali Sethi', 'Sales Manager', 'anjali@utkalproperty.com', '98531 40762', '2025-02-15', 'Active'],
-  ['Debasis Swain', 'Customer Support', 'debasis@utkalproperty.com', '90401 66218', '2025-02-18', 'Active'],
-].map((r, i) => ({
-  id: i + 1,
-  name: r[0],
-  role: r[1],
-  email: r[2],
-  phone: `+91 ${r[3]}`,
-  joined: r[4],
-  status: r[5],
-}));
 
 const EMPTY_FILTERS = { role: 'all', status: 'all', q: '' };
 
@@ -257,12 +235,38 @@ const TeamMemberForm = ({ member, existingEmails, onSave }) => {
     phone: member ? member.phone.replace(/\D/g, '').slice(-10) : '',
     joined: member?.joined || new Date().toISOString().slice(0, 10),
     status: member?.status || 'Active',
+    experience: member?.experience || '',
+    bio: member?.bio || '',
+    facebook: member?.facebook || '',
+    linkedin: member?.linkedin || '',
+    twitter: member?.twitter || '',
+    instagram: member?.instagram || '',
+    image: member?.image || '',
   }));
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(member?.image || '');
   const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((e) => ({ ...e, [k]: '' }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setErrors((err) => ({ ...err, image: 'Only JPG, PNG or WEBP allowed' }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((err) => ({ ...err, image: 'Image must be under 5MB' }));
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setErrors((err) => ({ ...err, image: '' }));
   };
 
   const submit = (e) => {
@@ -281,6 +285,7 @@ const TeamMemberForm = ({ member, existingEmails, onSave }) => {
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       phone: formatPhone(form.phone),
+      imageFile,
     });
   };
 
@@ -289,6 +294,58 @@ const TeamMemberForm = ({ member, existingEmails, onSave }) => {
 
   return (
     <form id="TeamMember-memberForm" className="TeamMember-form" onSubmit={submit} noValidate>
+      {/* Profile Photo Upload */}
+      <div className="TeamMember-field" style={{ marginBottom: '18px' }}>
+        <label>Member Profile Photo</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px' }}>
+          <div
+            style={{
+              width: '68px',
+              height: '68px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              background: '#e2e8f0',
+              display: 'grid',
+              placeItems: 'center',
+              border: '2px solid #cbd5e1',
+              flexShrink: 0,
+            }}
+          >
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Preview"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <Icon name="user" size={32} />
+            )}
+          </div>
+          <div>
+            <button
+              type="button"
+              className="TeamMember-btn TeamMember-btn--ghost"
+              style={{ padding: '7px 14px', fontSize: '13px' }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Icon name="image" size={15} style={{ marginRight: '6px' }} />
+              {imagePreview ? 'Change Photo' : 'Upload Photo'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              hidden
+              onChange={handleImageChange}
+            />
+            <p style={{ margin: '4px 0 0', fontSize: '11.5px', color: '#64748b' }}>
+              JPG, PNG or WEBP (max 5 MB)
+            </p>
+            {errors.image && <small style={{ color: '#ef4444' }}>{errors.image}</small>}
+          </div>
+        </div>
+      </div>
+
       <div className={`TeamMember-field ${errors.name ? 'has-error' : ''}`}>
         <label>Full Name</label>
         <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Rohit Kumar" />
@@ -338,6 +395,39 @@ const TeamMemberForm = ({ member, existingEmails, onSave }) => {
           {errors.joined && <small>{errors.joined}</small>}
         </div>
       </div>
+
+      <div className="TeamMember-formRow">
+        <div className="TeamMember-field">
+          <label>Experience (optional)</label>
+          <input value={form.experience} onChange={(e) => set('experience', e.target.value)} placeholder="e.g. 5+ Years" />
+        </div>
+        <div className="TeamMember-field">
+          <label>LinkedIn URL (optional)</label>
+          <input value={form.linkedin} onChange={(e) => set('linkedin', e.target.value)} placeholder="https://linkedin.com/in/..." />
+        </div>
+      </div>
+
+      <div className="TeamMember-formRow">
+        <div className="TeamMember-field">
+          <label>Facebook URL (optional)</label>
+          <input value={form.facebook} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/..." />
+        </div>
+        <div className="TeamMember-field">
+          <label>Twitter / X URL (optional)</label>
+          <input value={form.twitter} onChange={(e) => set('twitter', e.target.value)} placeholder="https://x.com/..." />
+        </div>
+      </div>
+
+      <div className="TeamMember-formRow">
+        <div className="TeamMember-field">
+          <label>Instagram URL (optional)</label>
+          <input value={form.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/..." />
+        </div>
+        <div className="TeamMember-field">
+          <label>Short Bio (optional)</label>
+          <input value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="Brief bio / description..." />
+        </div>
+      </div>
     </form>
   );
 };
@@ -346,7 +436,8 @@ const TeamMemberForm = ({ member, existingEmails, onSave }) => {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 const TeamMember = () => {
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(EMPTY_FILTERS);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -365,6 +456,45 @@ const TeamMember = () => {
   };
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  /* ---------- Fetch Members from Backend API ---------- */
+  const fetchMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(API_ENDPOINTS.TEAM);
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.data)) {
+        setMembers(
+          data.data.map((m) => ({
+            id: m._id,
+            name: m.name || '',
+            role: m.role || '',
+            email: m.email || '',
+            phone: m.phone || '',
+            joined: m.joined ? m.joined.slice(0, 10) : new Date().toISOString().slice(0, 10),
+            status: m.status || 'Active',
+            experience: m.experience || '',
+            bio: m.bio || '',
+            image: m.image ? getMediaUrl(m.image) : '',
+            rawImage: m.image || '',
+            facebook: m.facebook || '',
+            twitter: m.twitter || '',
+            instagram: m.instagram || '',
+            linkedin: m.linkedin || '',
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load team members:', err);
+      showToast('Failed to load team members from server', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   /* ---------- derived data ---------- */
   const counts = useMemo(
@@ -442,35 +572,115 @@ const TeamMember = () => {
     });
 
   /* ---------- CRUD ---------- */
-  const saveMember = (data) => {
-    if (modal.member) {
-      setMembers((prev) => prev.map((m) => (m.id === modal.member.id ? { ...m, ...data } : m)));
-      showToast('Team member updated successfully');
-    } else {
-      const nextId = members.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
-      setMembers((prev) => [...prev, { id: nextId, ...data }]);
-      setPage(Math.ceil((members.length + 1) / perPage));
-      showToast('Team member added successfully');
+  const saveMember = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('role', data.role);
+      formData.append('email', data.email);
+      formData.append('phone', data.phone);
+      formData.append('joined', data.joined);
+      formData.append('status', data.status);
+      if (data.experience) formData.append('experience', data.experience);
+      if (data.bio) formData.append('bio', data.bio);
+      if (data.facebook) formData.append('facebook', data.facebook);
+      if (data.twitter) formData.append('twitter', data.twitter);
+      if (data.instagram) formData.append('instagram', data.instagram);
+      if (data.linkedin) formData.append('linkedin', data.linkedin);
+      if (data.imageFile) {
+        formData.append('image', data.imageFile);
+      }
+
+      if (modal.member) {
+        const res = await fetch(`${API_ENDPOINTS.TEAM}/${modal.member.id}`, {
+          method: 'PUT',
+          body: formData,
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast('Team member updated successfully');
+          fetchMembers();
+          closeModal();
+        } else {
+          showToast(resData.message || 'Failed to update member', 'danger');
+        }
+      } else {
+        const res = await fetch(API_ENDPOINTS.TEAM, {
+          method: 'POST',
+          body: formData,
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast('Team member added successfully');
+          fetchMembers();
+          closeModal();
+        } else {
+          showToast(resData.message || 'Failed to add member', 'danger');
+        }
+      }
+    } catch (err) {
+      console.error('Error saving member:', err);
+      showToast('Error saving team member', 'danger');
     }
-    closeModal();
   };
 
-  const deleteMembers = (ids) => {
-    setMembers((prev) => prev.filter((m) => !ids.includes(m.id)));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      ids.forEach((i) => next.delete(i));
-      return next;
-    });
-    showToast(ids.length > 1 ? `${ids.length} team members deleted` : 'Team member deleted', 'danger');
-    closeModal();
+  const deleteMembers = async (ids) => {
+    try {
+      if (ids.length === 1) {
+        const res = await fetch(`${API_ENDPOINTS.TEAM}/${ids[0]}`, { method: 'DELETE' });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast('Team member deleted', 'danger');
+          fetchMembers();
+        } else {
+          showToast(resData.message || 'Failed to delete member', 'danger');
+        }
+      } else {
+        const res = await fetch(`${API_ENDPOINTS.TEAM}/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast(`${ids.length} team members deleted`, 'danger');
+          fetchMembers();
+        } else {
+          showToast(resData.message || 'Failed to delete members', 'danger');
+        }
+      }
+      setSelected((prev) => {
+        const next = new Set(prev);
+        ids.forEach((i) => next.delete(i));
+        return next;
+      });
+      closeModal();
+    } catch (err) {
+      console.error('Failed to delete member(s):', err);
+      showToast('Failed to delete member', 'danger');
+    }
   };
 
-  const toggleStatus = (member) => {
-    const status = member.status === 'Active' ? 'Inactive' : 'Active';
-    setMembers((prev) => prev.map((m) => (m.id === member.id ? { ...m, status } : m)));
-    showToast(`${member.name} marked as ${status}`);
-    closeModal();
+  const toggleStatus = async (member) => {
+    const nextStatus = member.status === 'Active' ? 'Inactive' : 'Active';
+    try {
+      const res = await fetch(`${API_ENDPOINTS.TEAM}/${member.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        showToast(`${member.name} marked as ${nextStatus}`);
+        fetchMembers();
+        closeModal();
+      } else {
+        showToast(resData.message || 'Failed to update status', 'danger');
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      showToast('Failed to update status', 'danger');
+    }
   };
 
   /* ---------- bulk actions ---------- */
@@ -480,7 +690,7 @@ const TeamMember = () => {
     { value: 'delete', label: 'Delete Selected', dot: 'danger' },
   ];
 
-  const runBulk = (action) => {
+  const runBulk = async (action) => {
     if (!selected.size) {
       showToast('Select at least one member first', 'warning');
       return undefined;
@@ -488,9 +698,23 @@ const TeamMember = () => {
     const ids = [...selected];
     if (action === 'delete') return setModal({ type: 'bulkDelete', ids });
     const status = action === 'activate' ? 'Active' : 'Inactive';
-    setMembers((prev) => prev.map((m) => (selected.has(m.id) ? { ...m, status } : m)));
-    showToast(`${ids.length} member(s) marked as ${status}`);
-    setSelected(new Set());
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`${API_ENDPOINTS.TEAM}/${id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+          })
+        )
+      );
+      showToast(`${ids.length} member(s) marked as ${status}`);
+      setSelected(new Set());
+      fetchMembers();
+    } catch (err) {
+      console.error('Error updating bulk status:', err);
+      showToast('Failed to update members status', 'danger');
+    }
     return undefined;
   };
 
@@ -637,7 +861,18 @@ const TeamMember = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((m, i) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                      <svg className="TeamMember-spinner" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                        <line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" /><line x1="4.93" y1="4.93" x2="7.76" y2="7.76" /><line x1="16.24" y1="16.24" x2="19.07" y2="19.07" /><line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" /><line x1="4.93" y1="19.07" x2="7.76" y2="16.24" /><line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+                      </svg>
+                      <span style={{ fontSize: '14px', fontWeight: 500 }}>Loading team members...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : rows.map((m, i) => (
                 <tr key={m.id} className={selected.has(m.id) ? 'is-selected' : ''}>
                   <td className="TeamMember-cell TeamMember-cell--check">
                     <input
@@ -653,7 +888,26 @@ const TeamMember = () => {
                   </td>
                   <td className="TeamMember-cell TeamMember-cell--name" data-label="Member">
                     <div className="TeamMember-memberInfo">
-                      <span className={`TeamMember-avatar TeamMember-avatar--c${m.id % 6}`}>{initials(m.name)}</span>
+                      {m.image ? (
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          className="TeamMember-avatar"
+                          style={{ objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            if (e.currentTarget.nextElementSibling) {
+                              e.currentTarget.nextElementSibling.style.display = 'grid';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className={`TeamMember-avatar TeamMember-avatar--c${(typeof m.id === 'string' ? m.id.charCodeAt(m.id.length - 1) : m.id) % 6}`}
+                        style={{ display: m.image ? 'none' : 'grid' }}
+                      >
+                        {initials(m.name)}
+                      </span>
                       <span className="TeamMember-nameText">{m.name}</span>
                     </div>
                   </td>
@@ -792,9 +1046,18 @@ const TeamMember = () => {
           }
         >
           <div className="TeamMember-viewHead">
-            <span className={`TeamMember-avatar TeamMember-avatar--lg TeamMember-avatar--c${modal.member.id % 6}`}>
-              {initials(modal.member.name)}
-            </span>
+            {modal.member.image ? (
+              <img
+                src={modal.member.image}
+                alt={modal.member.name}
+                className="TeamMember-avatar TeamMember-avatar--lg"
+                style={{ objectFit: 'cover' }}
+              />
+            ) : (
+              <span className={`TeamMember-avatar TeamMember-avatar--lg TeamMember-avatar--c${(typeof modal.member.id === 'string' ? modal.member.id.charCodeAt(modal.member.id.length - 1) : modal.member.id) % 6}`}>
+                {initials(modal.member.name)}
+              </span>
+            )}
             <div>
               <h4>{modal.member.name}</h4>
               <div className="TeamMember-viewBadges">
@@ -808,12 +1071,15 @@ const TeamMember = () => {
           </div>
           <dl className="TeamMember-details">
             {[
-              ['Member ID', `TM-${String(modal.member.id).padStart(3, '0')}`],
+              ['Member ID', `TM-${String(modal.member.id).slice(-4).toUpperCase()}`],
               ['Designation', modal.member.role],
               ['Email', modal.member.email],
               ['Phone', modal.member.phone],
               ['Joined On', formatDate(modal.member.joined)],
               ['Access Level', isManager(modal.member.role) ? 'Admin / Manager' : 'Team Member'],
+              ...(modal.member.experience ? [['Experience', modal.member.experience]] : []),
+              ...(modal.member.bio ? [['Bio', modal.member.bio]] : []),
+              ...(modal.member.linkedin ? [['LinkedIn', modal.member.linkedin]] : []),
             ].map(([k, v]) => (
               <div key={k} className="TeamMember-detailItem">
                 <dt>{k}</dt>

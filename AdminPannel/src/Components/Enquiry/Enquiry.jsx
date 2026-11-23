@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { API_ENDPOINTS } from "../../config/api";
 import "./Enquiry.css";
 
 /* ------------------------------------------------------------------ */
@@ -20,6 +21,12 @@ const SERVICES = [
   "Apartments & Flats",
   "Independent Houses & Villas",
   "Rental & Lease",
+  "Buy a Property",
+  "Rent a Property",
+  "Sell a Property",
+  "Plot / Land",
+  "Villa / House",
+  "Commercial Space",
 ];
 const SERVICE_CLASS = {
   "Residential Properties": "service-home",
@@ -28,6 +35,12 @@ const SERVICE_CLASS = {
   "Apartments & Flats": "service-rodent",
   "Independent Houses & Villas": "service-cockroach",
   "Rental & Lease": "service-mosquito",
+  "Buy a Property": "service-home",
+  "Rent a Property": "service-mosquito",
+  "Sell a Property": "service-termite",
+  "Plot / Land": "service-bedbug",
+  "Villa / House": "service-cockroach",
+  "Commercial Space": "service-termite",
 };
 const SERVICE_ICON = {
   "Residential Properties": "home",
@@ -36,73 +49,16 @@ const SERVICE_ICON = {
   "Apartments & Flats": "building",
   "Independent Houses & Villas": "home",
   "Rental & Lease": "key",
+  "Buy a Property": "home",
+  "Rent a Property": "key",
+  "Sell a Property": "building",
+  "Plot / Land": "mapPin",
+  "Villa / House": "home",
+  "Commercial Space": "building",
 };
 
 const AVATAR_COLORS = ["#f59a3d", "#f0558f", "#2fb344", "#2f9cf0", "#8b5cf6", "#14b8a6", "#e5484d"];
 
-const NAMES = [
-  "Manas Behera", "Lipsa Mohanty", "Debasish Sahoo", "Anita Jena", "Rakesh Swain",
-  "Smita Panda", "Biswajit Mishra", "Sonali Dash", "Pratap Sethy", "Mamata Nayak",
-  "Subrat Pradhan", "Jyoti Ranjan", "Kabita Sahu", "Tapan Parida", "Namita Barik",
-  "Ashok Mallick", "Rashmi Behura", "Gopal Samal", "Sasmita Lenka", "Pradeep Otta",
-];
-
-const MESSAGES = [
-  "I am looking for a 3 BHK residential flat in Patia, Bhubaneswar. Please share available listings.",
-  "Please share the pricing, square footage, and BDA/RERA approval details for the plot.",
-  "We need a commercial office space on lease in Sahid Nagar. Please call me back.",
-  "I would like to schedule a site visit for the independent villa project this weekend.",
-  "Looking for a 2 BHK semi-furnished apartment for family rent near Infocity.",
-  "Please send the brochure, floor plan, and home loan bank tie-up details.",
-  "Interested in investing in residential plots along the Bhubaneswar–Cuttack highway.",
-  "Can we arrange a callback to discuss negotiation and registration charges for the property?",
-];
-
-const buildSeed = () => {
-  const head = [
-    { name: "Ramesh Patra", service: "Residential Properties", phone: "9876543210", email: "rameshpatra@gmail.com", at: "2026-11-15T11:24", status: "New", message: MESSAGES[0] },
-    { name: "Sneha Das", service: "Plots & Land", phone: "8765432109", email: "snehasd@gmail.com", at: "2026-11-14T16:10", status: "In Progress", message: MESSAGES[1] },
-    { name: "Arjit Kuanar", service: "Independent Houses & Villas", phone: "9988766554", email: "arjitkuanar@gmail.com", at: "2026-11-14T10:32", status: "New", message: MESSAGES[3] },
-    { name: "Priya Rout", service: "Rental & Lease", phone: "7654321098", email: "priyarout@gmail.com", at: "2026-11-13T14:45", status: "Closed", message: MESSAGES[4] },
-    { name: "Sibu Nayak", service: "Commercial Properties", phone: "9123456789", email: "sibunayak@gmail.com", at: "2026-11-12T09:15", status: "In Progress", message: MESSAGES[2] },
-  ];
-
-  /* 251 remaining rows: 46 new, 16 in progress, 189 closed (256 total) */
-  const pool = [
-    ...Array(46).fill("New"),
-    ...Array(16).fill("In Progress"),
-    ...Array(189).fill("Closed"),
-  ];
-  let seed = 20261117;
-  const rand = () => {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  };
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(rand() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-
-  const pad = (n) => String(n).padStart(2, "0");
-  const rest = pool.map((status, k) => {
-    const i = k + 5;
-    const name = NAMES[(i * 7 + 3) % NAMES.length];
-    const date = new Date(Date.UTC(2026, 10, 12 - Math.floor(k / 3))).toISOString().slice(0, 10);
-    return {
-      name,
-      service: SERVICES[(i * 5 + 2) % SERVICES.length],
-      phone: `9${100000000 + ((i * 48271 * 1237) % 899999999)}`,
-      email: `${name.toLowerCase().replace(/\s+/g, "")}@gmail.com`,
-      at: `${date}T${pad(9 + ((k * 5) % 9))}:${pad((k * 17) % 60)}`,
-      status,
-      message: MESSAGES[(i * 3) % MESSAGES.length],
-    };
-  });
-
-  return [...head, ...rest].map((e, i) => ({ ...e, id: 256 - i }));
-};
-
-const INITIAL_ENQUIRIES = buildSeed();
 const PAGE_SIZE = 5;
 
 /* ------------------------------------------------------------------ */
@@ -112,17 +68,56 @@ const PAGE_SIZE = 5;
 const pad = (n) => String(n).padStart(2, "0");
 const toISO = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
 const isoOf = (d) => toISO(d.getFullYear(), d.getMonth(), d.getDate());
-const parseDate = (iso) => new Date(`${iso}T00:00:00`);
+const parseDate = (iso) => (iso ? new Date(`${iso}T00:00:00`) : new Date());
 
-const formatDate = (iso) =>
-  parseDate(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-const formatShort = (iso) => parseDate(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-const formatTime = (hhmm) => {
-  const [h, m] = hhmm.split(":").map(Number);
-  return `${pad(h % 12 || 12)}:${pad(m)} ${h >= 12 ? "PM" : "AM"}`;
+const formatDate = (iso) => {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso.includes("T") ? iso : `${iso}T00:00:00`);
+    return isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  } catch {
+    return iso;
+  }
 };
-const formatDateTime = (at) => `${formatDate(at.slice(0, 10))}, ${formatTime(at.slice(11, 16))}`;
-const formatPhone = (p) => `+91 ${p.slice(0, 5)} ${p.slice(5)}`;
+
+const formatShort = (iso) => {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso.includes("T") ? iso : `${iso}T00:00:00`);
+    return isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+  } catch {
+    return iso;
+  }
+};
+
+const formatTime = (hhmm) => {
+  if (!hhmm) return "";
+  try {
+    const [h, m] = hhmm.split(":").map(Number);
+    return `${pad(h % 12 || 12)}:${pad(m || 0)} ${h >= 12 ? "PM" : "AM"}`;
+  } catch {
+    return hhmm;
+  }
+};
+
+const formatDateTime = (at) => {
+  if (!at) return "-";
+  if (at.length >= 16) {
+    return `${formatDate(at.slice(0, 10))}, ${formatTime(at.slice(11, 16))}`;
+  }
+  return formatDate(at);
+};
+
+const formatPhone = (p) => {
+  if (!p) return "-";
+  const str = String(p).trim();
+  if (str.startsWith("+")) return str;
+  return `+91 ${str}`;
+};
 
 const getInitials = (name) =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
@@ -978,7 +973,8 @@ const Leaves = () => (
 /* ------------------------------------------------------------------ */
 
 const Enquiry = () => {
-  const [enquiries, setEnquiries] = useState(INITIAL_ENQUIRIES);
+  const [enquiries, setEnquiries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [service, setService] = useState("All");
   const [status, setStatus] = useState("All");
@@ -995,6 +991,42 @@ const Enquiry = () => {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const fetchEnquiries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(API_ENDPOINTS.ENQUIRY);
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        const mapped = json.data.map((item, index) => {
+          const createdAt = item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString();
+          return {
+            id: item._id,
+            _id: item._id,
+            num: json.data.length - index,
+            name: item.name || "Client",
+            service: item.service || item.interest || "Residential Properties",
+            phone: item.phone || "",
+            email: item.email || "",
+            location: item.location || "",
+            at: createdAt.slice(0, 16),
+            status: item.status || "New",
+            message: item.message || "",
+            source: item.source || "Website Popup",
+          };
+        });
+        setEnquiries(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to load enquiries:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, [fetchEnquiries]);
 
   const stats = useMemo(
     () => ({
@@ -1072,30 +1104,80 @@ const Enquiry = () => {
     showToast(`Exported ${rows.length} property enquir${rows.length === 1 ? "y" : "ies"}.`);
   };
 
-  const handleEdit = (data) => {
-    setEnquiries((list) => list.map((e) => (e.id === modal.enquiry.id ? { ...e, ...data } : e)));
-    closeModal();
-    showToast(`${data.name}'s property enquiry was updated.`);
+  const handleEdit = async (data) => {
+    const id = modal.enquiry._id || modal.enquiry.id;
+    try {
+      const res = await fetch(`${API_ENDPOINTS.ENQUIRY}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          service: data.service,
+          phone: data.phone,
+          email: data.email,
+          status: data.status,
+          message: data.message,
+        }),
+      });
+      const json = await res.json();
+      if (json && json.success) {
+        setEnquiries((list) =>
+          list.map((e) => ((e._id || e.id) === id ? { ...e, ...data } : e))
+        );
+        closeModal();
+        showToast(`${data.name}'s property enquiry was updated.`);
+      } else {
+        showToast(json.message || "Failed to update enquiry.");
+      }
+    } catch (err) {
+      console.error("Failed to update enquiry:", err);
+      showToast("Network error while updating enquiry.");
+    }
   };
 
-  const handleDelete = () => {
-    const { id, name } = modal.enquiry;
-    setEnquiries((list) => list.filter((e) => e.id !== id));
-    setSelected((s) => {
-      const next = new Set(s);
-      next.delete(id);
-      return next;
-    });
-    closeModal();
-    showToast(`Enquiry from ${name} was deleted.`);
+  const handleDelete = async () => {
+    const { id, _id, name } = modal.enquiry;
+    const targetId = _id || id;
+    try {
+      const res = await fetch(`${API_ENDPOINTS.ENQUIRY}/${targetId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json && json.success) {
+        setEnquiries((list) => list.filter((e) => (e._id || e.id) !== targetId));
+        setSelected((s) => {
+          const next = new Set(s);
+          next.delete(targetId);
+          return next;
+        });
+        closeModal();
+        showToast(`Enquiry from ${name} was deleted.`);
+      } else {
+        showToast(json.message || "Failed to delete enquiry.");
+      }
+    } catch (err) {
+      console.error("Failed to delete enquiry:", err);
+      showToast("Network error while deleting enquiry.");
+    }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     const count = selected.size;
-    setEnquiries((list) => list.filter((e) => !selected.has(e.id)));
-    setSelected(new Set());
-    closeModal();
-    showToast(`${count} enquir${count === 1 ? "y was" : "ies were"} deleted.`);
+    const ids = Array.from(selected);
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`${API_ENDPOINTS.ENQUIRY}/${id}`, { method: "DELETE" }).catch(() => {})
+        )
+      );
+      setEnquiries((list) => list.filter((e) => !selected.has(e._id) && !selected.has(e.id)));
+      setSelected(new Set());
+      closeModal();
+      showToast(`${count} enquir${count === 1 ? "y was" : "ies were"} deleted.`);
+    } catch (err) {
+      console.error("Failed to bulk delete enquiries:", err);
+      showToast("Network error during bulk delete.");
+    }
   };
 
   const statCards = [

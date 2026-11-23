@@ -577,3 +577,116 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================
+   FILTER TABS & ENHANCEMENTS
+========================================= */
+
+.our-team-first-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -15px auto 42px;
+  max-width: 800px;
+}
+
+.our-team-first-tab {
+  border: 1px solid rgba(161, 123, 62, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #173b2b;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.our-team-first-tab:hover {
+  background: #173b2b;
+  color: #fff;
+  border-color: #173b2b;
+  transform: translateY(-2px);
+}
+
+.our-team-first-tab.is-active {
+  background: #173b2b;
+  color: #f6d995;
+  border-color: #173b2b;
+  box-shadow: 0 4px 14px rgba(23, 59, 43, 0.25);
+}
+
+.our-team-first-exp-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(23, 59, 43, 0.88);
+  backdrop-filter: blur(6px);
+  color: #f6d995;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(246, 217, 149, 0.3);
+  z-index: 4;
+}
+
+.our-team-first-contacts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.our-team-first-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #173b2b;
+  background: rgba(23, 59, 43, 0.06);
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.our-team-first-contact-btn:hover {
+  background: #173b2b;
+  color: #f6d995;
+  border-color: #173b2b;
+}
+
+.our-team-first-skeleton-card {
+  border-radius: 16px;
+  background: #e9ece4;
+  height: 380px;
+  animation: ourTeamPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes ourTeamPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.our-team-first-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #657166;
+}
+
+.our-team-first-empty h3 {
+  font-size: 20px;
+  color: #173b2b;
+  margin-bottom: 8px;
+}
+

@@ -18,6 +18,7 @@ import {
   FiPlusSquare,
   FiPhoneCall,
   FiX,
+  FiStar,
 } from "react-icons/fi";
 
 import logo from "../../assets/logo.webp";
@@ -40,6 +41,7 @@ const menuItems = [
     children: [
       { text: "Add Property", path: "/properties/add", icon: <FiPlusSquare size={16} /> },
       { text: "Property Management", path: "/properties", icon: <FiFileText size={16} /> },
+      { text: "Property Reviews", path: "/properties/reviews", icon: <FiStar size={16} /> },
     ],
   },
   {
@@ -49,6 +51,7 @@ const menuItems = [
     children: [
       { text: "Post Blog", path: "/blog/new", icon: <FiPlusSquare size={16} /> },
       { text: "Blog Management", path: "/blog", icon: <FiFileText size={16} /> },
+      { text: "Categories", path: "/blog/category", icon: <FiTag size={16} /> },
     ],
   },
   {
@@ -89,11 +92,6 @@ const menuItems = [
     text: "Profile",
     path: "/profile",
     icon: <FiUser size={20} />,
-  },
-  {
-    text: "Setting",
-    path: "/settings",
-    icon: <FiSettings size={20} />,
   },
 ];
 

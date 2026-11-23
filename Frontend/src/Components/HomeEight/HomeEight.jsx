@@ -1,19 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { API_ENDPOINTS, getMediaUrl } from '../../config/api'
 import './HomeEight.css'
-
-/* ====== IMAGES FROM YOUR ASSETS ====== */
-import expert1 from '../../assets/experts-1.jpg'
-import expert2 from '../../assets/experts-2.jpg'
-import expert3 from '../../assets/experts-3.jpg'
-import expert4 from '../../assets/experts-4.jpg'
-
-/* ====== DATA ====== */
-const team = [
-  { img: expert1, name: 'Eleanor Pena', role: 'Medical Assistant' },
-  { img: expert2, name: 'Leslie Alexander', role: 'Marketing Coordinator' },
-  { img: expert3, name: 'Wade Warren', role: 'President of Sales' },
-  { img: expert4, name: 'Kathryn Murphy', role: 'Web Designer' },
-]
 
 const markets = [
   'Bhubaneswar, OD real estate',
@@ -51,13 +38,6 @@ const InIcon = () => (
   </svg>
 )
 
-const socials = [
-  { label: 'Twitter', Icon: XIcon },
-  { label: 'Instagram', Icon: InstaIcon },
-  { label: 'Facebook', Icon: FbIcon },
-  { label: 'LinkedIn', Icon: InIcon },
-]
-
 /* ====== HOOK ====== */
 const useInView = (threshold = 0.15) => {
   const ref = useRef(null)
@@ -84,6 +64,40 @@ const useInView = (threshold = 0.15) => {
 const HomeEight = () => {
   const [teamRef, teamIn] = useInView(0.15)
   const [mktRef, mktIn] = useInView(0.2)
+  const [teamMembers, setTeamMembers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchTeam = async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.TEAM}?status=Active`)
+        const data = await res.json()
+        if (isMounted && data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setTeamMembers(data.data)
+        }
+      } catch (err) {
+        console.error('Failed to load home team members:', err)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    fetchTeam()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const displayTeam = teamMembers.map((m, i) => ({
+    id: m._id || i,
+    name: m.name,
+    role: m.role,
+    img: m.image ? getMediaUrl(m.image) : '',
+    twitter: m.twitter || '',
+    instagram: m.instagram || '',
+    facebook: m.facebook || '',
+    linkedin: m.linkedin || '',
+  }))
 
   return (
     <div className="he-wrap">
@@ -96,30 +110,69 @@ const HomeEight = () => {
         </div>
 
         <div className="he-team">
-          {team.map((m, i) => (
-            <article className="he-member he-reveal" key={m.name} style={{ '--d': `${0.1 + i * 0.12}s` }}>
-              <div className="he-photo">
-                <img src={m.img} alt={m.name} />
-                <div className="he-photo-shade" />
+          {displayTeam.length > 0 ? (
+            displayTeam.map((m, i) => (
+              <article className="he-member he-reveal" key={m.id || m.name} style={{ '--d': `${0.1 + i * 0.12}s` }}>
+                <div className="he-photo">
+                  {m.img ? (
+                    <img
+                      src={m.img}
+                      alt={m.name}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e2e8f0', color: '#64748b', fontSize: '2.5rem', fontWeight: 700 }}>
+                      {m.name ? m.name.charAt(0) : 'U'}
+                    </div>
+                  )}
+                  <div className="he-photo-shade" />
 
-                <ul className="he-social">
-                  {socials.map(({ label, Icon }, k) => (
-                    <li key={label} style={{ '--i': k }}>
-                      <a href="#!" aria-label={`${m.name} ${label}`} onClick={(e) => e.preventDefault()}>
-                        <Icon />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <ul className="he-social">
+                    {m.twitter && (
+                      <li style={{ '--i': 0 }}>
+                        <a href={m.twitter} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} Twitter`}>
+                          <XIcon />
+                        </a>
+                      </li>
+                    )}
+                    {m.instagram && (
+                      <li style={{ '--i': 1 }}>
+                        <a href={m.instagram} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} Instagram`}>
+                          <InstaIcon />
+                        </a>
+                      </li>
+                    )}
+                    {m.facebook && (
+                      <li style={{ '--i': 2 }}>
+                        <a href={m.facebook} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} Facebook`}>
+                          <FbIcon />
+                        </a>
+                      </li>
+                    )}
+                    {m.linkedin && (
+                      <li style={{ '--i': 3 }}>
+                        <a href={m.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} LinkedIn`}>
+                          <InIcon />
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                </div>
 
-              <div className="he-info">
-                <h3>{m.name}</h3>
-                <p>{m.role}</p>
-                <span className="he-info-bar" />
-              </div>
-            </article>
-          ))}
+                <div className="he-info">
+                  <h3>{m.name}</h3>
+                  <p>{m.role}</p>
+                  <span className="he-info-bar" />
+                </div>
+              </article>
+            ))
+          ) : (
+            !loading && (
+              <p style={{ color: '#888', gridColumn: '1 / -1', textAlign: 'center', padding: '2rem 0' }}>
+                No team members available at the moment.
+              </p>
+            )
+          )}
         </div>
       </section>
 

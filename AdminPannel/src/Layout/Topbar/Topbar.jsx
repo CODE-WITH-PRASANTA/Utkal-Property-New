@@ -10,10 +10,10 @@ import {
   Shield,
   X,
 } from 'lucide-react';
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
 import './Topbar.css';
 
-const BACKEND_BASE_URL = 'http://localhost:5000';
-const API_BASE_URL = `${BACKEND_BASE_URL}/api/profiles`;
+const API_PROFILES_URL = API_ENDPOINTS.PROFILES;
 const AUTH_KEY = 'isAdminAuthenticated';
 
 const DEFAULT_AVATAR =
@@ -25,7 +25,7 @@ const getAvatarUrl = (path) => {
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:')) {
     return path;
   }
-  return `${BACKEND_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 const Topbar = ({ toggleSidebar }) => {
@@ -50,7 +50,7 @@ const Topbar = ({ toggleSidebar }) => {
   // Fetch initial profile on mount
   const fetchTopProfile = async () => {
     try {
-      const res = await fetch(API_BASE_URL);
+      const res = await fetch(API_PROFILES_URL);
       const result = await res.json();
       if (result.success && result.data?.length > 0) {
         setCurrentProfile(result.data[0]);
