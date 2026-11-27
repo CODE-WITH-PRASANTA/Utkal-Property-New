@@ -26,9 +26,9 @@ const propertyReviewSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, "Email is required"],
       trim: true,
       lowercase: true,
+      default: "",
     },
     phone: {
       type: String,
@@ -44,8 +44,13 @@ const propertyReviewSchema = new mongoose.Schema(
     },
     comment: {
       type: String,
-      required: [true, "Review comment is required"],
+      default: "",
       trim: true,
+    },
+    type: {
+      type: String,
+      enum: ["Review", "Brochure"],
+      default: "Review",
     },
     status: {
       type: String,

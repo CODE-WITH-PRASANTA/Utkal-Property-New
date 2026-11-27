@@ -50,11 +50,21 @@ const deleteFile = (url) => {
 const createProperty = async (req, res) => {
   try {
     const { title, slug } = req.body;
-    if (!title || !title.trim()) {
-      return res.status(400).json({ success: false, message: "Property title is required" });
+
+    const isDraft =
+      req.body.isDraft === "true" ||
+      req.body.isDraft === true ||
+      req.body.saveAs === "draft" ||
+      req.body.status === "Draft";
+
+    let finalTitle = (title || "").trim();
+    if (!finalTitle) {
+      finalTitle = isDraft
+        ? `Untitled Draft - ${new Date().toLocaleDateString("en-IN")}`
+        : `Untitled Property - ${new Date().toLocaleDateString("en-IN")}`;
     }
 
-    let finalSlug = slugify(slug || title);
+    let finalSlug = slugify(slug || finalTitle);
     if (!finalSlug) finalSlug = `property-${Date.now()}`;
 
     const existingProperty = await Property.findOne({ slug: finalSlug });
@@ -62,23 +72,20 @@ const createProperty = async (req, res) => {
       finalSlug = `${finalSlug}-${Date.now().toString().slice(-4)}`;
     }
 
-    const isDraft =
-      req.body.isDraft === "true" ||
-      req.body.isDraft === true ||
-      req.body.saveAs === "draft";
-
     const propertyPayload = {
-      title: title.trim(),
+      title: finalTitle,
       slug: finalSlug,
+      builderName: req.body.builderName ? req.body.builderName.trim() : "",
       location: req.body.location ? req.body.location.trim() : "",
       description: req.body.description || req.body.descriptionText || "",
 
       category: req.body.category || "Residential",
       propertyType: req.body.propertyType || "Apartment",
-      status: req.body.status || (isDraft ? "Pending" : "Active"),
+      status: req.body.status || (isDraft ? "Draft" : "Active"),
 
       price: parseNumber(req.body.price),
       pricePerSqft: parseNumber(req.body.pricePerSqft),
+      bookingAmount: parseNumber(req.body.bookingAmount),
       rera: req.body.rera ? req.body.rera.trim() : "",
       projectArea: req.body.projectArea ? String(req.body.projectArea).trim() : "",
       superArea: req.body.superArea ? String(req.body.superArea).trim() : "",
@@ -103,6 +110,8 @@ const createProperty = async (req, res) => {
       isFeatured: req.body.isFeatured === "true" || req.body.isFeatured === true,
       isBestProperty: req.body.isBestProperty === "true" || req.body.isBestProperty === true,
       images: req.imageUrls || [],
+      youtubeUrl: req.body.youtubeUrl ? req.body.youtubeUrl.trim() : "",
+      brochurePdf: req.brochureUrl || "",
       floorPlans: req.planUrls || [],
     };
 
@@ -191,6 +200,40 @@ const getProperty = async (req, res) => {
   }
 };
 
+// @desc    Download property brochure PDF
+// @route   GET /api/properties/:idOrSlug/brochure
+const downloadBrochure = async (req, res) => {
+  try {
+    const { idOrSlug } = req.params;
+    const query = /^[a-f\d]{24}$/i.test(idOrSlug) ? { _id: idOrSlug } : { slug: idOrSlug };
+    const property = await Property.findOne(query);
+
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    let pdfRelativePath = property.brochurePdf;
+    if (!pdfRelativePath && Array.isArray(property.floorPlans)) {
+      pdfRelativePath = property.floorPlans.find((fp) => String(fp).toLowerCase().endsWith(".pdf")) || "";
+    }
+
+    if (!pdfRelativePath) {
+      return res.status(404).json({ success: false, message: "Brochure PDF not uploaded for this property" });
+    }
+
+    const filePath = path.join(__dirname, "..", pdfRelativePath.replace(/^\//, ""));
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: "Brochure file not found on server" });
+    }
+
+    const safeName = `${(property.slug || "property")}-brochure.pdf`;
+    return res.download(filePath, safeName);
+  } catch (error) {
+    console.error("Error downloading brochure:", error);
+    return res.status(500).json({ success: false, message: "Failed to download brochure" });
+  }
+};
+
 // @desc    Update property
 // @route   PUT /api/properties/:id
 const updateProperty = async (req, res) => {
@@ -202,6 +245,7 @@ const updateProperty = async (req, res) => {
 
     const updates = { ...req.body };
     if (req.body.title) updates.title = req.body.title.trim();
+    if (req.body.builderName !== undefined) updates.builderName = req.body.builderName.trim();
     if (req.body.location !== undefined) updates.location = req.body.location.trim();
     if (req.body.description !== undefined) updates.description = req.body.description;
     if (req.body.category !== undefined) updates.category = req.body.category;
@@ -210,6 +254,8 @@ const updateProperty = async (req, res) => {
 
     if (req.body.price !== undefined) updates.price = parseNumber(req.body.price);
     if (req.body.pricePerSqft !== undefined) updates.pricePerSqft = parseNumber(req.body.pricePerSqft);
+    if (req.body.bookingAmount !== undefined) updates.bookingAmount = parseNumber(req.body.bookingAmount);
+    if (req.body.youtubeUrl !== undefined) updates.youtubeUrl = req.body.youtubeUrl.trim();
     if (req.body.rera !== undefined) updates.rera = req.body.rera.trim();
     if (req.body.projectArea !== undefined) updates.projectArea = req.body.projectArea;
     if (req.body.superArea !== undefined) updates.superArea = req.body.superArea;
@@ -252,6 +298,15 @@ const updateProperty = async (req, res) => {
       updates.floorPlans = [...keptPlans, ...(req.planUrls || [])];
     } else if (req.planUrls && req.planUrls.length > 0) {
       updates.floorPlans = [...property.floorPlans, ...req.planUrls];
+    }
+
+    // Handle brochure PDF upload / removal
+    if (req.brochureUrl) {
+      if (property.brochurePdf) deleteFile(property.brochurePdf);
+      updates.brochurePdf = req.brochureUrl;
+    } else if (req.body.existingBrochurePdf === "") {
+      if (property.brochurePdf) deleteFile(property.brochurePdf);
+      updates.brochurePdf = "";
     }
 
     if (req.body.slug && req.body.slug.trim()) {
@@ -343,6 +398,7 @@ module.exports = {
   createProperty,
   getProperties,
   getProperty,
+  downloadBrochure,
   updateProperty,
   updateStatus,
   togglePropertyFlag,

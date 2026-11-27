@@ -8,6 +8,7 @@ import {
   FaTint, FaArrowRight, FaCheckCircle, FaLayerGroup,
 } from 'react-icons/fa';
 import './SellProperty.css';
+import { API_ENDPOINTS } from '../../config/api';
 import sellImg from '../../assets/sell-1.jpg';
 import rentImg from '../../assets/rent-1.jpg'; // add this image, or point it to sell-1.png
 
@@ -297,13 +298,46 @@ const SellProperty = ({ onSubmit }) => {
     }
     setBusy(true);
     try {
-      const payload = { listingType: mode, ...f, images: f.images.map((x) => x.file) };
-      if (onSubmit) await onSubmit(payload);
-      else await new Promise((r) => setTimeout(r, 900)); // demo delay: replace with your API call
+      const fd = new FormData();
+      fd.append('listingType', mode);
+      fd.append('title', f.title);
+      fd.append('location', f.location);
+      fd.append('description', f.description);
+      fd.append('propertyType', f.type);
+      fd.append('category', f.category);
+      fd.append('area', f.area);
+      fd.append('bedrooms', f.bedrooms);
+      fd.append('bathrooms', f.bathrooms);
+      fd.append('facing', f.facing);
+      fd.append('furnishing', f.furnishing);
+      fd.append('price', f.price);
+      fd.append('rent', f.rent);
+      fd.append('psf', f.psf);
+      fd.append('rera', f.rera);
+      fd.append('availability', f.availability);
+      fd.append('amenities', JSON.stringify(f.amenities || []));
+      fd.append('ownerName', f.name);
+      fd.append('phone', f.mobile);
+      fd.append('email', f.email);
+      f.images.forEach((x) => {
+        if (x.file) fd.append('images', x.file);
+      });
+
+      if (onSubmit) {
+        await onSubmit({ listingType: mode, ...f, images: f.images.map((x) => x.file) });
+      } else {
+        const res = await fetch(API_ENDPOINTS.SELL_RENT, { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Failed to submit property');
+        }
+      }
       f.images.forEach((x) => URL.revokeObjectURL(x.url));
       setForms((p) => ({ ...p, [mode]: { ...initial } }));
       setDone(true);
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (errSubmit) {
+      alert(errSubmit.message || 'Failed to submit property. Please try again.');
     } finally {
       setBusy(false);
     }

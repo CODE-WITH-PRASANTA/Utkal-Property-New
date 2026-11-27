@@ -8,7 +8,10 @@ export const API_ENDPOINTS = {
   GALLERIES: `${API_BASE_URL}/api/galleries`,
   TEAM: `${API_BASE_URL}/api/team`,
   ENQUIRY: `${API_BASE_URL}/api/enquiry`,
+  LEADS: `${API_BASE_URL}/api/leads`,
+  SELL_RENT: `${API_BASE_URL}/api/sell-rent`,
   PROPERTY_REVIEWS: `${API_BASE_URL}/api/property-reviews`,
+  AUTH: `${API_BASE_URL}/api/auth`,
 };
 
 export const getMediaUrl = (path, fallback = '') => {

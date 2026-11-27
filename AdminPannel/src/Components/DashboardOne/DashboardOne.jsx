@@ -257,14 +257,42 @@ const DashboardOneCalendar = () => {
 }
 
 /* ---------- Main component ---------- */
-const STATS = [
-  { id: 'properties', label: 'Total Properties', value: 248, change: '+12%', tone: 'green', Icon: HomeIcon },
-  { id: 'enquiries', label: 'Total Enquiries', value: 96, change: '+18%', tone: 'amber', Icon: UsersIcon },
-  { id: 'sell', label: 'Sell Requests', value: 32, change: '+10%', tone: 'blue', Icon: HandshakeIcon },
-  { id: 'rent', label: 'Rent Requests', value: 28, change: '+08%', tone: 'purple', Icon: KeyIcon },
-]
+const DashboardOne = ({ summary, onCardClick }) => {
+  const stats = [
+    {
+      id: 'properties',
+      label: 'Total Properties',
+      value: summary?.totalProperties ?? 0,
+      badge: `${summary?.activeProps ?? 0} Active`,
+      tone: 'green',
+      Icon: HomeIcon,
+    },
+    {
+      id: 'enquiries',
+      label: 'Total Enquiries & Leads',
+      value: summary?.totalEnquiries ?? 0,
+      badge: 'Live',
+      tone: 'amber',
+      Icon: UsersIcon,
+    },
+    {
+      id: 'sell',
+      label: 'Sell Requests',
+      value: summary?.totalSell ?? 0,
+      badge: 'Listings',
+      tone: 'blue',
+      Icon: HandshakeIcon,
+    },
+    {
+      id: 'rent',
+      label: 'Rent Requests',
+      value: summary?.totalRent ?? 0,
+      badge: 'Listings',
+      tone: 'purple',
+      Icon: KeyIcon,
+    },
+  ]
 
-const DashboardOne = () => {
   return (
     <section className="DashboardOne">
       <header className="DashboardOne__header">
@@ -278,11 +306,12 @@ const DashboardOne = () => {
       </header>
 
       <div className="DashboardOne__cards">
-        {STATS.map(({ id, label, value, change, tone, Icon }, i) => (
+        {stats.map(({ id, label, value, badge, tone, Icon }, i) => (
           <article
             key={id}
             className={`DashboardOne__card DashboardOne__card--${tone}`}
-            style={{ animationDelay: `${i * 90}ms` }}
+            style={{ animationDelay: `${i * 90}ms`, cursor: onCardClick ? 'pointer' : 'default' }}
+            onClick={() => onCardClick && onCardClick(id)}
           >
             <div className="DashboardOne__cardIcon">
               <Icon size={28} />
@@ -296,7 +325,7 @@ const DashboardOne = () => {
                 </strong>
                 <span className="DashboardOne__cardBadge">
                   <ArrowUpIcon />
-                  {change}
+                  {badge}
                 </span>
               </div>
             </div>

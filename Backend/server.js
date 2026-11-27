@@ -54,8 +54,11 @@ app.use("/api/galleries", require("./routes/galleryRoutes"));
 app.use("/api/team", require("./routes/teamRoutes"));
 app.use("/api/enquiry", require("./routes/enquiryRoutes"));
 app.use("/api/enquiries", require("./routes/enquiryRoutes"));
+app.use("/api/leads", require("./routes/leadRoutes"));
+app.use("/api/sell-rent", require("./routes/sellRentRoutes"));
 app.use("/api/property-reviews", require("./routes/propertyReviewRoutes"));
 app.use("/api/reviews", require("./routes/propertyReviewRoutes"));
+app.use("/api/auth", require("./routes/authRoutes"));
 
 // Server
 const PORT = process.env.PORT || 5000;

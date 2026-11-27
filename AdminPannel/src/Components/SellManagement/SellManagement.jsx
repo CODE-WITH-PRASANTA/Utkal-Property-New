@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { API_ENDPOINTS, getMediaUrl } from '../../config/api';
 import './SellManagement.css';
 
 /* ------------------------------------------------------------------ */
@@ -151,93 +152,22 @@ const LOCATIONS = [
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const slug = (s) => s.toLowerCase().replace(/[^a-z]+/g, '-');
+const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z]+/g, '-');
 const typeSlug = (t) => slug(t).replace(/-$/, '');
-const sellId = (n) => `SL${String(n).padStart(4, '0')}`;
-const formatPrice = (n) => `₹ ${Number(n).toLocaleString('en-IN')}`;
+const sellId = (n) => `SL-${String(n || '').slice(-5).toUpperCase()}`;
+const formatPrice = (n) => (n ? `₹ ${Number(n).toLocaleString('en-IN')}` : '—');
 
 const formatDate = (iso) => {
+  if (!iso) return '—';
   const d = new Date(`${iso}T00:00:00Z`);
+  if (isNaN(d.getTime())) return iso;
   return `${String(d.getUTCDate()).padStart(2, '0')} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 };
 
 const formatPhone = (raw) => {
-  const d = String(raw).replace(/\D/g, '').slice(-10);
+  const d = String(raw || '').replace(/\D/g, '').slice(-10);
+  if (d.length < 10) return raw || '—';
   return `+91 ${d.slice(0, 5)} ${d.slice(5)}`;
-};
-
-const OWNERS = ['Ankit Sahu', 'Soumya Panda', 'Deepak Mishra', 'Smita Nayak', 'Manas Das', 'Lipsa Patra', 'Bikash Dash', 'Swati Mohanty', 'Debasis Swain', 'Anita Rout', 'Jyoti Pradhan', 'Sanjay Barik', 'Rashmi Sethi', 'Tapan Ray', 'Subham Jena', 'Kalpana Behera'];
-
-const BASE = [
-  ['3 BHK Duplex House', 'House', 'Ramesh Patra', '98612 34567', 'Patia', 12500000, '2026-11-17', 'New'],
-  ['2 BHK Apartment', 'Apartment', 'Sneha Mohanty', '93456 78901', 'Khandagiri', 7800000, '2026-11-16', 'In Progress'],
-  ['Residential Plot (2000 Sq.Ft.)', 'Plot / Land', 'Amit Kumar', '91234 56789', 'Infocity', 4200000, '2026-11-15', 'In Progress'],
-  ['4 BHK Villa', 'Villa', 'Priya Das', '72053 01234', 'Rasulgarh', 18500000, '2026-11-14', 'New'],
-  ['Commercial Office Space', 'Commercial', 'Binay Jena', '87654 32109', 'Saheed Nagar', 25000000, '2026-11-12', 'Sold'],
-  ['1 BHK Flat', 'Apartment', 'Suman Nayak', '94321 09876', 'Jaydev Vihar', 3600000, '2026-11-11', 'In Progress'],
-  ['Plot (2400 Sq.Ft.)', 'Plot / Land', 'Piyush Rout', '81123 45678', 'Chandrasekharpur', 5500000, '2026-11-10', 'New'],
-  ['Independent House', 'House', 'Madhusmita Pal', '96543 21098', 'Nayapalli', 10500000, '2026-11-08', 'Sold'],
-  ['Luxury Villa (5 BHK)', 'Villa', 'Sagar Behera', '70088 99001', 'Kalinga Nagar', 32000000, '2026-11-07', 'In Progress'],
-  ['3 BHK Apartment', 'Apartment', 'Kiran Patra', '93456 11223', 'Ghatikia', 9200000, '2026-11-05', 'New'],
-];
-
-/* Builds 78 requests (24 New / 31 In Progress / 18 Sold / 5 Rejected) to match the design */
-const buildListings = () => {
-  let seed = 7;
-  const rnd = () => {
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  };
-  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
-
-  const first = BASE.map((r, i) => ({
-    id: i + 1,
-    title: r[0],
-    type: r[1],
-    owner: r[2],
-    phone: `+91 ${r[3]}`,
-    location: r[4],
-    price: r[5],
-    date: r[6],
-    status: r[7],
-    notes: '',
-  }));
-
-  const pool = [...Array(20).fill('New'), ...Array(27).fill('In Progress'), ...Array(16).fill('Sold'), ...Array(5).fill('Rejected')];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-
-  const titleFor = (type) => {
-    if (type === 'House') return pick(['2 BHK House', '3 BHK Independent House', '4 BHK Duplex House', 'Corner House']);
-    if (type === 'Apartment') return pick(['1 BHK Flat', '2 BHK Apartment', '3 BHK Apartment', '3 BHK Sea-facing Flat']);
-    if (type === 'Plot / Land') return `Residential Plot (${pick([1200, 1500, 1800, 2200, 3000])} Sq.Ft.)`;
-    if (type === 'Villa') return pick(['3 BHK Villa', '4 BHK Villa', 'Luxury Villa (5 BHK)', 'Gated Community Villa']);
-    return pick(['Commercial Showroom', 'Office Space', 'Retail Shop', 'Warehouse']);
-  };
-
-  const extra = pool.map((status, i) => {
-    const type = pick(TYPES);
-    let digits = String(6 + Math.floor(rnd() * 4));
-    for (let k = 0; k < 9; k++) digits += Math.floor(rnd() * 10);
-    const date = new Date(Date.UTC(2026, 10, 4) - Math.floor(i / 2) * 86400000).toISOString().slice(0, 10);
-    const base = type === 'Villa' ? 150 : type === 'Commercial' ? 180 : type === 'House' ? 90 : type === 'Plot / Land' ? 35 : 45;
-    return {
-      id: 11 + i,
-      title: titleFor(type),
-      type,
-      owner: pick(OWNERS),
-      phone: formatPhone(digits),
-      location: pick(LOCATIONS),
-      price: (base + Math.floor(rnd() * 80)) * 100000,
-      date,
-      status,
-      notes: '',
-    };
-  });
-
-  return [...first, ...extra];
 };
 
 const EMPTY_FILTERS = { status: 'all', type: 'all', location: 'all', from: '', to: '', q: '' };
@@ -492,7 +422,8 @@ const SellManagementForm = ({ item, onSave }) => {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 const SellManagement = () => {
-  const [items, setItems] = useState(buildListings);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(EMPTY_FILTERS);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -513,6 +444,43 @@ const SellManagement = () => {
   };
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const mapSellFromApi = (doc) => ({
+    id: doc._id,
+    title: doc.title || 'Untitled Property',
+    type: doc.propertyType || 'Apartment',
+    owner: doc.ownerName || 'Owner',
+    phone: formatPhone(doc.phone),
+    email: doc.email || '',
+    location: doc.location || 'Bhubaneswar',
+    price: doc.price || 0,
+    date: doc.createdAt ? new Date(doc.createdAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    status: doc.status || 'New',
+    image: Array.isArray(doc.images) && doc.images.length > 0 ? getMediaUrl(doc.images[0]) : null,
+    notes: doc.notes || doc.description || '',
+  });
+
+  const fetchSellListings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_ENDPOINTS.SELL_RENT}?listingType=sell`);
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setItems(json.data.map(mapSellFromApi));
+      } else {
+        setItems([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch sell listings:', err);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSellListings();
+  }, [fetchSellListings]);
 
   useEffect(() => {
     if (!dateOpen) return undefined;
@@ -605,34 +573,73 @@ const SellManagement = () => {
     });
 
   /* ---------- CRUD ---------- */
-  const saveItem = (data) => {
-    if (modal.item) {
-      setItems((prev) => prev.map((l) => (l.id === modal.item.id ? { ...l, ...data } : l)));
-      showToast('Sell request updated successfully');
-    } else {
-      const nextId = items.reduce((m, l) => Math.max(m, l.id), 0) + 1;
-      setItems((prev) => [{ id: nextId, ...data }, ...prev]);
-      setPage(1);
-      showToast('New sell request added successfully');
+  const saveItem = async (data) => {
+    try {
+      if (modal.item) {
+        const res = await fetch(`${API_ENDPOINTS.SELL_RENT}/${modal.item.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, ownerName: data.owner, propertyType: data.type }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || 'Update failed');
+        setItems((prev) => prev.map((l) => (l.id === modal.item.id ? mapSellFromApi(json.data) : l)));
+        showToast('Sell request updated successfully');
+      } else {
+        const res = await fetch(API_ENDPOINTS.SELL_RENT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, listingType: 'sell', ownerName: data.owner, propertyType: data.type }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || 'Create failed');
+        setItems((prev) => [mapSellFromApi(json.data), ...prev]);
+        setPage(1);
+        showToast('New sell request added successfully');
+      }
+      closeModal();
+    } catch (err) {
+      showToast(err.message || 'Failed to save sell request', 'danger');
     }
-    closeModal();
   };
 
-  const deleteItems = (ids) => {
-    setItems((prev) => prev.filter((l) => !ids.includes(l.id)));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      ids.forEach((i) => next.delete(i));
-      return next;
-    });
-    showToast(ids.length > 1 ? `${ids.length} sell requests deleted` : 'Sell request deleted', 'danger');
-    closeModal();
+  const deleteItems = async (ids) => {
+    try {
+      if (ids.length === 1) {
+        await fetch(`${API_ENDPOINTS.SELL_RENT}/${ids[0]}`, { method: 'DELETE' });
+      } else {
+        await fetch(`${API_ENDPOINTS.SELL_RENT}/bulk`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, action: 'delete' }),
+        });
+      }
+      setItems((prev) => prev.filter((l) => !ids.includes(l.id)));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        ids.forEach((i) => next.delete(i));
+        return next;
+      });
+      showToast(ids.length > 1 ? `${ids.length} sell requests deleted` : 'Sell request deleted', 'danger');
+      closeModal();
+    } catch {
+      showToast('Failed to delete sell request(s)', 'danger');
+    }
   };
 
-  const changeStatus = (item, status) => {
-    setItems((prev) => prev.map((l) => (l.id === item.id ? { ...l, status } : l)));
-    setModal({ type: 'view', item: { ...item, status } });
-    showToast(`Status changed to ${status}`);
+  const changeStatus = async (item, status) => {
+    try {
+      await fetch(`${API_ENDPOINTS.SELL_RENT}/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      setItems((prev) => prev.map((l) => (l.id === item.id ? { ...l, status } : l)));
+      setModal({ type: 'view', item: { ...item, status } });
+      showToast(`Status changed to ${status}`);
+    } catch {
+      showToast('Failed to update status', 'danger');
+    }
   };
 
   /* ---------- export ---------- */
@@ -663,7 +670,7 @@ const SellManagement = () => {
     { value: 'delete', label: 'Delete Selected', dot: 'rejected' },
   ];
 
-  const runBulk = (action) => {
+  const runBulk = async (action) => {
     if (!selected.size) {
       showToast('Select at least one request first', 'warning');
       return undefined;
@@ -671,9 +678,18 @@ const SellManagement = () => {
     const ids = [...selected];
     if (action === 'delete') return setModal({ type: 'bulkDelete', ids });
     if (action === 'export') return exportCsv(items.filter((l) => selected.has(l.id)));
-    setItems((prev) => prev.map((l) => (selected.has(l.id) ? { ...l, status: action } : l)));
-    showToast(`${ids.length} request(s) marked as ${action}`);
-    setSelected(new Set());
+    try {
+      await fetch(`${API_ENDPOINTS.SELL_RENT}/bulk`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status: action }),
+      });
+      setItems((prev) => prev.map((l) => (selected.has(l.id) ? { ...l, status: action } : l)));
+      showToast(`${ids.length} request(s) marked as ${action}`);
+      setSelected(new Set());
+    } catch {
+      showToast('Bulk update failed', 'danger');
+    }
     return undefined;
   };
 

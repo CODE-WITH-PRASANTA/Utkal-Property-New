@@ -5,8 +5,10 @@ const fs = require("fs");
 
 const imageDir = path.join(__dirname, "..", "uploads", "properties");
 const planDir = path.join(__dirname, "..", "uploads", "floorplans");
+const brochureDir = path.join(__dirname, "..", "uploads", "brochures");
 fs.mkdirSync(imageDir, { recursive: true });
 fs.mkdirSync(planDir, { recursive: true });
+fs.mkdirSync(brochureDir, { recursive: true });
 
 // Keep file in memory, convert to webp before saving
 const upload = multer({
@@ -30,6 +32,7 @@ const upload = multer({
 }).fields([
   { name: "images", maxCount: 30 },
   { name: "floorPlans", maxCount: 15 },
+  { name: "brochurePdf", maxCount: 1 },
 ]);
 
 const makeName = (prefix = "prop") =>
@@ -40,6 +43,7 @@ const convertToWebp = async (req, res, next) => {
   try {
     req.imageUrls = [];
     req.planUrls = [];
+    req.brochureUrl = "";
 
     const imageFiles = (req.files && req.files.images) || [];
     for (const file of imageFiles) {
@@ -73,6 +77,17 @@ const convertToWebp = async (req, res, next) => {
 
         req.planUrls.push(`/uploads/floorplans/${name}`);
       }
+    }
+
+    const brochureFiles = (req.files && req.files.brochurePdf) || [];
+    if (brochureFiles.length > 0) {
+      const file = brochureFiles[0];
+      if (file.mimetype !== "application/pdf") {
+        throw new Error("Brochure must be a PDF file");
+      }
+      const name = `${makeName("brochure")}.pdf`;
+      fs.writeFileSync(path.join(brochureDir, name), file.buffer);
+      req.brochureUrl = `/uploads/brochures/${name}`;
     }
 
     next();

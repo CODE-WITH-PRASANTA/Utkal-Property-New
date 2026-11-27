@@ -1,4 +1,5 @@
 import React from 'react'
+import { getMediaUrl } from '../../config/api'
 import './DashboardThree.css'
 
 /* ---------- Icons ---------- */
@@ -74,14 +75,6 @@ const PinIcon = (p) => (
 )
 
 /* ---------- Data ---------- */
-const ENQUIRIES = [
-  { id: 1, name: 'Rohit Sahoo', interest: 'Buy', location: 'Patia, Bhubaneswar', date: '17 Nov 2026', status: 'New' },
-  { id: 2, name: 'Sneha Mohanty', interest: 'Rent', location: 'Khandagiri, Bhubaneswar', date: '16 Nov 2026', status: 'In Progress' },
-  { id: 3, name: 'Amit Kumar', interest: 'Buy', location: 'Chandrasekharpur, BBSR', date: '16 Nov 2026', status: 'New' },
-  { id: 4, name: 'Priya Das', interest: 'Sell', location: 'Rasulgarh, Bhubaneswar', date: '15 Nov 2026', status: 'Closed' },
-  { id: 5, name: 'Binay Jena', interest: 'Rent', location: 'Nayapalli, Bhubaneswar', date: '15 Nov 2026', status: 'In Progress' },
-]
-
 const ACTIONS = [
   { id: 'add', label: 'Add Property', tone: 'green', Icon: PlusIcon },
   { id: 'manage', label: 'Manage Properties', tone: 'blue', Icon: FileIcon },
@@ -89,13 +82,16 @@ const ACTIONS = [
   { id: 'team', label: 'Manage Team', tone: 'purple', Icon: TeamIcon },
 ]
 
-const PROPERTIES = [
-  { id: 1, title: '3 BHK Luxury Apartment', location: 'Patia, Bhubaneswar', price: '₹ 85,00,000', tag: 'For Sale', look: 0 },
-  { id: 2, title: '2 BHK Residential Flat', location: 'Khandagiri, Bhubaneswar', price: '₹ 52,00,000', tag: 'For Rent', look: 1 },
-  { id: 3, title: '4 BHK Duplex Villa', location: 'Infocity, Bhubaneswar', price: '₹ 1,35,00,000', tag: 'For Sale', look: 2 },
-]
+const slug = (s) => String(s || '').toLowerCase().replace(/\s+/g, '-')
 
-const slug = (s) => s.toLowerCase().replace(/\s+/g, '-')
+const fmtDate = (iso) => {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const fmtPrice = (p) => (p ? `₹ ${Number(p).toLocaleString('en-IN')}` : 'Price on Request')
 
 /* ---------- Property thumbnail (inline illustration) ---------- */
 const LOOKS = [
@@ -150,58 +146,71 @@ const DashboardThreeThumb = ({ look = 0 }) => {
 }
 
 /* ---------- Recent Enquiries ---------- */
-const DashboardThreeEnquiries = ({ onViewAll }) => (
-  <section className="DashboardThree__panel DashboardThree__enquiries">
-    <header className="DashboardThree__panelHead">
-      <h2 className="DashboardThree__panelTitle">
-        <MailIcon className="DashboardThree__panelIcon" />
-        Recent Enquiries
-      </h2>
-      <button type="button" className="DashboardThree__viewAll" onClick={onViewAll}>
-        View All <ArrowRight />
-      </button>
-    </header>
+const DashboardThreeEnquiries = ({ enquiries = [], onViewAll }) => {
+  const recent = enquiries.slice(0, 5)
+  return (
+    <section className="DashboardThree__panel DashboardThree__enquiries">
+      <header className="DashboardThree__panelHead">
+        <h2 className="DashboardThree__panelTitle">
+          <MailIcon className="DashboardThree__panelIcon" />
+          Recent Enquiries
+        </h2>
+        <button type="button" className="DashboardThree__viewAll" onClick={onViewAll}>
+          View All <ArrowRight />
+        </button>
+      </header>
 
-    <div className="DashboardThree__tableWrap">
-      <table className="DashboardThree__table">
-        <thead>
-          <tr>
-            <th className="DashboardThree__colNo">#</th>
-            <th>Name</th>
-            <th>Interest</th>
-            <th>Location</th>
-            <th className="DashboardThree__colDate">Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ENQUIRIES.map((e, i) => (
-            <tr key={e.id} className="DashboardThree__row" style={{ '--i': i }}>
-              <td className="DashboardThree__colNo" data-label="#">
-                {String(i + 1).padStart(2, '0')}
-              </td>
-              <td className="DashboardThree__cellName" data-label="Name">
-                {e.name}
-              </td>
-              <td data-label="Interest">
-                <span className={`DashboardThree__pill DashboardThree__pill--${slug(e.interest)}`}>{e.interest}</span>
-              </td>
-              <td className="DashboardThree__cellLocation" data-label="Location">
-                {e.location}
-              </td>
-              <td className="DashboardThree__colDate DashboardThree__cellDate" data-label="Date">
-                {e.date}
-              </td>
-              <td data-label="Status">
-                <span className={`DashboardThree__pill DashboardThree__pill--${slug(e.status)}`}>{e.status}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </section>
-)
+      <div className="DashboardThree__tableWrap">
+        {recent.length === 0 ? (
+          <p style={{ padding: '24px 16px', color: '#64748b', textAlign: 'center', margin: 0 }}>
+            No recent enquiries found.
+          </p>
+        ) : (
+          <table className="DashboardThree__table">
+            <thead>
+              <tr>
+                <th className="DashboardThree__colNo">#</th>
+                <th>Name</th>
+                <th>Interest</th>
+                <th>Location</th>
+                <th className="DashboardThree__colDate">Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((e, i) => {
+                const interest = e.interest || 'Buy'
+                const status = e.status || 'New'
+                return (
+                  <tr key={e._id || i} className="DashboardThree__row" style={{ '--i': i }}>
+                    <td className="DashboardThree__colNo" data-label="#">
+                      {String(i + 1).padStart(2, '0')}
+                    </td>
+                    <td className="DashboardThree__cellName" data-label="Name">
+                      {e.name || 'Visitor'}
+                    </td>
+                    <td data-label="Interest">
+                      <span className={`DashboardThree__pill DashboardThree__pill--${slug(interest)}`}>{interest}</span>
+                    </td>
+                    <td className="DashboardThree__cellLocation" data-label="Location">
+                      {e.location || 'Odisha'}
+                    </td>
+                    <td className="DashboardThree__colDate DashboardThree__cellDate" data-label="Date">
+                      {fmtDate(e.createdAt)}
+                    </td>
+                    <td data-label="Status">
+                      <span className={`DashboardThree__pill DashboardThree__pill--${slug(status)}`}>{status}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </section>
+  )
+}
 
 /* ---------- Quick Actions ---------- */
 const DashboardThreeActions = ({ onAction }) => (
@@ -232,48 +241,76 @@ const DashboardThreeActions = ({ onAction }) => (
 )
 
 /* ---------- Recent Properties ---------- */
-const DashboardThreeProperties = ({ onViewAll, onSelect }) => (
-  <section className="DashboardThree__panel DashboardThree__properties">
-    <header className="DashboardThree__panelHead">
-      <h2 className="DashboardThree__panelTitle">
-        <HomeIcon className="DashboardThree__panelIcon" />
-        Recent Properties
-      </h2>
-      <button type="button" className="DashboardThree__viewAll" onClick={onViewAll}>
-        View All <ArrowRight />
-      </button>
-    </header>
+const DashboardThreeProperties = ({ properties = [], onViewAll, onSelect }) => {
+  const recent = properties.slice(0, 3)
+  return (
+    <section className="DashboardThree__panel DashboardThree__properties">
+      <header className="DashboardThree__panelHead">
+        <h2 className="DashboardThree__panelTitle">
+          <HomeIcon className="DashboardThree__panelIcon" />
+          Recent Properties
+        </h2>
+        <button type="button" className="DashboardThree__viewAll" onClick={onViewAll}>
+          View All <ArrowRight />
+        </button>
+      </header>
 
-    <ul className="DashboardThree__propList">
-      {PROPERTIES.map((p) => (
-        <li key={p.id}>
-          <button type="button" className="DashboardThree__prop" onClick={() => onSelect && onSelect(p)}>
-            <span className="DashboardThree__thumb">
-              <DashboardThreeThumb look={p.look} />
-            </span>
-            <span className="DashboardThree__propInfo">
-              <strong className="DashboardThree__propTitle">{p.title}</strong>
-              <span className="DashboardThree__propLocation">
-                <PinIcon />
-                {p.location}
-              </span>
-              <span className="DashboardThree__propPrice">{p.price}</span>
-            </span>
-            <span className={`DashboardThree__tag DashboardThree__tag--${slug(p.tag)}`}>{p.tag}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
-  </section>
-)
+      {recent.length === 0 ? (
+        <p style={{ padding: '24px 16px', color: '#64748b', textAlign: 'center', margin: 0 }}>
+          No properties posted yet.
+        </p>
+      ) : (
+        <ul className="DashboardThree__propList">
+          {recent.map((p, idx) => {
+            const imgUrl = Array.isArray(p.images) && p.images.length > 0 ? getMediaUrl(p.images[0]) : null
+            const tag = p.isDraft ? 'Draft' : (p.status || 'Active')
+            return (
+              <li key={p._id || idx}>
+                <button
+                  type="button"
+                  className="DashboardThree__prop"
+                  onClick={() => onSelect && onSelect({ id: p._id, ...p })}
+                >
+                  <span className="DashboardThree__thumb">
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                    ) : (
+                      <DashboardThreeThumb look={idx % 3} />
+                    )}
+                  </span>
+                  <span className="DashboardThree__propInfo">
+                    <strong className="DashboardThree__propTitle">{p.title}</strong>
+                    <span className="DashboardThree__propLocation">
+                      <PinIcon />
+                      {p.location || 'Odisha'}
+                    </span>
+                    <span className="DashboardThree__propPrice">{fmtPrice(p.price)}</span>
+                  </span>
+                  <span className={`DashboardThree__tag DashboardThree__tag--${slug(tag)}`}>{tag}</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
+  )
+}
 
 /* ---------- Main ---------- */
-const DashboardThree = ({ onViewAllEnquiries, onViewAllProperties, onQuickAction, onSelectProperty }) => {
+const DashboardThree = ({
+  enquiries = [],
+  properties = [],
+  onViewAllEnquiries,
+  onViewAllProperties,
+  onQuickAction,
+  onSelectProperty,
+}) => {
   return (
     <div className="DashboardThree">
-      <DashboardThreeEnquiries onViewAll={onViewAllEnquiries} />
+      <DashboardThreeEnquiries enquiries={enquiries} onViewAll={onViewAllEnquiries} />
       <DashboardThreeActions onAction={onQuickAction} />
-      <DashboardThreeProperties onViewAll={onViewAllProperties} onSelect={onSelectProperty} />
+      <DashboardThreeProperties properties={properties} onViewAll={onViewAllProperties} onSelect={onSelectProperty} />
     </div>
   )
 }

@@ -5,6 +5,7 @@ const {
   createProperty,
   getProperties,
   getProperty,
+  downloadBrochure,
   updateProperty,
   updateStatus,
   togglePropertyFlag,
@@ -12,6 +13,7 @@ const {
 } = require("../controller/propertyController");
 
 router.get("/", getProperties);
+router.get("/:idOrSlug/brochure", downloadBrochure);
 router.get("/:idOrSlug", getProperty);
 router.post("/", upload, convertToWebp, createProperty);
 router.put("/:id", upload, convertToWebp, updateProperty);

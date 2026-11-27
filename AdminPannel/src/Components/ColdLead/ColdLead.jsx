@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { API_ENDPOINTS } from '../../config/api';
 import './ColdLead.css';
 
 /* ------------------------------------------------------------------ */
@@ -62,8 +63,9 @@ const Icon = ({ name, size = 18, className = '' }) => (
 /* ------------------------------------------------------------------ */
 const STATUSES = ['New', 'In Progress', 'Follow-up', 'Not Interested', 'Converted'];
 const TYPES = ['Hot', 'Warm', 'Cold'];
-const SOURCES = ['Website', 'Facebook', 'Google Ads', 'Referral'];
+const SOURCES = ['Brochure Download', 'Website', 'Facebook', 'Google Ads', 'Referral'];
 const ENQUIRIES = [
+  'Brochure Download',
   'Buy Apartment',
   'Rent Flat',
   'Buy Villa',
@@ -74,91 +76,23 @@ const ENQUIRIES = [
   'Commercial Space',
   'Buy Flat',
 ];
-const AGENTS = ['Akash', 'Priya', 'Rakesh'];
+const AGENTS = ['Unassigned', 'Akash', 'Priya', 'Rakesh'];
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z]+/g, '-');
 
 const formatDate = (iso) => {
+  if (!iso) return '—';
   const d = new Date(`${iso}T00:00:00Z`);
+  if (isNaN(d.getTime())) return iso;
   return `${String(d.getUTCDate()).padStart(2, '0')} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 };
 
 const formatPhone = (raw) => {
-  const d = String(raw).replace(/\D/g, '').slice(-10);
+  const d = String(raw || '').replace(/\D/g, '').slice(-10);
+  if (d.length < 10) return raw || '—';
   return `+91 ${d.slice(0, 5)} ${d.slice(5)}`;
-};
-
-const FIRST = ['Ankit', 'Soumya', 'Rakesh', 'Deepak', 'Smita', 'Manas', 'Lipsa', 'Bikash', 'Swati', 'Debasis', 'Anita', 'Jyoti', 'Sanjay', 'Pratik', 'Rashmi', 'Tapan', 'Subham', 'Kalpana', 'Ranjan', 'Itishree', 'Biswajit', 'Mamata', 'Ashok', 'Sonali'];
-const LAST = ['Sahu', 'Panda', 'Mishra', 'Behera', 'Nayak', 'Das', 'Patra', 'Jena', 'Dash', 'Mohanty', 'Swain', 'Rout', 'Pradhan', 'Barik', 'Sethi', 'Ray'];
-
-const BASE_LEADS = [
-  ['Rohit Sahoo', '98612 34567', 'rohit@gmail.com', 'Website', 'Hot', 'New', 'Buy Apartment', 'Akash', '2026-11-17'],
-  ['Sneha Mohanty', '93456 78901', 'sneha@gmail.com', 'Facebook', 'Warm', 'In Progress', 'Rent Flat', 'Priya', '2026-11-16'],
-  ['Amit Kumar', '91234 56789', 'amit@gmail.com', 'Google Ads', 'Hot', 'Follow-up', 'Buy Villa', 'Akash', '2026-11-16'],
-  ['Priya Das', '72053 01234', 'priya@gmail.com', 'Website', 'Cold', 'New', 'Investment', 'Rakesh', '2026-11-15'],
-  ['Binay Jena', '87654 32109', 'binay@gmail.com', 'Referral', 'Warm', 'In Progress', 'Buy Plot / Land', 'Priya', '2026-11-15'],
-  ['Suman Nayak', '94321 09876', 'suman@gmail.com', 'Website', 'Cold', 'Not Interested', 'General Enquiry', 'Rakesh', '2026-11-14'],
-  ['Piyush Rout', '81123 45678', 'piyush@gmail.com', 'Facebook', 'Hot', 'Converted', 'Buy Apartment', 'Akash', '2026-11-14'],
-  ['Madhusmita Pal', '96543 21098', 'madhu@gmail.com', 'Google Ads', 'Warm', 'Follow-up', 'Rent House', 'Priya', '2026-11-13'],
-  ['Sagar Behera', '70088 99001', 'sagar@gmail.com', 'Website', 'Cold', 'New', 'Commercial Space', 'Rakesh', '2026-11-13'],
-  ['Kiran Patra', '93456 11223', 'kiran@gmail.com', 'Referral', 'Warm', 'In Progress', 'Buy Flat', 'Akash', '2026-11-12'],
-];
-
-/* Builds 126 leads (32 Hot / 46 Warm / 48 Cold) so the numbers match the design */
-const buildLeads = () => {
-  let seed = 42;
-  const rnd = () => {
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  };
-  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
-
-  const first = BASE_LEADS.map((r, i) => ({
-    id: i + 1,
-    name: r[0],
-    phone: `+91 ${r[1]}`,
-    email: r[2],
-    source: r[3],
-    type: r[4],
-    status: r[5],
-    enquiry: r[6],
-    assignedTo: r[7],
-    date: r[8],
-    notes: '',
-  }));
-
-  const pool = [...Array(29).fill('Hot'), ...Array(42).fill('Warm'), ...Array(45).fill('Cold')];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-
-  const extra = pool.map((type, i) => {
-    const f = pick(FIRST);
-    const l = pick(LAST);
-    let digits = String(6 + Math.floor(rnd() * 4));
-    for (let k = 0; k < 9; k++) digits += Math.floor(rnd() * 10);
-    const date = new Date(Date.UTC(2026, 10, 12) - Math.floor((i + 1) / 3) * 86400000)
-      .toISOString()
-      .slice(0, 10);
-    return {
-      id: 11 + i,
-      name: `${f} ${l}`,
-      phone: formatPhone(digits),
-      email: `${f}${l}`.toLowerCase() + '@gmail.com',
-      source: pick(SOURCES),
-      type,
-      status: pick(STATUSES),
-      enquiry: pick(ENQUIRIES),
-      assignedTo: pick(AGENTS),
-      date,
-      notes: '',
-    };
-  });
-
-  return [...first, ...extra];
 };
 
 const EMPTY_FILTERS = { status: 'all', type: 'all', source: 'all', from: '', to: '', q: '' };
@@ -346,45 +280,9 @@ const ColdLeadForm = ({ lead, onSave }) => {
           </div>
           {errors.phone && <small>{errors.phone}</small>}
         </div>
-        <div className={`ColdLead-field ${errors.email ? 'has-error' : ''}`}>
-          <label>Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => set('email', e.target.value)}
-            placeholder="name@gmail.com"
-          />
-          {errors.email && <small>{errors.email}</small>}
-        </div>
-      </div>
-
-      <div className="ColdLead-formRow">
         <div className="ColdLead-field">
           <label>Source</label>
           <ColdLeadSelect value={form.source} onChange={(v) => set('source', v)} options={opt(SOURCES)} />
-        </div>
-        <div className="ColdLead-field">
-          <label>Lead Type</label>
-          <ColdLeadSelect
-            value={form.type}
-            onChange={(v) => set('type', v)}
-            options={opt(TYPES, (v) => v.toLowerCase())}
-          />
-        </div>
-      </div>
-
-      <div className="ColdLead-formRow">
-        <div className="ColdLead-field">
-          <label>Status</label>
-          <ColdLeadSelect
-            value={form.status}
-            onChange={(v) => set('status', v)}
-            options={opt(STATUSES, slug)}
-          />
-        </div>
-        <div className="ColdLead-field">
-          <label>Assigned To</label>
-          <ColdLeadSelect value={form.assignedTo} onChange={(v) => set('assignedTo', v)} options={opt(AGENTS)} />
         </div>
       </div>
 
@@ -459,7 +357,8 @@ const ColdLeadCall = ({ lead, onLog, onClose }) => {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 const ColdLead = () => {
-  const [leads, setLeads] = useState(buildLeads);
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(EMPTY_FILTERS);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -480,6 +379,44 @@ const ColdLead = () => {
   };
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const mapLeadFromApi = (l) => ({
+    id: l._id,
+    name: l.name || 'Unknown',
+    phone: formatPhone(l.phone),
+    email: l.email || '',
+    source: l.source || 'Website',
+    type: l.type || 'Warm',
+    status: l.status || 'New',
+    enquiry: l.enquiry || l.propertyTitle || 'General Enquiry',
+    propertyTitle: l.propertyTitle || '',
+    propertySlug: l.propertySlug || '',
+    assignedTo: l.assignedTo || 'Unassigned',
+    date: l.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    notes: l.notes || '',
+  });
+
+  const fetchLeads = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(API_ENDPOINTS.LEADS);
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setLeads(json.data.map(mapLeadFromApi));
+      } else {
+        setLeads([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch leads:', err);
+      setLeads([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
 
   useEffect(() => {
     if (!dateOpen) return undefined;
@@ -571,43 +508,81 @@ const ColdLead = () => {
     });
 
   /* ---------- CRUD ---------- */
-  const saveLead = (data) => {
-    if (modal.lead) {
-      setLeads((prev) => prev.map((l) => (l.id === modal.lead.id ? { ...l, ...data } : l)));
-      showToast('Lead updated successfully');
-    } else {
-      const nextId = leads.reduce((m, l) => Math.max(m, l.id), 0) + 1;
-      const today = new Date().toISOString().slice(0, 10);
-      setLeads((prev) => [{ id: nextId, date: today, ...data }, ...prev]);
-      setPage(1);
-      showToast('New lead added successfully');
+  const saveLead = async (data) => {
+    try {
+      if (modal.lead) {
+        const res = await fetch(`${API_ENDPOINTS.LEADS}/${modal.lead.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || 'Update failed');
+        setLeads((prev) => prev.map((l) => (l.id === modal.lead.id ? mapLeadFromApi(json.data) : l)));
+        showToast('Lead updated successfully');
+      } else {
+        const res = await fetch(API_ENDPOINTS.LEADS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || 'Failed to add lead');
+        setLeads((prev) => [mapLeadFromApi(json.data), ...prev]);
+        setPage(1);
+        showToast('New lead added successfully');
+      }
+      closeModal();
+    } catch (err) {
+      showToast(err.message || 'Failed to save lead', 'danger');
     }
-    closeModal();
   };
 
-  const deleteLeads = (ids) => {
-    setLeads((prev) => prev.filter((l) => !ids.includes(l.id)));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      ids.forEach((i) => next.delete(i));
-      return next;
-    });
-    showToast(ids.length > 1 ? `${ids.length} leads deleted` : 'Lead deleted', 'danger');
-    closeModal();
+  const deleteLeads = async (ids) => {
+    try {
+      if (ids.length === 1) {
+        await fetch(`${API_ENDPOINTS.LEADS}/${ids[0]}`, { method: 'DELETE' });
+      } else {
+        await fetch(`${API_ENDPOINTS.LEADS}/bulk`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, action: 'delete' }),
+        });
+      }
+      setLeads((prev) => prev.filter((l) => !ids.includes(l.id)));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        ids.forEach((i) => next.delete(i));
+        return next;
+      });
+      showToast(ids.length > 1 ? `${ids.length} leads deleted` : 'Lead deleted', 'danger');
+      closeModal();
+    } catch (err) {
+      showToast('Failed to delete lead(s)', 'danger');
+    }
   };
 
-  const logCall = (outcome, note) => {
+  const logCall = async (outcome, note) => {
     const id = modal.lead.id;
-    setLeads((prev) =>
-      prev.map((l) => {
-        if (l.id !== id) return l;
-        const status = l.status === 'New' && outcome === 'Connected' ? 'In Progress' : l.status;
-        const notes = note ? `${l.notes ? `${l.notes}\n` : ''}[${outcome}] ${note}` : l.notes;
-        return { ...l, status, notes };
-      })
-    );
-    showToast('Call log saved');
-    closeModal();
+    const currentLead = leads.find((l) => l.id === id);
+    if (!currentLead) return;
+    const status = currentLead.status === 'New' && outcome === 'Connected' ? 'In Progress' : currentLead.status;
+    const notes = note ? `${currentLead.notes ? `${currentLead.notes}\n` : ''}[${outcome}] ${note}` : currentLead.notes;
+
+    try {
+      await fetch(`${API_ENDPOINTS.LEADS}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, notes }),
+      });
+      setLeads((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, status, notes } : l))
+      );
+      showToast('Call log saved');
+      closeModal();
+    } catch (err) {
+      showToast('Failed to save call log', 'danger');
+    }
   };
 
   /* ---------- export ---------- */
@@ -638,7 +613,7 @@ const ColdLead = () => {
     { value: 'delete', label: 'Delete Selected', dot: 'not-interested' },
   ];
 
-  const runBulk = (action) => {
+  const runBulk = async (action) => {
     if (!selected.size) {
       showToast('Select at least one lead first', 'warning');
       return;
@@ -647,9 +622,18 @@ const ColdLead = () => {
     if (action === 'delete') return setModal({ type: 'bulkDelete', ids });
     if (action === 'export') return exportCsv(leads.filter((l) => selected.has(l.id)));
     const status = { followup: 'Follow-up', progress: 'In Progress', converted: 'Converted' }[action];
-    setLeads((prev) => prev.map((l) => (selected.has(l.id) ? { ...l, status } : l)));
-    showToast(`${ids.length} lead(s) marked as ${status}`);
-    setSelected(new Set());
+    try {
+      await fetch(`${API_ENDPOINTS.LEADS}/bulk`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status }),
+      });
+      setLeads((prev) => prev.map((l) => (selected.has(l.id) ? { ...l, status } : l)));
+      showToast(`${ids.length} lead(s) marked as ${status}`);
+      setSelected(new Set());
+    } catch (err) {
+      showToast('Bulk update failed', 'danger');
+    }
     return undefined;
   };
 
@@ -712,22 +696,6 @@ const ColdLead = () => {
 
       {/* Filters */}
       <div className="ColdLead-card ColdLead-filters">
-        <ColdLeadSelect
-          icon="filter"
-          value={draft.status}
-          onChange={(v) => setDraft((d) => ({ ...d, status: v }))}
-          options={statusOpts}
-          className="ColdLead-filterItem"
-          ariaLabel="Filter by status"
-        />
-        <ColdLeadSelect
-          icon="bars"
-          value={draft.type}
-          onChange={(v) => setDraft((d) => ({ ...d, type: v }))}
-          options={typeOpts}
-          className="ColdLead-filterItem"
-          ariaLabel="Filter by lead type"
-        />
         <ColdLeadSelect
           icon="user"
           value={draft.source}
@@ -839,12 +807,8 @@ const ColdLead = () => {
                 <th>#</th>
                 <th>Name</th>
                 <th>Phone</th>
-                <th>Email</th>
                 <th>Source</th>
-                <th>Lead Type</th>
-                <th>Status</th>
                 <th>Enquiry / Interest</th>
-                <th>Assigned To</th>
                 <th>Added On</th>
                 <th className="ColdLead-th--actions">Actions</th>
               </tr>
@@ -874,32 +838,11 @@ const ColdLead = () => {
                       {l.phone}
                     </span>
                   </td>
-                  <td className="ColdLead-cell" data-label="Email">
-                    <span className="ColdLead-iconText">
-                      <Icon name="mail" size={14} />
-                      {l.email}
-                    </span>
-                  </td>
                   <td className="ColdLead-cell" data-label="Source">
                     <span className={`ColdLead-pill ColdLead-pill--src-${slug(l.source)}`}>{l.source}</span>
                   </td>
-                  <td className="ColdLead-cell" data-label="Lead Type">
-                    <span className={`ColdLead-pill ColdLead-pill--type-${l.type.toLowerCase()}`}>{l.type}</span>
-                  </td>
-                  <td className="ColdLead-cell" data-label="Status">
-                    <span className={`ColdLead-status ColdLead-status--${slug(l.status)}`}>
-                      <i />
-                      {l.status}
-                    </span>
-                  </td>
                   <td className="ColdLead-cell ColdLead-cell--enquiry" data-label="Enquiry">
                     {l.enquiry}
-                  </td>
-                  <td className="ColdLead-cell" data-label="Assigned To">
-                    <span className="ColdLead-iconText">
-                      <Icon name="user" size={14} />
-                      {l.assignedTo}
-                    </span>
                   </td>
                   <td className="ColdLead-cell" data-label="Added On">
                     <span className="ColdLead-iconText">
@@ -1011,22 +954,13 @@ const ColdLead = () => {
             <div className="ColdLead-avatar ColdLead-avatar--lg">{modal.lead.name.charAt(0)}</div>
             <div>
               <h4>{modal.lead.name}</h4>
-              <div className="ColdLead-viewBadges">
-                <span className={`ColdLead-pill ColdLead-pill--type-${modal.lead.type.toLowerCase()}`}>{modal.lead.type}</span>
-                <span className={`ColdLead-status ColdLead-status--${slug(modal.lead.status)}`}>
-                  <i />
-                  {modal.lead.status}
-                </span>
-              </div>
             </div>
           </div>
           <dl className="ColdLead-details">
             {[
               ['Phone', modal.lead.phone],
-              ['Email', modal.lead.email || '—'],
               ['Source', modal.lead.source],
               ['Enquiry', modal.lead.enquiry],
-              ['Assigned To', modal.lead.assignedTo],
               ['Added On', formatDate(modal.lead.date)],
             ].map(([k, v]) => (
               <div key={k} className="ColdLead-detailItem">

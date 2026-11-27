@@ -51,6 +51,7 @@ const ICONS = {
   info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01",
   checkCircle: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6",
   building: "M5 21V4h10v17M15 9h4v12M9 8h2M9 12h2M9 16h2M3 21h18",
+  video: "M23 7l-7 5 7 5V7zM1 5h15v14H1z",
 
   /* ---- amenity icons ---- */
   pool: "M8 13V6a2 2 0 0 1 2-2M16 13V6a2 2 0 0 1 2-2M8 8h8M8 11h8M2 16c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0M2 20c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0",
@@ -110,7 +111,7 @@ const Icon = ({ name, size = 18, className = "" }) => (
 const CATEGORIES = ["Residential", "Commercial", "Rental"];
 // Duplex + Independent House are now ONE option
 const PROPERTY_TYPES = ["Duplex / Independent House", "Plot / Land", "Apartment", "Villa", "Flat"];
-const STATUSES = ["Active", "Inactive", "Pending", "Under Construction", "Sold", "Ready to Move", "Upcoming"];
+const STATUSES = ["Active", "Draft", "Pending", "Inactive", "Under Construction", "Sold", "Ready to Move", "Upcoming"];
 
 // Every amenity has an icon (used for the premium icon tiles)
 const AMENITIES = [
@@ -196,11 +197,11 @@ const fmtSize = (b) => {
 /* ------------------------------------------------------------------ */
 /*  REUSABLE: Field wrapper                                            */
 /* ------------------------------------------------------------------ */
-const PropertyField = ({ label, required, error, className = "", children, htmlFor }) => (
+const PropertyField = ({ label, error, className = "", children, htmlFor }) => (
   <div className={`PropertyField ${error ? "has-error" : ""} ${className}`}>
     {label && (
       <label className="PropertyField__label" htmlFor={htmlFor}>
-        {label} {required && <span className="PropertyField__required">*</span>}
+        {label}
       </label>
     )}
     {children}
@@ -632,6 +633,7 @@ const Property = () => {
 
   const [form, setForm] = useState({
     title: "",
+    builderName: "",
     location: "",
     description: "",
     descriptionText: "",
@@ -640,6 +642,7 @@ const Property = () => {
     status: "Active",
     price: "",
     pricePerSqft: "",
+    bookingAmount: "",
     rera: "",
     projectArea: "",
     superArea: "",
@@ -654,12 +657,14 @@ const Property = () => {
     rental: "",
     possession: "",
     amenities: [],
+    youtubeUrl: "",
     metaTitle: "",
     metaDescription: "",
     slug: "",
   });
   const [images, setImages] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [brochurePdf, setBrochurePdf] = useState(null);
   const [nearby, setNearby] = useState([
     { id: uid(), name: "", distance: "" },
   ]);
@@ -679,6 +684,7 @@ const Property = () => {
   const metaTouched = useRef(false);
   const imgInput = useRef(null);
   const planInput = useRef(null);
+  const pdfInput = useRef(null);
 
   const set = (key, val) => {
     setForm((f) => ({ ...f, [key]: val }));
@@ -711,6 +717,7 @@ const Property = () => {
         const p = json.data;
         setForm({
           title: p.title || "",
+          builderName: p.builderName || p.builder || "",
           location: p.location || "",
           description: p.description || "",
           descriptionText: p.description
@@ -721,6 +728,7 @@ const Property = () => {
           status: p.status || "Active",
           price: p.price != null ? String(p.price) : "",
           pricePerSqft: p.pricePerSqft != null ? String(p.pricePerSqft) : "",
+          bookingAmount: p.bookingAmount != null ? String(p.bookingAmount) : "",
           rera: p.rera || "",
           projectArea: p.projectArea || "",
           superArea: p.superArea || "",
@@ -735,6 +743,7 @@ const Property = () => {
           rental: p.rental != null ? String(p.rental) : "",
           possession: p.possession ? p.possession.split("T")[0] : "",
           amenities: Array.isArray(p.amenities) ? p.amenities : [],
+          youtubeUrl: p.youtubeUrl || "",
           metaTitle: p.metaTitle || "",
           metaDescription: p.metaDescription || "",
           slug: p.slug || "",
@@ -763,6 +772,15 @@ const Property = () => {
               existingUrl: plan,
             }))
           );
+        }
+
+        if (p.brochurePdf) {
+          setBrochurePdf({
+            id: uid(),
+            name: p.brochurePdf.split("/").pop() || "brochure.pdf",
+            url: getMediaUrl(p.brochurePdf),
+            existingUrl: p.brochurePdf,
+          });
         }
 
         if (Array.isArray(p.nearbyPlaces) && p.nearbyPlaces.length > 0) {
@@ -827,7 +845,14 @@ const Property = () => {
   const toggleAmenity = (name) => {
     set("amenities", form.amenities.includes(name) ? form.amenities.filter((x) => x !== name) : [...form.amenities, name]);
   };
-  const visibleAmenities = AMENITIES.filter((a) => a.name.toLowerCase().includes(amenityQuery.toLowerCase()));
+  const allAmenityItems = useMemo(() => {
+    const knownNames = new Set(AMENITIES.map((a) => a.name));
+    const extras = (form.amenities || [])
+      .filter((name) => name && !knownNames.has(name))
+      .map((name) => ({ name, icon: "checkCircle" }));
+    return [...AMENITIES, ...extras];
+  }, [form.amenities]);
+  const visibleAmenities = allAmenityItems.filter((a) => a.name.toLowerCase().includes(amenityQuery.toLowerCase()));
 
   /* ---- uploads ---- */
   const addImages = (fileList) => {
@@ -856,6 +881,25 @@ const Property = () => {
       setErrors((e) => ({ ...e, plans: undefined }));
       showToast(`${ok.length} floor plan${ok.length > 1 ? "s" : ""} uploaded`);
     }
+  };
+
+  const addBrochurePdf = (fileList) => {
+    const f = fileList && fileList[0];
+    if (!f) return;
+    if (f.type !== "application/pdf") {
+      return showToast(`${f.name}: only PDF files are allowed`, "error");
+    }
+    if (f.size > 15 * 1024 * 1024) {
+      return showToast(`${f.name}: max 15 MB allowed`, "error");
+    }
+    setBrochurePdf({
+      id: uid(),
+      name: f.name,
+      size: f.size,
+      url: URL.createObjectURL(f),
+      file: f,
+    });
+    showToast(`PDF "${f.name}" selected`);
   };
 
   const onDrop = (setter, handler) => (e) => {
@@ -893,36 +937,9 @@ const Property = () => {
     setModal({ type: null });
   };
 
-  /* ---- validation ---- */
+  /* ---- validation (all fields optional) ---- */
   const validate = () => {
-    const e = {};
-    const req = (key, label) => {
-      if (!String(form[key] || "").trim()) e[key] = `${label} is required`;
-    };
-    req("title", "Property title");
-    req("location", "Location");
-    if (!form.descriptionText.trim()) e.description = "Description is required";
-    req("price", "Price");
-    req("pricePerSqft", "Price per sq. ft.");
-    req("projectArea", "Project area");
-    req("superArea", "Super built-up area");
-    req("houses", "Number of houses / villas");
-    req("floors", "Total floors");
-    req("bedrooms", "Bedrooms");
-    req("bathrooms", "Bathrooms");
-    req("parking", "Parking");
-    req("facing", "Facing");
-    req("overlooking", "Overlooking");
-    req("maintenance", "Monthly maintenance");
-    req("rental", "Expected rental");
-    if (!form.amenities.length) e.amenities = "Select at least one amenity";
-    if (!images.length) e.images = "Upload at least one property image";
-    if (!plans.length) e.plans = "Upload at least one floor plan";
-    if (!nearby.some((n) => n.name.trim())) e.nearby = "Add at least one nearby place";
-    req("metaTitle", "Meta title");
-    req("metaDescription", "Meta description");
-    req("slug", "URL slug");
-    return e;
+    return {};
   };
 
   const sectionErrors = (e) => ({
@@ -937,19 +954,22 @@ const Property = () => {
   const buildFormData = (status, isDraft = false) => {
     const fd = new FormData();
     fd.append("title", form.title || "");
+    fd.append("builderName", form.builderName || "");
     fd.append("slug", form.slug || "");
     fd.append("location", form.location || "");
     fd.append("description", form.description || form.descriptionText || "");
     fd.append("descriptionText", form.descriptionText || "");
     fd.append("category", form.category || "Residential");
     fd.append("propertyType", form.propertyType || "Apartment");
-    fd.append("status", status || form.status || "Active");
+    fd.append("status", status || (isDraft ? "Draft" : form.status) || "Active");
     fd.append("isDraft", isDraft ? "true" : "false");
     if (isDraft) fd.append("saveAs", "draft");
 
     if (form.price) fd.append("price", form.price);
     if (form.pricePerSqft) fd.append("pricePerSqft", form.pricePerSqft);
+    if (form.bookingAmount) fd.append("bookingAmount", form.bookingAmount);
     if (form.rera) fd.append("rera", form.rera);
+    if (form.youtubeUrl) fd.append("youtubeUrl", form.youtubeUrl);
     if (form.projectArea) fd.append("projectArea", form.projectArea);
     if (form.superArea) fd.append("superArea", form.superArea);
     if (form.houses) fd.append("houses", form.houses);
@@ -990,19 +1010,27 @@ const Property = () => {
       }
     });
 
+    if (brochurePdf && brochurePdf.file) {
+      fd.append("brochurePdf", brochurePdf.file);
+    }
+    fd.append("existingBrochurePdf", brochurePdf && brochurePdf.existingUrl ? brochurePdf.existingUrl : "");
+
     return fd;
   };
 
   /* ---- actions ---- */
   const onSaveDraft = async () => {
-    if (!form.title.trim()) {
-      setErrors((e) => ({ ...e, title: "Property title is required to save a draft" }));
-      setOpenSections((s) => ({ ...s, basic: true }));
-      return setModal({ type: "errors", list: ["Property title is required to save a draft"] });
+    const draftTitle = (form.title || "").trim() || `Untitled Draft - ${new Date().toLocaleDateString("en-IN")}`;
+    if (!form.title || !form.title.trim()) {
+      setForm((prev) => ({ ...prev, title: draftTitle }));
     }
+
     setBusy("draft");
     try {
-      const fd = buildFormData("Pending", true);
+      const fd = buildFormData("Draft", true);
+      if (!form.title || !form.title.trim()) {
+        fd.set("title", draftTitle);
+      }
       const url = isEdit ? `${API_ENDPOINTS.PROPERTIES}/${editId}` : API_ENDPOINTS.PROPERTIES;
       const method = isEdit ? "PUT" : "POST";
       const res = await fetch(url, {
@@ -1013,6 +1041,11 @@ const Property = () => {
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to save property draft");
       }
+
+      if (!isEdit && data.data && data.data._id) {
+        navigate(`/properties/edit/${data.data._id}`, { replace: true });
+      }
+
       showToast(isEdit ? "Property changes saved as draft!" : "Property draft saved successfully to database!");
       setModal({ type: "draft" });
     } catch (err) {
@@ -1040,7 +1073,8 @@ const Property = () => {
   const onConfirmPublish = async () => {
     setBusy("publish");
     try {
-      const fd = buildFormData(form.status || "Active", false);
+      const pubStatus = form.status === "Draft" ? "Active" : (form.status || "Active");
+      const fd = buildFormData(pubStatus, false);
       const url = isEdit ? `${API_ENDPOINTS.PROPERTIES}/${editId}` : API_ENDPOINTS.PROPERTIES;
       const method = isEdit ? "PUT" : "POST";
       const res = await fetch(url, {
@@ -1124,6 +1158,16 @@ const Property = () => {
               <PropertyInput icon="pin" value={form.location} error={errors.location} placeholder="Area, City" onChange={(e) => set("location", e.target.value)} />
             </PropertyField>
 
+            <PropertyField label="Builder Name" error={errors.builderName}>
+              <PropertyInput
+                icon="building"
+                value={form.builderName}
+                error={errors.builderName}
+                placeholder="e.g. SJ Developer / Utkal Builders"
+                onChange={(e) => set("builderName", e.target.value)}
+              />
+            </PropertyField>
+
             <PropertyField label="Category" required>
               <div className="Property__radios Property__radios--3">
                 {CATEGORIES.map((c) => (
@@ -1165,12 +1209,15 @@ const Property = () => {
 
       {/* ===== 2. Property & Project Details ===== */}
       <PropertySection id="details" title="Property & Project Details" icon="layers" open={openSections.details} onToggle={toggleSection} hasError={secErr.details}>
-        <div className="Property__grid Property__grid--three">
+        <div className="Property__grid Property__grid--four">
           <PropertyField label="Property Price" required error={errors.price}>
             <PropertyInput icon="rupee" prefix="₹" inputMode="numeric" placeholder="e.g. 85,00,000" value={formatINR(form.price)} error={errors.price} onChange={(e) => set("price", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="Price per Sq. Feet" required error={errors.pricePerSqft}>
             <PropertyInput icon="rupee" inputMode="numeric" placeholder="e.g. 5,500" value={formatINR(form.pricePerSqft)} error={errors.pricePerSqft} onChange={(e) => set("pricePerSqft", digits(e.target.value))} />
+          </PropertyField>
+          <PropertyField label="Booking Amount" error={errors.bookingAmount}>
+            <PropertyInput icon="rupee" prefix="₹" inputMode="numeric" placeholder="e.g. 5,00,000" value={formatINR(form.bookingAmount)} error={errors.bookingAmount} onChange={(e) => set("bookingAmount", digits(e.target.value))} />
           </PropertyField>
           <PropertyField label="RERA No.">
             <PropertyInput icon="file" value={form.rera} placeholder="e.g. OD/2024/000123" onChange={(e) => set("rera", e.target.value.toUpperCase())} />
@@ -1233,7 +1280,7 @@ const Property = () => {
               </h4>
               <div className="Property__amenityMeta">
                 <span className="Property__amenityCount">
-                  <b>{form.amenities.length}</b> / {AMENITIES.length} selected
+                  <b>{form.amenities.length}</b> / {allAmenityItems.length} selected
                 </span>
                 {form.amenities.length > 0 && (
                   <button type="button" className="Property__amenityClear" onClick={() => set("amenities", [])}>
@@ -1318,6 +1365,75 @@ const Property = () => {
                 </div>
               )}
             </PropertyField>
+
+            <div className="Property__youtubeWrap">
+              <PropertyField label="YouTube Video URL (Walkthrough)" error={errors.youtubeUrl}>
+                <PropertyInput
+                  icon="video"
+                  value={form.youtubeUrl}
+                  error={errors.youtubeUrl}
+                  placeholder="e.g. https://www.youtube.com/watch?v=..."
+                  onChange={(e) => set("youtubeUrl", e.target.value)}
+                />
+              </PropertyField>
+              {form.youtubeUrl && form.youtubeUrl.trim() && (
+                <a
+                  href={form.youtubeUrl.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="Property__youtubePreviewLink"
+                >
+                  <Icon name="eye" size={15} /> Preview YouTube Video
+                </a>
+              )}
+            </div>
+
+            <div className="Property__youtubeWrap">
+              <PropertyField label="Upload PDF (Brochure / Document)">
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="PropertyButton PropertyButton--outline PropertyButton--sm"
+                    onClick={() => pdfInput.current && pdfInput.current.click()}
+                  >
+                    <Icon name="upload" size={16} /> {brochurePdf ? "Change PDF" : "Upload PDF"}
+                  </button>
+                  <input
+                    ref={pdfInput}
+                    type="file"
+                    accept="application/pdf"
+                    hidden
+                    onChange={(e) => {
+                      addBrochurePdf(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                  {brochurePdf && (
+                    <div className="PropertyFile" style={{ flex: 1, minWidth: "220px", margin: 0 }}>
+                      <span className="PropertyFile__type is-pdf">PDF</span>
+                      <a
+                        href={brochurePdf.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="PropertyFile__name"
+                        style={{ color: "inherit", textDecoration: "none" }}
+                      >
+                        {brochurePdf.name}
+                      </a>
+                      {brochurePdf.size && <span className="PropertyFile__size">({fmtSize(brochurePdf.size)})</span>}
+                      <button
+                        type="button"
+                        className="PropertyFile__remove"
+                        aria-label="Remove PDF"
+                        onClick={() => setBrochurePdf(null)}
+                      >
+                        <Icon name="trash" size={17} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </PropertyField>
+            </div>
           </div>
         </div>
       </PropertySection>

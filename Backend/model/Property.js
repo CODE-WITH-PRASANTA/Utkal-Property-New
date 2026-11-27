@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const propertySchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
+    title: { type: String, trim: true, default: "Untitled Property" },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    builderName: { type: String, trim: true, default: "" },
     location: { type: String, trim: true, default: "" },
     description: { type: String, default: "" },
 
@@ -19,12 +20,13 @@ const propertySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "Pending", "Under Construction", "Sold", "Ready to Move", "Upcoming"],
+      enum: ["Active", "Inactive", "Pending", "Draft", "Under Construction", "Sold", "Ready to Move", "Upcoming"],
       default: "Active",
     },
 
     price: { type: Number },
     pricePerSqft: { type: Number },
+    bookingAmount: { type: Number },
     rera: { type: String, trim: true, default: "" },
     projectArea: { type: String, default: "" },
     superArea: { type: String, default: "" },
@@ -41,6 +43,8 @@ const propertySchema = new mongoose.Schema(
 
     amenities: [{ type: String }],
     images: [{ type: String }],
+    youtubeUrl: { type: String, trim: true, default: "" },
+    brochurePdf: { type: String, default: "" },
     floorPlans: [{ type: String }],
     nearbyPlaces: [
       {

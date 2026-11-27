@@ -24,7 +24,7 @@ const ALL_TYPES = Array.from(new Set([
   ...TYPES_BY_CATEGORY.Commercial,
   ...TYPES_BY_CATEGORY.Rental,
 ]))
-const STATUSES = ['Active', 'Pending', 'Inactive', 'Under Construction', 'Sold', 'Ready to Move', 'Upcoming']
+const STATUSES = ['Active', 'Draft', 'Pending', 'Inactive', 'Under Construction', 'Sold', 'Ready to Move', 'Upcoming']
 
 const CATEGORY_OPTIONS = ['All Category', ...CATEGORIES]
 const STATUS_OPTIONS = ['All Status', ...STATUSES]
@@ -32,6 +32,7 @@ const PER_PAGE_OPTIONS = ['10 per page', '20 per page', '50 per page']
 
 const STATUS_CLASS = {
   Active: 'active',
+  Draft: 'draft',
   Pending: 'pending',
   Inactive: 'inactive',
   'Under Construction': 'pending',
@@ -41,6 +42,7 @@ const STATUS_CLASS = {
 }
 const STATUS_DOT = {
   Active: '#16a34a',
+  Draft: '#64748b',
   Pending: '#f59e0b',
   Inactive: '#ef4444',
   'Under Construction': '#0284c7',
@@ -390,7 +392,8 @@ const PropertyManagement = () => {
           category: p.category || 'Residential',
           location: p.location || 'Odisha',
           price: p.price || 0,
-          status: p.status || 'Active',
+          status: p.isDraft ? 'Draft' : (p.status || 'Active'),
+          isDraft: Boolean(p.isDraft),
           date: p.createdAt ? toISO(new Date(p.createdAt)) : toISO(new Date()),
           image: p.images && p.images.length > 0 ? getMediaUrl(p.images[0]) : null,
           isBestProperty: Boolean(p.isBestProperty),
@@ -443,6 +446,7 @@ const PropertyManagement = () => {
     total: rows.length,
     active: rows.filter((r) => r.status === 'Active').length,
     pending: rows.filter((r) => r.status === 'Pending').length,
+    draft: rows.filter((r) => r.status === 'Draft' || r.isDraft).length,
     inactive: rows.filter((r) => r.status === 'Inactive').length,
   }), [rows])
 
@@ -548,7 +552,7 @@ const PropertyManagement = () => {
   const statCards = [
     { label: 'Total Properties', value: stats.total, Icon: FiHome, Mark: FiHome, tone: 'green' },
     { label: 'Active Properties', value: stats.active, Icon: FiCheckCircle, Mark: FiHome, tone: 'blue' },
-    { label: 'Pending / Under Review', value: stats.pending, Icon: FiClock, Mark: FiHome, tone: 'yellow' },
+    { label: 'Draft Properties', value: stats.draft, Icon: FiFileText, Mark: FiHome, tone: 'yellow' },
     { label: 'Inactive Properties', value: stats.inactive, Icon: FiXCircle, Mark: FiHome, tone: 'red' },
   ]
 

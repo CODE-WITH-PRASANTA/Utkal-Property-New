@@ -11,10 +11,10 @@ import {
   X,
 } from 'lucide-react';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
+import { clearAuthSession } from '../../config/auth';
 import './Topbar.css';
 
 const API_PROFILES_URL = API_ENDPOINTS.PROFILES;
-const AUTH_KEY = 'isAdminAuthenticated';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
@@ -89,9 +89,8 @@ const Topbar = ({ toggleSidebar }) => {
     // 1. Close dropdowns immediately
     closeAllMenus();
 
-    // 2. Clear all authentication flags from both storages
-    sessionStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem(AUTH_KEY);
+    // 2. Clear JWT session from both storages
+    clearAuthSession();
 
     // 3. Notify any listeners if needed
     window.dispatchEvent(new Event('adminLoggedOut'));

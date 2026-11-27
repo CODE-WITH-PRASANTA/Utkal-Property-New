@@ -284,7 +284,23 @@ const PropertyReviews = () => {
                       {/* Property Title & Slug */}
                       <td className="pr-prop-info">
                         <h4>{r.propertyTitle || "Property"}</h4>
-                        <span className="pr-prop-badge">/{r.propertySlug}</span>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 4 }}>
+                          <span className="pr-prop-badge">/{r.propertySlug}</span>
+                          {r.type === "Brochure" && (
+                            <span
+                              style={{
+                                fontSize: "0.72rem",
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                background: "#dbeafe",
+                                color: "#1d4ed8",
+                              }}
+                            >
+                              Brochure Request
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Reviewer Name, Email, Phone */}
@@ -294,7 +310,7 @@ const PropertyReviews = () => {
                           <div>
                             <div className="pr-reviewer-name">{r.name}</div>
                             <div className="pr-reviewer-meta">
-                              <span>✉ {r.email}</span>
+                              {r.email && <span>✉ {r.email}</span>}
                               {r.phone && <span>📞 {r.phone}</span>}
                             </div>
                           </div>

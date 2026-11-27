@@ -14,6 +14,29 @@ import feat3 from "../../assets/featured-3.jpg";
 import feat4 from "../../assets/featured-4.jpg";
 
 /* ==========================================================================
+   HELPER: Convert any YouTube URL (watch / youtu.be / shorts) to embed URL
+   ========================================================================== */
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return "";
+  const trimmed = String(url).trim();
+  if (trimmed.includes("youtube.com/embed/")) return trimmed;
+  let videoId = "";
+  const watchMatch = trimmed.match(/[?&]v=([^&#]+)/);
+  if (watchMatch) {
+    videoId = watchMatch[1];
+  } else {
+    const shortMatch = trimmed.match(/youtu\.be\/([^?&#]+)/);
+    if (shortMatch) {
+      videoId = shortMatch[1];
+    } else {
+      const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([^?&#]+)/);
+      if (shortsMatch) videoId = shortsMatch[1];
+    }
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0` : trimmed;
+};
+
+/* ==========================================================================
    DEFAULT / SERIAL DATA (Matches all 9 uploaded screenshots precisely)
    ========================================================================== */
 const DEFAULT_PROPERTY = {
@@ -442,8 +465,8 @@ const PropertyDetailsMain = () => {
   const [searchParams] = useSearchParams();
   const targetIdOrSlug = id || slug || searchParams.get("id") || searchParams.get("slug");
 
-  const [propData, setPropData] = useState(DEFAULT_PROPERTY);
-  const [loading, setLoading] = useState(false);
+  const [propData, setPropData] = useState(targetIdOrSlug ? null : DEFAULT_PROPERTY);
+  const [loading, setLoading] = useState(Boolean(targetIdOrSlug));
 
   /* Slider states */
   const [activeSlide, setActiveSlide] = useState(0);
@@ -455,6 +478,8 @@ const PropertyDetailsMain = () => {
   const [lightboxImg, setLightboxImg] = useState(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [brochureModalOpen, setBrochureModalOpen] = useState(false);
+  const [brochureForm, setBrochureForm] = useState({ name: "", phone: "", email: "" });
+  const [brochureSubmitting, setBrochureSubmitting] = useState(false);
 
   /* Sidebar Lead Form State */
   const [leadForm, setLeadForm] = useState({ name: "", email: "", mobile: "", captchaInput: "" });
@@ -515,33 +540,31 @@ const PropertyDetailsMain = () => {
 
           const dynamicAmenities = Array.isArray(d.amenities) && d.amenities.length > 0
             ? d.amenities.map((a) => ({ name: a, icon: mapAmenityIcon(a) }))
-            : DEFAULT_PROPERTY.amenities;
+            : [];
 
           const dynamicSpecs = [
-            { label: "Project Area", value: d.projectArea || "1.3 Acre", icon: "area" },
-            { label: "No. of Towers", value: d.houses ? Math.max(1, Math.ceil(d.houses / 100)).toString() : "1", icon: "tower" },
-            { label: "Total Floors", value: d.floors || "2B+S+27", icon: "floors" },
-            { label: "Number of Flats", value: d.houses ? String(d.houses) : "108", icon: "flats" },
-            { label: "Facing", value: d.facing || "West, East", icon: "facing" },
-            { label: "Carpet Area (sq.ft.)", value: d.superArea || "1655-2058", icon: "carpet" },
-            { label: "Bedrooms", value: d.bedrooms || "3-4", icon: "bed" },
-            { label: "Bathrooms", value: d.bathrooms || "3-4", icon: "bath" },
-            { label: "Balconies", value: d.balconies || "3-5", icon: "balcony" },
-            { label: "Parking", value: d.parking || "1", icon: "car" },
-            { label: "Transaction Type", value: d.category || "New property", icon: "key" },
-            { label: "Property Overlooking", value: d.overlooking || "Pool, Road, Club, Garden, Park", icon: "overlook" },
-            { label: "Maintainance Per Month", value: d.maintenance !== undefined ? `₹ ${Number(d.maintenance).toLocaleString("en-IN")}` : "₹ 0.00", icon: "rupee" },
-            { label: "Expected Rental Return", value: d.rental !== undefined ? `₹ ${Number(d.rental).toLocaleString("en-IN")}` : "₹ 1.00 Lac", icon: "rental" },
-          ];
+            d.projectArea && { label: "Project Area", value: d.projectArea, icon: "area" },
+            d.floors && { label: "Total Floors", value: d.floors, icon: "floors" },
+            d.houses !== undefined && d.houses !== null && d.houses !== "" && { label: "Number of Units", value: String(d.houses), icon: "flats" },
+            d.facing && { label: "Facing", value: d.facing, icon: "facing" },
+            d.superArea && { label: "Carpet / Super Area (sq.ft.)", value: d.superArea, icon: "carpet" },
+            d.bedrooms && { label: "Bedrooms", value: String(d.bedrooms), icon: "bed" },
+            d.bathrooms && { label: "Bathrooms", value: String(d.bathrooms), icon: "bath" },
+            d.parking && { label: "Parking", value: String(d.parking), icon: "car" },
+            d.category && { label: "Category", value: d.category, icon: "key" },
+            d.overlooking && { label: "Property Overlooking", value: d.overlooking, icon: "overlook" },
+            d.maintenance !== undefined && d.maintenance !== null && d.maintenance !== "" && { label: "Maintenance / Month", value: `₹ ${Number(d.maintenance).toLocaleString("en-IN")}`, icon: "rupee" },
+            d.rental !== undefined && d.rental !== null && d.rental !== "" && { label: "Expected Rental Return", value: `₹ ${Number(d.rental).toLocaleString("en-IN")}`, icon: "rental" },
+          ].filter(Boolean);
 
           const dynamicNeighbourhood = Array.isArray(d.nearbyPlaces) && d.nearbyPlaces.length > 0
-            ? d.nearbyPlaces.map((np) => ({ name: np.name, dist: np.distance }))
-            : DEFAULT_PROPERTY.neighbourhood;
+            ? d.nearbyPlaces.filter((np) => np && np.name).map((np) => ({ name: np.name, dist: np.distance || "" }))
+            : [];
 
           // Fetch similar real properties
-          let similarMapped = DEFAULT_PROPERTY.similarProjects;
+          let similarMapped = [];
           try {
-            const simRes = await fetch(`${API_ENDPOINTS.PROPERTIES}?limit=6`);
+            const simRes = await fetch(`${API_ENDPOINTS.PROPERTIES}?isDraft=false&limit=6`);
             const simJson = await simRes.json();
             if (simJson.success && Array.isArray(simJson.data)) {
               const others = simJson.data.filter((p) => p.slug !== targetIdOrSlug && p._id !== targetIdOrSlug);
@@ -551,9 +574,9 @@ const PropertyDetailsMain = () => {
                   slug: op.slug,
                   title: op.title,
                   price: op.price
-                    ? `₹ ${(op.price >= 10000000 ? (op.price / 10000000).toFixed(2) + " Cr" : (op.price / 100000).toFixed(2) + " Lac")}`
+                    ? `₹ ${Number(op.price).toLocaleString("en-IN")}`
                     : "Price on Request",
-                  location: op.location || "Bhubaneswar",
+                  location: op.location || "",
                   image: Array.isArray(op.images) && op.images.length > 0 ? getMediaUrl(op.images[0]) : feat1,
                   tag: op.isFeatured ? "Featured" : op.status || "Residential",
                 }));
@@ -564,35 +587,48 @@ const PropertyDetailsMain = () => {
           }
 
           setPropData({
-            ...DEFAULT_PROPERTY,
             id: d._id || d.slug,
-            title: d.title || DEFAULT_PROPERTY.title,
-            subtitle: d.metaTitle || DEFAULT_PROPERTY.subtitle,
-            location: d.location || DEFAULT_PROPERTY.location,
-            fullAddress: d.location || DEFAULT_PROPERTY.fullAddress,
-            builder: d.builder || DEFAULT_PROPERTY.builder,
+            slug: d.slug || d._id,
+            title: d.title || "",
+            subtitle: d.metaTitle || "",
+            location: d.location || "",
+            fullAddress: d.location || "",
+            builder: d.builderName || d.builder || "",
             priceRange: d.price
-              ? `₹ ${(d.price >= 10000000 ? (d.price / 10000000).toFixed(2) + " Cr" : (d.price / 100000).toFixed(2) + " Lac")}`
-              : DEFAULT_PROPERTY.priceRange,
-            pricePerSqft: d.pricePerSqft ? `₹ ${d.pricePerSqft.toLocaleString("en-IN")} / Sqft` : DEFAULT_PROPERTY.pricePerSqft,
-            type: d.propertyType || DEFAULT_PROPERTY.type,
-            furnishing: d.furnishing || DEFAULT_PROPERTY.furnishing,
-            sba: d.superArea || DEFAULT_PROPERTY.sba,
-            status: d.status || DEFAULT_PROPERTY.status,
-            reraNo: d.rera || DEFAULT_PROPERTY.reraNo,
-            overviewSpecs: dynamicSpecs,
+              ? `₹ ${Number(d.price).toLocaleString("en-IN")}`
+              : "Price on Request",
+            pricePerSqft: d.pricePerSqft ? `₹ ${Number(d.pricePerSqft).toLocaleString("en-IN")} / Sqft` : "",
+            bookingAmount: d.bookingAmount
+              ? `₹ ${Number(d.bookingAmount).toLocaleString("en-IN")}`
+              : "",
+            videoUrl: d.youtubeUrl ? getYoutubeEmbedUrl(d.youtubeUrl) : "",
+            brochurePdf: d.brochurePdf
+              ? getMediaUrl(d.brochurePdf)
+              : Array.isArray(d.floorPlans)
+              ? getMediaUrl(d.floorPlans.find((fp) => String(fp).toLowerCase().endsWith(".pdf")) || "")
+              : "",
+            type: d.propertyType || "",
+            furnishing: d.furnishing || "",
+            sba: d.superArea
+              ? (String(d.superArea).toLowerCase().includes("sq") ? d.superArea : `${d.superArea} Sqft`)
+              : (d.projectArea || ""),
+            availableFrom: d.possession
+              ? new Date(d.possession).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+              : "",
+            status: d.status || "Active",
+            reraNo: d.rera || "",
+            viewsCount: d.viewsCount || 0,
+            overview: dynamicSpecs,
             amenities: dynamicAmenities,
-            keyFeatures: Array.isArray(d.amenities) && d.amenities.length > 0 ? d.amenities.slice(0, 10) : DEFAULT_PROPERTY.keyFeatures,
+            keyFeatures: Array.isArray(d.amenities) && d.amenities.length > 0 ? d.amenities.slice(0, 10) : [],
             neighbourhood: dynamicNeighbourhood,
             similarProjects: similarMapped,
-            description: d.description || DEFAULT_PROPERTY.description,
-            locationDetails: d.location
-              ? `Strategically located in ${d.location}. The project enjoys seamless connectivity to major roads, schools, hospitals, shopping malls, business hubs, and daily lifestyle essentials.`
-              : DEFAULT_PROPERTY.locationDetails,
-            images: Array.isArray(d.images) && d.images.length > 0 ? d.images.map((img) => getMediaUrl(img)) : DEFAULT_PROPERTY.images,
+            description: d.description || "",
+            locationDetails: d.location || "",
+            images: Array.isArray(d.images) && d.images.length > 0 ? d.images.map((img) => getMediaUrl(img)) : [pImg1],
             floorPlans: Array.isArray(d.floorPlans) && d.floorPlans.length > 0
               ? d.floorPlans.map((fp, i) => ({ label: `Plan ${i + 1}`, title: `Floor Plan ${i + 1}`, img: getMediaUrl(fp) }))
-              : DEFAULT_PROPERTY.floorPlans,
+              : [],
           });
         }
       } catch (err) {
@@ -641,11 +677,11 @@ const PropertyDetailsMain = () => {
     };
   }, [slug, targetIdOrSlug]);
 
-  const slideCount = propData.images.length;
-  const nextSlide = () => setActiveSlide((prev) => (prev + 1) % slideCount);
-  const prevSlide = () => setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
+  const slideCount = propData && Array.isArray(propData.images) ? propData.images.length : 0;
+  const nextSlide = () => slideCount > 0 && setActiveSlide((prev) => (prev + 1) % slideCount);
+  const prevSlide = () => slideCount > 0 && setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
 
-  const activeReviews = publishedReviews.length > 0 ? publishedReviews : propData.reviews;
+  const activeReviews = publishedReviews;
   const avgRating = (
     activeReviews.reduce((sum, r) => sum + (r.stars || 5), 0) / (activeReviews.length || 1)
   ).toFixed(1);
@@ -738,6 +774,32 @@ const PropertyDetailsMain = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="pdm-page">
+        <div className="pdm-container" style={{ padding: "80px 20px", textAlign: "center" }}>
+          <p style={{ fontSize: "18px", color: "#475569" }}>Loading property details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!propData) {
+    return (
+      <div className="pdm-page">
+        <div className="pdm-container" style={{ padding: "80px 20px", textAlign: "center" }}>
+          <h2 style={{ marginBottom: "12px", color: "#0f172a" }}>Property Not Found</h2>
+          <p style={{ color: "#64748b", marginBottom: "24px" }}>
+            The property you are looking for does not exist or has been removed.
+          </p>
+          <Link to="/properties" className="pdm-btn pdm-btn-contact" style={{ display: "inline-flex", textDecoration: "none" }}>
+            Back to Properties
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pdm-page">
       <div className="pdm-container">
@@ -792,76 +854,92 @@ const PropertyDetailsMain = () => {
           {/* Right: Info Card */}
           <div className="pdm-hero-card">
             <h1 className="pdm-hero-title">{propData.title}</h1>
-            <p className="pdm-hero-sub">{propData.subtitle}</p>
+            {propData.subtitle && <p className="pdm-hero-sub">{propData.subtitle}</p>}
 
-            <div className="pdm-hero-loc">
-              <span className="pdm-hero-loc-icon"><SvgIcon name="pin" size={16} /></span>
-              <span>{propData.location}</span>
-            </div>
+            {propData.location && (
+              <div className="pdm-hero-loc">
+                <span className="pdm-hero-loc-icon"><SvgIcon name="pin" size={16} /></span>
+                <span>{propData.location}</span>
+              </div>
+            )}
 
             {/* Builder pill */}
-            <div className="pdm-builder-pill">
-              <div className="pdm-builder-avatar">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
+            {propData.builder && (
+              <div className="pdm-builder-pill">
+                <div className="pdm-builder-avatar">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div className="pdm-builder-text">
+                  <span className="pdm-builder-tag">Builder :</span>
+                  <span className="pdm-builder-name">{propData.builder}</span>
+                </div>
               </div>
-              <div className="pdm-builder-text">
-                <span className="pdm-builder-tag">Builder :</span>
-                <span className="pdm-builder-name">{propData.builder}</span>
-              </div>
-            </div>
+            )}
 
             {/* Price Box */}
             <div className="pdm-price-row">
               <span className="pdm-price-main">{propData.priceRange}</span>
-              <span className="pdm-price-sqft">{propData.pricePerSqft}</span>
+              {propData.pricePerSqft && <span className="pdm-price-sqft">{propData.pricePerSqft}</span>}
             </div>
 
             {/* Specs 2-Column Grid */}
             <div className="pdm-specs-grid">
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">🏬</div>
-                <div>
-                  <div className="pdm-spec-label">Type</div>
-                  <div className="pdm-spec-val">{propData.type}</div>
+              {propData.type && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">🏬</div>
+                  <div>
+                    <div className="pdm-spec-label">Type</div>
+                    <div className="pdm-spec-val">{propData.type}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">📝</div>
-                <div>
-                  <div className="pdm-spec-label">Booking Amount</div>
-                  <div className="pdm-spec-val">{propData.bookingAmount}</div>
+              )}
+              {propData.bookingAmount && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">📝</div>
+                  <div>
+                    <div className="pdm-spec-label">Booking Amount</div>
+                    <div className="pdm-spec-val">{propData.bookingAmount}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">🛋️</div>
-                <div>
-                  <div className="pdm-spec-label">Furnishing</div>
-                  <div className="pdm-spec-val">{propData.furnishing}</div>
+              )}
+              {propData.furnishing && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">🛋️</div>
+                  <div>
+                    <div className="pdm-spec-label">Furnishing</div>
+                    <div className="pdm-spec-val">{propData.furnishing}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">↔️</div>
-                <div>
-                  <div className="pdm-spec-label">SBA</div>
-                  <div className="pdm-spec-val">{propData.sba}</div>
+              )}
+              {propData.sba && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">↔️</div>
+                  <div>
+                    <div className="pdm-spec-label">SBA</div>
+                    <div className="pdm-spec-val">{propData.sba}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">📅</div>
-                <div>
-                  <div className="pdm-spec-label">Available From</div>
-                  <div className="pdm-spec-val">{propData.availableFrom}</div>
+              )}
+              {propData.availableFrom && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">📅</div>
+                  <div>
+                    <div className="pdm-spec-label">Possession Date</div>
+                    <div className="pdm-spec-val">{propData.availableFrom}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pdm-spec-item">
-                <div className="pdm-spec-icon">✔️</div>
-                <div>
-                  <div className="pdm-spec-label">Status</div>
-                  <div className="pdm-spec-val">{propData.status}</div>
+              )}
+              {propData.status && (
+                <div className="pdm-spec-item">
+                  <div className="pdm-spec-icon">✔️</div>
+                  <div>
+                    <div className="pdm-spec-label">Status</div>
+                    <div className="pdm-spec-val">{propData.status}</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -886,13 +964,11 @@ const PropertyDetailsMain = () => {
             </div>
 
             {/* RERA and Views */}
-            <div className="pdm-hero-footer">
-              <span className="pdm-rera">RERA NO: {propData.reraNo}</span>
-              <span className="pdm-views">
-                <SvgIcon name="eye" size={16} />
-                <span>{propData.viewsCount}</span>
-              </span>
-            </div>
+            {propData.reraNo && (
+              <div className="pdm-hero-footer">
+                <span className="pdm-rera">RERA NO: {propData.reraNo}</span>
+              </div>
+            )}
           </div>
         </section>
 
@@ -915,34 +991,43 @@ const PropertyDetailsMain = () => {
             </div>
           </div>
 
-          <div className="pdm-overview-grid">
-            {propData.overview.map((item, i) => (
-              <div key={i} className="pdm-overview-item">
-                <div className="pdm-overview-icon">
-                  <SvgIcon name={item.icon} size={26} />
+          {propData.overview.length > 0 && (
+            <div className="pdm-overview-grid">
+              {propData.overview.map((item, i) => (
+                <div key={i} className="pdm-overview-item">
+                  <div className="pdm-overview-icon">
+                    <SvgIcon name={item.icon} size={26} />
+                  </div>
+                  <div className="pdm-overview-info">
+                    <span className="pdm-ov-label">{item.label}</span>
+                    <span className="pdm-ov-val">{item.value}</span>
+                  </div>
                 </div>
-                <div className="pdm-overview-info">
-                  <span className="pdm-ov-label">{item.label}</span>
-                  <span className="pdm-ov-val">{item.value}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* =================================================================
               SERIAL 3: DESCRIPTION & LOCATION DETAILS (Matches Image 3)
              ================================================================= */}
-          <div className="pdm-prose-block">
-            <h3 className="pdm-gold-heading">Description</h3>
-            <span className="pdm-gold-bar" />
-            <p className="pdm-prose-text">{propData.description}</p>
-          </div>
+          {propData.description && (
+            <div className="pdm-prose-block">
+              <h3 className="pdm-gold-heading">Description</h3>
+              <span className="pdm-gold-bar" />
+              <div
+                className="pdm-prose-text"
+                dangerouslySetInnerHTML={{ __html: propData.description }}
+              />
+            </div>
+          )}
 
-          <div className="pdm-prose-block">
-            <h3 className="pdm-gold-heading">Location</h3>
-            <span className="pdm-gold-bar" />
-            <p className="pdm-prose-text">{propData.locationDetails}</p>
-          </div>
+          {propData.locationDetails && (
+            <div className="pdm-prose-block">
+              <h3 className="pdm-gold-heading">Location</h3>
+              <span className="pdm-gold-bar" />
+              <p className="pdm-prose-text">{propData.locationDetails}</p>
+            </div>
+          )}
         </section>
 
         {/* =================================================================
@@ -954,123 +1039,135 @@ const PropertyDetailsMain = () => {
           <div className="pdm-col-main">
 
             {/* Serial 4: Amenities */}
-            <div className="pdm-card">
-              <h3 className="pdm-gold-heading">Amenities {propData.title}</h3>
-              <span className="pdm-gold-bar" />
+            {propData.amenities.length > 0 && (
+              <div className="pdm-card">
+                <h3 className="pdm-gold-heading">Amenities {propData.title}</h3>
+                <span className="pdm-gold-bar" />
 
-              <div className="pdm-amenities-grid">
-                {propData.amenities.map((am, i) => (
-                  <div key={i} className="pdm-amenity-card">
-                    <div className="pdm-amenity-icon">
-                      <SvgIcon name={am.icon} size={24} />
+                <div className="pdm-amenities-grid">
+                  {propData.amenities.map((am, i) => (
+                    <div key={i} className="pdm-amenity-card">
+                      <div className="pdm-amenity-icon">
+                        <SvgIcon name={am.icon} size={24} />
+                      </div>
+                      <span className="pdm-amenity-name">{am.name}</span>
                     </div>
-                    <span className="pdm-amenity-name">{am.name}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Serial 5: Key Features */}
-            <div className="pdm-card">
-              <h3 className="pdm-gold-heading">Key Features {propData.title}</h3>
-              <span className="pdm-gold-bar" />
+            {propData.keyFeatures.length > 0 && (
+              <div className="pdm-card">
+                <h3 className="pdm-gold-heading">Key Features {propData.title}</h3>
+                <span className="pdm-gold-bar" />
 
-              <div className="pdm-features-wrap">
-                {propData.keyFeatures.map((kf, i) => (
-                  <span key={i} className="pdm-feature-pill">
-                    <SvgIcon name="star" size={14} />
-                    <span>{kf}</span>
-                  </span>
-                ))}
+                <div className="pdm-features-wrap">
+                  {propData.keyFeatures.map((kf, i) => (
+                    <span key={i} className="pdm-feature-pill">
+                      <SvgIcon name="star" size={14} />
+                      <span>{kf}</span>
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Serial 5: Floor Plans & Documents */}
-            <div className="pdm-card">
-              <h3 className="pdm-gold-heading">Floor Plans &amp; Documents</h3>
-              <span className="pdm-gold-bar" />
+            {propData.floorPlans.length > 0 && (
+              <div className="pdm-card">
+                <h3 className="pdm-gold-heading">Floor Plans &amp; Documents</h3>
+                <span className="pdm-gold-bar" />
 
-              {/* Tabs */}
-              <div className="pdm-floorplan-tabs">
-                {propData.floorPlans.map((fp, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`pdm-fp-tab ${activePlanTab === i ? "is-active" : ""}`}
-                    onClick={() => setActivePlanTab(i)}
-                  >
-                    {fp.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Floor Plan Display */}
-              <div
-                className="pdm-floorplan-viewer"
-                onClick={() => setLightboxImg(propData.floorPlans[activePlanTab]?.img)}
-                title="Click to view full plan"
-              >
-                <div className="pdm-fp-meta-tag">
-                  {propData.floorPlans[activePlanTab]?.title}
+                {/* Tabs */}
+                <div className="pdm-floorplan-tabs">
+                  {propData.floorPlans.map((fp, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`pdm-fp-tab ${activePlanTab === i ? "is-active" : ""}`}
+                      onClick={() => setActivePlanTab(i)}
+                    >
+                      {fp.label}
+                    </button>
+                  ))}
                 </div>
-                <img
-                  src={propData.floorPlans[activePlanTab]?.img}
-                  alt={propData.floorPlans[activePlanTab]?.title}
-                  className="pdm-fp-img"
-                />
-                <span className="pdm-fp-zoom-hint">🔍 Click to zoom blueprint</span>
+
+                {/* Floor Plan Display */}
+                <div
+                  className="pdm-floorplan-viewer"
+                  onClick={() => setLightboxImg(propData.floorPlans[activePlanTab]?.img)}
+                  title="Click to view full plan"
+                >
+                  <div className="pdm-fp-meta-tag">
+                    {propData.floorPlans[activePlanTab]?.title}
+                  </div>
+                  <img
+                    src={propData.floorPlans[activePlanTab]?.img}
+                    alt={propData.floorPlans[activePlanTab]?.title}
+                    className="pdm-fp-img"
+                  />
+                  <span className="pdm-fp-zoom-hint">🔍 Click to zoom blueprint</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* =================================================================
                 SERIAL 6: WALKTHROUGH VIDEO (Matches Image 6)
                ================================================================= */}
-            <div className="pdm-card">
-              <h3 className="pdm-gold-heading">Walkthrough video of {propData.title}</h3>
-              <span className="pdm-gold-bar" />
+            {propData.videoUrl && (
+              <div className="pdm-card">
+                <h3 className="pdm-gold-heading">Walkthrough video of {propData.title}</h3>
+                <span className="pdm-gold-bar" />
 
-              <div className="pdm-video-wrap">
-                <iframe
-                  src={propData.videoUrl}
-                  title={`Walkthrough video of ${propData.title}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                <div className="pdm-video-wrap">
+                  <iframe
+                    src={propData.videoUrl}
+                    title={`Walkthrough video of ${propData.title}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* =================================================================
                 SERIAL 7: EXPLORE NEIGHBOURHOOD (Matches Image 7)
                ================================================================= */}
-            <div className="pdm-card">
-              <h3 className="pdm-gold-heading">Explore Neighbourhood - {propData.title}</h3>
-              <span className="pdm-gold-bar" />
+            {propData.neighbourhood.length > 0 && (
+              <div className="pdm-card">
+                <h3 className="pdm-gold-heading">Explore Neighbourhood - {propData.title}</h3>
+                <span className="pdm-gold-bar" />
 
-              <div className="pdm-neighbour-grid">
-                {propData.neighbourhood.map((item, i) => (
-                  <div key={i} className="pdm-neighbour-card">
-                    <span className="pdm-nb-name">{item.name}</span>
-                    <span className="pdm-nb-dist">{item.dist}</span>
-                  </div>
-                ))}
+                <div className="pdm-neighbour-grid">
+                  {propData.neighbourhood.map((item, i) => (
+                    <div key={i} className="pdm-neighbour-card">
+                      <span className="pdm-nb-name">{item.name}</span>
+                      <span className="pdm-nb-dist">{item.dist}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* =================================================================
                 SERIAL 8: LOCATION MAP (Matches Image 8)
                ================================================================= */}
-            <div className="pdm-card">
-              <p className="pdm-map-address">
-                <strong>Location:</strong> {propData.fullAddress}
-              </p>
-              <div className="pdm-map-wrap">
-                <iframe
-                  title="Google Map Location"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(propData.fullAddress)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                  loading="lazy"
-                />
+            {propData.fullAddress && (
+              <div className="pdm-card">
+                <p className="pdm-map-address">
+                  <strong>Location:</strong> {propData.fullAddress}
+                </p>
+                <div className="pdm-map-wrap">
+                  <iframe
+                    title="Google Map Location"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(propData.fullAddress)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    loading="lazy"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -1422,11 +1519,87 @@ const PropertyDetailsMain = () => {
             </div>
             <div className="pdm-modal-body">
               <p>Enter your email or phone to receive the high-resolution architectural plans and pricing breakdown for <strong>{propData.title}</strong>.</p>
-              <form onSubmit={(e) => { e.preventDefault(); alert("Brochure has been sent to your details!"); setBrochureModalOpen(false); }}>
-                <input type="text" placeholder="Your Name" required className="pdm-modal-input" />
-                <input type="tel" placeholder="Your Phone Number" required className="pdm-modal-input" />
-                <button type="submit" className="pdm-btn-teal" style={{ width: "100%", marginTop: "12px" }}>
-                  Download Now
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!brochureForm.name.trim() || !brochureForm.phone.trim()) return;
+                  setBrochureSubmitting(true);
+                  try {
+                    await fetch(API_ENDPOINTS.LEADS, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        propertyId: propData.id,
+                        propertySlug: propData.slug || targetIdOrSlug,
+                        propertyTitle: propData.title,
+                        name: brochureForm.name.trim(),
+                        phone: brochureForm.phone.trim(),
+                        email: brochureForm.email.trim(),
+                        source: "Brochure Download",
+                        type: "Hot",
+                        status: "New",
+                        enquiry: propData.title ? `Brochure: ${propData.title}` : "Brochure Download",
+                        notes: `Requested Official Brochure Download for ${propData.title}`,
+                      }),
+                    });
+
+                    if (propData.brochurePdf) {
+                      const downloadUrl = `${API_ENDPOINTS.PROPERTIES}/${propData.slug || propData.id}/brochure`;
+                      const a = document.createElement("a");
+                      a.href = downloadUrl;
+                      a.setAttribute(
+                        "download",
+                        `${(propData.slug || propData.title || "property")
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")}-brochure.pdf`
+                      );
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                    } else {
+                      alert("Thank you! Brochure PDF is not uploaded yet; our team will send it to your phone/email shortly.");
+                    }
+
+                    setBrochureForm({ name: "", phone: "", email: "" });
+                    setBrochureModalOpen(false);
+                  } catch (err) {
+                    console.error("Brochure submit error:", err);
+                    alert("Something went wrong. Please try again.");
+                  } finally {
+                    setBrochureSubmitting(false);
+                  }
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Your Name *"
+                  required
+                  value={brochureForm.name}
+                  onChange={(e) => setBrochureForm({ ...brochureForm, name: e.target.value })}
+                  className="pdm-modal-input"
+                />
+                <input
+                  type="tel"
+                  placeholder="Your Phone Number *"
+                  required
+                  value={brochureForm.phone}
+                  onChange={(e) => setBrochureForm({ ...brochureForm, phone: e.target.value })}
+                  className="pdm-modal-input"
+                />
+                <input
+                  type="email"
+                  placeholder="Your Email (Optional)"
+                  value={brochureForm.email}
+                  onChange={(e) => setBrochureForm({ ...brochureForm, email: e.target.value })}
+                  className="pdm-modal-input"
+                />
+                <button
+                  type="submit"
+                  className="pdm-btn-teal"
+                  disabled={brochureSubmitting}
+                  style={{ width: "100%", marginTop: "12px" }}
+                >
+                  {brochureSubmitting ? "Processing..." : "Download Now"}
                 </button>
               </form>
             </div>

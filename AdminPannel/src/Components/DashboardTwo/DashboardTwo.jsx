@@ -69,19 +69,36 @@ const DashboardTwoCounter = ({ value, duration = 1600 }) => {
 }
 
 /* ---------- Enquiry overview (line chart) ---------- */
-/* One value per label so every point sits exactly on its month */
-const RANGES = {
-  3: { label: 'Last 3 Months', labels: ['Sep', 'Oct', 'Nov'], values: [66, 82, 96] },
-  6: {
-    label: 'Last 6 Months',
-    labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-    values: [28, 44, 56, 52, 78, 96],
-  },
-  12: {
-    label: 'Last 12 Months',
-    labels: ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-    values: [14, 20, 18, 28, 36, 31, 44, 52, 64, 72, 85, 96],
-  },
+const RANGE_META = {
+  3: 'Last 3 Months',
+  6: 'Last 6 Months',
+  12: 'Last 12 Months',
+}
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const buildMonthlySeries = (items, monthsCount) => {
+  const now = new Date()
+  const buckets = []
+  for (let i = monthsCount - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    buckets.push({
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      label: MONTH_NAMES[d.getMonth()],
+      count: 0,
+    })
+  }
+  items.forEach((item) => {
+    if (!item?.createdAt) return
+    const dt = new Date(item.createdAt)
+    if (isNaN(dt.getTime())) return
+    const match = buckets.find((b) => b.year === dt.getFullYear() && b.month === dt.getMonth())
+    if (match) match.count += 1
+  })
+  return {
+    labels: buckets.map((b) => b.label),
+    values: buckets.map((b) => b.count),
+  }
 }
 
 /* Smooth curve through points (Catmull-Rom → Bézier) */
@@ -127,12 +144,12 @@ const DashboardTwoRangeSelect = ({ value, onChange }) => {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span>{RANGES[value].label}</span>
+        <span>{RANGE_META[value]}</span>
         <ChevronDown />
       </button>
       {open && (
         <ul className="DashboardTwo__selectMenu" role="listbox">
-          {Object.keys(RANGES).map((k) => (
+          {Object.keys(RANGE_META).map((k) => (
             <li key={k}>
               <button
                 type="button"
@@ -144,7 +161,7 @@ const DashboardTwoRangeSelect = ({ value, onChange }) => {
                   setOpen(false)
                 }}
               >
-                {RANGES[k].label}
+                {RANGE_META[k]}
                 {String(value) === k && <CheckIcon />}
               </button>
             </li>
@@ -155,7 +172,7 @@ const DashboardTwoRangeSelect = ({ value, onChange }) => {
   )
 }
 
-const DashboardTwoChart = () => {
+const DashboardTwoChart = ({ enquiries = [], leads = [] }) => {
   const [range, setRange] = useState(6)
   const [width, setWidth] = useState(520)
   const [active, setActive] = useState(null)
@@ -175,13 +192,17 @@ const DashboardTwoChart = () => {
     return () => ro.disconnect()
   }, [])
 
-  const { labels, values } = RANGES[range]
+  const { labels, values } = useMemo(
+    () => buildMonthlySeries([...enquiries, ...leads], range),
+    [enquiries, leads, range]
+  )
   const H = 280
   /* top padding leaves room for the tooltip inside the chart area */
   const pad = { l: 40, r: 26, t: 56, b: 30 }
   const innerW = width - pad.l - pad.r
   const innerH = H - pad.t - pad.b
-  const max = 100
+  const max = Math.ceil(Math.max(10, ...values) / 5) * 5
+  const ticks = [0, Math.round(max * 0.25), Math.round(max * 0.5), Math.round(max * 0.75), max]
 
   const pts = useMemo(
     () =>
@@ -198,7 +219,6 @@ const DashboardTwoChart = () => {
   const line = smoothPath(pts)
   const baseY = pad.t + innerH
   const area = `${line} L${pts[pts.length - 1].x},${baseY} L${pts[0].x},${baseY} Z`
-  const ticks = [0, 20, 40, 60, 80, 100]
   const idx = active === null ? pts.length - 1 : active
   const cur = pts[idx]
   const compact = width < 420 && labels.length > 6
@@ -339,15 +359,14 @@ const DashboardTwoChart = () => {
 }
 
 /* ---------- Property status (donut) ---------- */
-const STATUS = [
-  { id: 'sale', label: 'For Sale', value: 118, color: '#1f9a55' },
-  { id: 'rent', label: 'For Rent', value: 62, color: '#1d9bf0' },
-  { id: 'sold', label: 'Sold', value: 38, color: '#fbc531' },
-  { id: 'rented', label: 'Rented', value: 30, color: '#a259f7' },
-]
-
-const DashboardTwoStatus = () => {
-  const total = STATUS.reduce((s, i) => s + i.value, 0)
+const DashboardTwoStatus = ({ summary }) => {
+  const statusItems = [
+    { id: 'active', label: 'Active', value: summary?.activeProps ?? 0, color: '#1f9a55' },
+    { id: 'featured', label: 'Featured', value: summary?.featuredProps ?? 0, color: '#1d9bf0' },
+    { id: 'draft', label: 'Draft / Pending', value: summary?.draftProps ?? 0, color: '#fbc531' },
+    { id: 'best', label: 'Best Property', value: summary?.bestProps ?? 0, color: '#a259f7' },
+  ]
+  const total = statusItems.reduce((s, i) => s + i.value, 0)
   const R = 72
   const C = 2 * Math.PI * R
   const gap = 3
@@ -360,13 +379,13 @@ const DashboardTwoStatus = () => {
   }, [])
 
   let offset = 0
-  const segs = STATUS.map((s) => {
-    const len = (s.value / total) * C
+  const segs = statusItems.map((s) => {
+    const len = total > 0 ? (s.value / total) * C : 0
     const seg = { ...s, len, offset }
     offset += len
     return seg
   })
-  const hovered = STATUS.find((s) => s.id === hover)
+  const hovered = statusItems.find((s) => s.id === hover)
 
   return (
     <section className="DashboardTwo__panel DashboardTwo__status">
@@ -404,14 +423,14 @@ const DashboardTwoStatus = () => {
           </svg>
           <div className="DashboardTwo__donutCenter">
             <strong className="DashboardTwo__donutValue">
-              <DashboardTwoCounter value={hovered ? hovered.value : total} duration={hovered ? 500 : 1600} />
+              <DashboardTwoCounter value={hovered ? hovered.value : (summary?.totalProperties ?? total)} duration={hovered ? 500 : 1600} />
             </strong>
             <span className="DashboardTwo__donutLabel">{hovered ? hovered.label : 'Total'}</span>
           </div>
         </div>
 
         <ul className="DashboardTwo__legend">
-          {STATUS.map((s) => (
+          {statusItems.map((s) => (
             <li
               key={s.id}
               className={`DashboardTwo__legendItem ${hover === s.id ? 'is-hover' : ''}`}
@@ -509,11 +528,11 @@ const DashboardTwoPromo = ({ onAddProperty }) => (
 )
 
 /* ---------- Main ---------- */
-const DashboardTwo = ({ onAddProperty }) => {
+const DashboardTwo = ({ enquiries = [], leads = [], summary, onAddProperty }) => {
   return (
     <div className="DashboardTwo">
-      <DashboardTwoChart />
-      <DashboardTwoStatus />
+      <DashboardTwoChart enquiries={enquiries} leads={leads} />
+      <DashboardTwoStatus summary={summary} />
       <DashboardTwoPromo onAddProperty={onAddProperty} />
     </div>
   )

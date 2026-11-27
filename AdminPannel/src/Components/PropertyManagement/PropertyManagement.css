@@ -208,6 +208,8 @@
 .PropertyManagement-status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: block; }
 .PropertyManagement-status--active { color: #166534; background: #d4f4dd; }
 .PropertyManagement-status--active i { background: #16a34a; }
+.PropertyManagement-status--draft { color: #475569; background: #f1f5f9; }
+.PropertyManagement-status--draft i { background: #64748b; }
 .PropertyManagement-status--pending { color: #9a5b00; background: #fdeccb; }
 .PropertyManagement-status--pending i { background: #f59e0b; }
 .PropertyManagement-status--inactive { color: #b91c1c; background: #fde0e0; }

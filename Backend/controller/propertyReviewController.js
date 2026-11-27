@@ -5,22 +5,26 @@ const Property = require("../model/Property");
 // @route   POST /api/property-reviews
 const createReview = async (req, res) => {
   try {
-    const { propertyId, propertySlug, propertyTitle, name, email, phone, rating, comment } = req.body;
+    const { propertyId, propertySlug, propertyTitle, name, email, phone, rating, comment, type = "Review" } = req.body;
+    const isBrochure = type === "Brochure";
 
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: "Please provide your name" });
     }
-    if (!email || !email.trim()) {
+    if (!isBrochure && (!email || !email.trim())) {
       return res.status(400).json({ success: false, message: "Please provide your email address" });
     }
-    if (!comment || !comment.trim()) {
+    if (isBrochure && (!phone || !phone.trim()) && (!email || !email.trim())) {
+      return res.status(400).json({ success: false, message: "Please provide your phone number or email" });
+    }
+    if (!isBrochure && (!comment || !comment.trim())) {
       return res.status(400).json({ success: false, message: "Please write a review comment" });
     }
     if (!propertySlug && !propertyId) {
       return res.status(400).json({ success: false, message: "Property identification is missing" });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanEmail = email ? email.toLowerCase().trim() : "";
     const cleanSlug = (propertySlug || "").toLowerCase().trim();
 
     // Check for existing property to resolve both ID and slug
@@ -36,24 +40,27 @@ const createReview = async (req, res) => {
     const finalPropId = propDoc ? propDoc._id : (propertyId && /^[a-f\d]{24}$/i.test(propertyId) ? propertyId : undefined);
     const finalTitle = propertyTitle || (propDoc ? propDoc.title : "Property");
 
-    // Prevent duplicacy: Check if this user (email) has already submitted a review for this property
-    const query = {
-      email: cleanEmail,
-      $or: [
-        { propertySlug: finalSlug },
-        ...(finalPropId ? [{ property: finalPropId }] : []),
-      ],
-    };
+    // Prevent duplicacy only for actual Reviews (allow multiple brochure downloads)
+    if (!isBrochure && cleanEmail) {
+      const query = {
+        email: cleanEmail,
+        type: { $ne: "Brochure" },
+        $or: [
+          { propertySlug: finalSlug },
+          ...(finalPropId ? [{ property: finalPropId }] : []),
+        ],
+      };
 
-    const existing = await PropertyReview.findOne(query);
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already submitted a review for this property.",
-      });
+      const existing = await PropertyReview.findOne(query);
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: "You have already submitted a review for this property.",
+        });
+      }
     }
 
-    // Create review with Draft status
+    // Create review / brochure lead with Draft status
     const review = await PropertyReview.create({
       property: finalPropId,
       propertySlug: finalSlug,
@@ -62,13 +69,16 @@ const createReview = async (req, res) => {
       email: cleanEmail,
       phone: phone ? phone.trim() : "",
       rating: Math.max(1, Math.min(5, Number(rating) || 5)),
-      comment: comment.trim(),
+      comment: comment ? comment.trim() : `Brochure Download Request for ${finalTitle}`,
+      type: isBrochure ? "Brochure" : "Review",
       status: "Draft", // Always goes to draft first
     });
 
     res.status(201).json({
       success: true,
-      message: "Thank you! Your review has been submitted and is currently pending admin verification.",
+      message: isBrochure
+        ? "Brochure request recorded! Starting download..."
+        : "Thank you! Your review has been submitted and is currently pending admin verification.",
       data: review,
     });
   } catch (error) {

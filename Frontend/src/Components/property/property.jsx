@@ -12,20 +12,83 @@ import img4 from "../../assets/property-listing-4.jpg";
 const IMAGES = [img1, img2, img3, img4];
 const rotate = (arr, n) => arr.map((_, i) => arr[(i + n) % arr.length]);
 
-/* ---------- Indian Rupee (INR) formatter ---------- */
+/* ---------- Indian Rupee (INR) formatter (Full Real Price, No Lac/Cr) ---------- */
 const formatINR = (amount) => {
   if (!amount || isNaN(amount)) return "Price on Request";
-  if (amount >= 10000000) {
-    return `₹ ${(amount / 10000000).toFixed(2)} Cr`;
+  return `₹ ${Number(amount).toLocaleString("en-IN")}`;
+};
+
+/* ---------- Smart Amenity Matcher ---------- */
+const matchAmenity = (propAmenity, targetAmenity) => {
+  if (!propAmenity || !targetAmenity) return false;
+
+  const normalize = (s) =>
+    String(s)
+      .toLowerCase()
+      .replace(/[\u2018\u2019']/g, "")
+      .replace(/[^a-z0-9]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const p = normalize(propAmenity);
+  const t = normalize(targetAmenity);
+
+  if (p === t) return true;
+  if (p.includes(t) || t.includes(p)) return true;
+
+  // Pool synonyms (Swimming Pool, Infinity Pool, Kids Pool)
+  if (t.includes("pool") && p.includes("pool")) return true;
+
+  // Gym / Fitness
+  if (
+    (t.includes("gym") || t.includes("fitness")) &&
+    (p.includes("gym") || p.includes("fitness"))
+  ) {
+    return true;
   }
-  if (amount >= 100000) {
-    return `₹ ${(amount / 100000).toFixed(2)} Lac`;
+
+  // Play Area (Kids Play Area, Children Play Area)
+  if (
+    (t.includes("play") || t.includes("kids") || t.includes("children")) &&
+    (p.includes("play") || p.includes("kids") || p.includes("children"))
+  ) {
+    return true;
   }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+
+  // Security (24x7 Security, 24/7 Security, Security, Guard)
+  if (t.includes("security") && p.includes("security")) return true;
+
+  // Clubhouse / Club House
+  if (t.includes("club") && p.includes("club")) return true;
+
+  // Power backup
+  if (t.includes("power") && p.includes("power")) return true;
+
+  // Lift / Elevator
+  if (
+    (t.includes("lift") || t.includes("elevator")) &&
+    (p.includes("lift") || p.includes("elevator"))
+  ) {
+    return true;
+  }
+
+  // Parking
+  if (
+    t.includes("parking") &&
+    (p.includes("parking") || p.includes("garage"))
+  ) {
+    return true;
+  }
+
+  // Garden / Lawn
+  if (
+    (t.includes("garden") || t.includes("lawn")) &&
+    (p.includes("garden") || p.includes("lawn"))
+  ) {
+    return true;
+  }
+
+  return false;
 };
 
 const FILTERS = [
@@ -233,7 +296,8 @@ const Property = () => {
   const [maxSqft, setMaxSqft] = useState("");
   const [sort, setSort] = useState("Newest listings");
   const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(true);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   // Fetch properties from Database API
   useEffect(() => {
@@ -292,13 +356,13 @@ const Property = () => {
           : `${p.bathrooms} Baths`
         : "3 Baths";
 
-      const sqft = p.superArea
+      const sqft = p.superArea && String(p.superArea).trim()
         ? String(p.superArea).toLowerCase().includes("sq")
-          ? p.superArea
-          : `${p.superArea} Sqft`
-        : p.projectArea
-        ? `${p.projectArea}`
-        : "1,850 Sqft";
+          ? String(p.superArea).trim()
+          : `${String(p.superArea).trim()} Sqft`
+        : p.projectArea && String(p.projectArea).trim()
+        ? String(p.projectArea).trim()
+        : "—";
 
       return {
         id: p._id,
@@ -322,6 +386,89 @@ const Property = () => {
     });
   }, [properties]);
 
+  // Extract distinct locations for left sidebar filter
+  const locationOptions = useMemo(() => {
+    const locSet = new Set();
+    const defaults = [
+      "Patia",
+      "Hanspal",
+      "Kalarahanga",
+      "Raghunathpur",
+      "Khandagiri",
+      "Chandrasekharpur",
+      "Jaydev Vihar",
+      "Nayapalli",
+      "Sundarpada",
+      "Bhubaneswar",
+      "Cuttack",
+    ];
+
+    // Extract localities from loaded properties
+    formattedProperties.forEach((p) => {
+      if (!p.address) return;
+      const parts = p.address.split(",").map((s) => s.trim()).filter(Boolean);
+      parts.forEach((part) => {
+        const clean = part.replace(/^(near|opposite|beside|at)\s+/i, "").trim();
+        if (clean.length >= 3 && clean.length <= 25) {
+          locSet.add(clean);
+        }
+      });
+    });
+
+    defaults.forEach((d) => locSet.add(d));
+    return ["All Locations", ...Array.from(locSet)];
+  }, [formattedProperties]);
+
+  // Dynamic filter definitions
+  const dynamicFilters = useMemo(
+    () => [
+      { key: "location", label: "All Locations", options: locationOptions },
+      { key: "status", label: "All Status", options: ["All Status", "Active", "Under Construction", "Ready to Move", "Upcoming"] },
+      { key: "type", label: "Home Type", options: ["Home Type", "Apartment", "Villa", "Independent House", "Penthouse", "Plot", "Commercial"] },
+      { key: "category", label: "Category", options: ["Category", "Residential", "Commercial", "Industrial"] },
+      { key: "beds", label: "BHK", options: ["BHK", "1 BHK", "2 BHK", "3 BHK", "4+ BHK"] },
+    ],
+    [locationOptions]
+  );
+
+  // Distinct amenities across all properties
+  const allAmenities = useMemo(() => {
+    const baseAmenities = [
+      "Swimming Pool",
+      "Club House",
+      "Gym",
+      "Kids' Play Area",
+      "24x7 Security",
+      "EV Charging",
+      "Vastu Compliant",
+      "Power Backup",
+      "Lift",
+      "Reserved Parking",
+      "Private Garden",
+      "Temple",
+      "Multipurpose Hall",
+      "Intercom",
+      "Tennis Court",
+      "Jogging Track",
+    ];
+
+    const set = new Set(baseAmenities);
+    formattedProperties.forEach((p) => {
+      if (Array.isArray(p.amenities)) {
+        p.amenities.forEach((a) => {
+          if (a && typeof a === "string" && a.trim().length > 1) {
+            const exists = Array.from(set).some((item) => matchAmenity(item, a));
+            if (!exists) {
+              set.add(a.trim());
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(set);
+  }, [formattedProperties]);
+
   // Client-side filtering & sorting
   const filteredProperties = useMemo(() => {
     return formattedProperties
@@ -332,6 +479,14 @@ const Property = () => {
           const matchAddr = p.address.toLowerCase().includes(q);
           const matchType = p.propertyType.toLowerCase().includes(q);
           if (!matchTitle && !matchAddr && !matchType) return false;
+        }
+
+        // Location filter
+        if (filters.location && filters.location !== "All Locations") {
+          const loc = filters.location.toLowerCase();
+          const addr = (p.address || "").toLowerCase();
+          const title = (p.title || "").toLowerCase();
+          if (!addr.includes(loc) && !title.includes(loc)) return false;
         }
 
         if (filters.status && filters.status !== "All Status") {
@@ -351,15 +506,23 @@ const Property = () => {
           if (num && !p.beds.includes(num)) return false;
         }
 
+        // Sqft range filter
+        if (minSqft || maxSqft) {
+          const numSqft = parseInt(String(p.sqft).replace(/[^\d]/g, ""), 10) || 0;
+          if (minSqft && numSqft > 0 && numSqft < Number(minSqft)) return false;
+          if (maxSqft && numSqft > 0 && numSqft > Number(maxSqft)) return false;
+        }
+
         const minP = parsePriceVal(minPrice);
         if (minP > 0 && p.price > 0 && p.price < minP) return false;
 
         const maxP = parsePriceVal(maxPrice);
         if (maxP > 0 && p.price > 0 && p.price > maxP) return false;
 
+        // Amenities filter with smart matching
         if (selectedAmenities.length > 0) {
-          const hasAll = selectedAmenities.every((amenity) =>
-            p.amenities.some((a) => a.toLowerCase().includes(amenity.toLowerCase()))
+          const hasAll = selectedAmenities.every((targetAmenity) =>
+            p.amenities.some((a) => matchAmenity(a, targetAmenity))
           );
           if (!hasAll) return false;
         }
@@ -371,17 +534,10 @@ const Property = () => {
         if (sort === "Price: High to Low") return b.price - a.price;
         return b.createdAt - a.createdAt;
       });
-  }, [formattedProperties, query, filters, minPrice, maxPrice, selectedAmenities, sort]);
+  }, [formattedProperties, query, filters, minPrice, maxPrice, minSqft, maxSqft, selectedAmenities, sort]);
 
   return (
     <section className="pl">
-      <header className="pl-hero">
-        <h1>Properties &amp; Real Estate in Odisha</h1>
-        <nav aria-label="Breadcrumb">
-          <Link to="/">Home</Link> <span>/</span> <em>Property List</em>
-        </nav>
-      </header>
-
       <div className="pl-layout">
         {/* ---------- sidebar ---------- */}
         <aside className="pl-side">
@@ -396,7 +552,7 @@ const Property = () => {
               <IconSearch />
             </label>
 
-            {FILTERS.map((f) => (
+            {dynamicFilters.map((f) => (
               <Select
                 key={f.key}
                 label={f.label}
@@ -438,38 +594,65 @@ const Property = () => {
               />
             </div>
 
-            <button
-              type="button"
-              className={`pl-more ${moreOpen ? "is-open" : ""}`}
-              onClick={() => setMoreOpen(!moreOpen)}
-              aria-expanded={moreOpen}
-            >
-              <span className="pl-more__icon"><IconPlus /></span>
-              Amenities &amp; Features
-            </button>
+            <div className="pl-amenities-header">
+              <button
+                type="button"
+                className={`pl-more ${moreOpen ? "is-open" : ""}`}
+                onClick={() => setMoreOpen(!moreOpen)}
+                aria-expanded={moreOpen}
+              >
+                <span className="pl-more__icon"><IconPlus /></span>
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  Amenities &amp; Features
+                  {selectedAmenities.length > 0 && (
+                    <span className="pl-amenity-pill">{selectedAmenities.length}</span>
+                  )}
+                </span>
+              </button>
+
+              {selectedAmenities.length > 0 && (
+                <button
+                  type="button"
+                  className="pl-clear-link"
+                  onClick={() => setSelectedAmenities([])}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
 
             <div className={`pl-features ${moreOpen ? "is-open" : ""}`}>
               <div>
-                {[
-                  "Swimming Pool",
-                  "Club House",
-                  "Gym",
-                  "Kids' Play Area",
-                  "EV Charging",
-                  "Vastu Compliant",
-                  "Power Backup",
-                  "24x7 Security",
-                ].map((x) => (
-                  <label key={x} className="pl-check">
-                    <input
-                      type="checkbox"
-                      checked={selectedAmenities.includes(x)}
-                      onChange={() => toggleAmenity(x)}
-                    />
-                    <span>{x}</span>
-                  </label>
-                ))}
+                {(showAllAmenities ? allAmenities : allAmenities.slice(0, 8)).map((x) => {
+                  const matchCount = formattedProperties.filter((p) =>
+                    p.amenities.some((a) => matchAmenity(a, x))
+                  ).length;
+
+                  return (
+                    <label key={x} className="pl-check" title={`${x} (${matchCount} properties)`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedAmenities.includes(x)}
+                        onChange={() => toggleAmenity(x)}
+                      />
+                      <span className="pl-check-text">{x}</span>
+                      {matchCount > 0 && (
+                        <span className="pl-check-count">({matchCount})</span>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
+
+              {allAmenities.length > 8 && (
+                <button
+                  type="button"
+                  className="pl-show-more-amenities"
+                  onClick={() => setShowAllAmenities(!showAllAmenities)}
+                >
+                  {showAllAmenities ? "Show Fewer Amenities" : `+ ${allAmenities.length - 8} More Amenities`}
+                </button>
+              )}
             </div>
 
             <button

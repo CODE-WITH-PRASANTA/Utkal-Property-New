@@ -14,19 +14,10 @@ import { FaUser } from "react-icons/fa";
 
 import "./Login.css";
 import brandLogo from "../../assets/admin.jpg";
+import { API_ENDPOINTS } from "../../config/api";
+import { getAuthToken, isJwtExpired, setAuthSession } from "../../config/auth";
 
-const AUTH_KEY = "isAdminAuthenticated";
-const DEMO_USER = "Utkal";
-const DEMO_PASS = "12345";
 const BRAND_NAME = "Utkal Property";
-
-const authenticate = async (identifier, password) => {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return (
-    identifier.trim().toLowerCase() === DEMO_USER.toLowerCase() &&
-    password === DEMO_PASS
-  );
-};
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -38,6 +29,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState("Admin");
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
 
@@ -50,12 +42,10 @@ const Login = () => {
       ? location.state.from.pathname
       : "/";
 
-  // Skip login if already authenticated
+  // Skip login if already authenticated with a valid JWT
   useEffect(() => {
-    const remembered = localStorage.getItem(AUTH_KEY) === "true";
-    if (remembered) sessionStorage.setItem(AUTH_KEY, "true");
-
-    if (sessionStorage.getItem(AUTH_KEY) === "true") {
+    const token = getAuthToken();
+    if (token && !isJwtExpired(token)) {
       navigate(destination, { replace: true });
     }
   }, [navigate, destination]);
@@ -85,24 +75,33 @@ const Login = () => {
     setInfoMessage("");
 
     try {
-      const ok = await authenticate(formData.identifier, formData.password);
+      const response = await fetch(`${API_ENDPOINTS.AUTH}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: formData.identifier.trim(),
+          password: formData.password,
+        }),
+      });
 
-      if (!ok) {
-        setErrorMessage("Incorrect username or password. Please try again.");
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success || !data?.token) {
+        setErrorMessage(
+          data?.message || "Incorrect User ID or password. Please try again."
+        );
         return;
       }
 
-      sessionStorage.setItem(AUTH_KEY, "true");
-      if (formData.rememberMe) {
-        localStorage.setItem(AUTH_KEY, "true");
-      } else {
-        localStorage.removeItem(AUTH_KEY);
-      }
-
+      setAuthSession(data.token, data.admin, formData.rememberMe);
+      setLoggedInUser(data.admin?.userId || formData.identifier.trim());
       setIsSuccess(true);
+
       redirectTimer.current = setTimeout(() => {
         navigate(destination, { replace: true });
-      }, 1200);
+      }, 900);
     } catch (err) {
       setErrorMessage("Something went wrong. Check your connection and try again.");
     } finally {
@@ -124,7 +123,7 @@ const Login = () => {
             <div className="Login-success-icon-wrapper">
               <FiCheckCircle size={74} className="Login-success-icon" />
             </div>
-            <h2 className="Login-success-title">Welcome back, {DEMO_USER}</h2>
+            <h2 className="Login-success-title">Welcome back, {loggedInUser}</h2>
             <p className="Login-success-subtitle">
               Signing you in to {BRAND_NAME} Admin Panel
             </p>
@@ -210,8 +209,8 @@ const Login = () => {
               <input
                 type="text"
                 name="identifier"
-                placeholder="Username (Utkal)"
-                aria-label="Username"
+                placeholder="User ID"
+                aria-label="User ID"
                 value={formData.identifier}
                 onChange={handleChange}
                 autoComplete="username"

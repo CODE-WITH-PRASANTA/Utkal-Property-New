@@ -7,6 +7,7 @@ import {
   FiTrash2, FiUser, FiPhone, FiX, FiCheck, FiAlertTriangle, FiInbox, FiInfo,
 } from 'react-icons/fi'
 import './RentManagement.css'
+import { API_ENDPOINTS, getMediaUrl } from '../../config/api'
 
 /* ------------------------------------------------------------------ */
 /*  Constants & helpers                                               */
@@ -37,69 +38,14 @@ const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDat
 const shiftDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return toISO(d) }
 const formatDate = (iso) => {
   if (!iso) return '—'
-  const [y, m, d] = iso.split('-')
-  return `${d} ${MONTHS[Number(m) - 1]} ${y}`
+  const [y, m, d] = String(iso).split('-')
+  return `${d} ${MONTHS[Number(m) - 1] || m} ${y}`
 }
-const formatRent = (n) => `₹ ${Number(n).toLocaleString('en-IN')} / Month`
-
-/* ------------------------------------------------------------------ */
-/*  Sample data (64 listings: 18 requests, 25 rented, 14 available)   */
-/* ------------------------------------------------------------------ */
-const SEED = [
-  ['2 BHK Apartment', 'Ramesh Patra', '+91 98612 34567', 'Apartment', 18000, '2026-11-17', 'Available', 'Bhubaneswar'],
-  ['3 BHK Villa', 'Sneha Mohanty', '+91 93456 78901', 'Villa', 45000, '2026-11-16', 'Request', 'Bhubaneswar'],
-  ['Independent House', 'Amit Kumar', '+91 91234 56789', 'House', 25000, '2026-11-15', 'Rented', 'Cuttack'],
-  ['Commercial Space', 'Priya Das', '+91 72053 01234', 'Commercial', 60000, '2026-11-14', 'Available', 'Bhubaneswar'],
-  ['1 BHK Flat', 'Binay Jena', '+91 87654 32109', 'Apartment', 12000, '2026-11-12', 'In Review', 'Puri'],
-  ['Residential Plot', 'Suman Nayak', '+91 94321 09876', 'Plot / Land', 30000, '2026-11-11', 'Available', 'Bhubaneswar'],
-  ['3 BHK Duplex', 'Piyush Rout', '+91 81123 45678', 'Duplex', 40000, '2026-11-10', 'Rented', 'Cuttack'],
-  ['Shop / Showroom', 'Madhusmita Pal', '+91 96543 21098', 'Shop', 75000, '2026-11-08', 'Available', 'Bhubaneswar'],
-  ['Office Space', 'Sagar Behera', '+91 70088 99001', 'Commercial', 50000, '2026-11-07', 'Request', 'Rourkela'],
-  ['2 BHK Flat', 'Kiran Patra', '+91 93456 11223', 'Apartment', 20000, '2026-11-05', 'Rented', 'Sambalpur'],
-]
-const FIRST = ['Anil', 'Sunita', 'Manas', 'Rashmi', 'Deepak', 'Smita', 'Bikash', 'Lipsa', 'Santosh', 'Jyoti', 'Prasant', 'Namita', 'Girija', 'Subrat', 'Chinmayee', 'Rakesh', 'Tapan', 'Kabita']
-const LAST = ['Mohapatra', 'Sahoo', 'Behera', 'Nayak', 'Mishra', 'Das', 'Panda', 'Swain', 'Rout', 'Biswal', 'Jena', 'Pattnaik']
-const TITLES = {
-  Apartment: ['1 BHK Flat', '2 BHK Flat', '3 BHK Apartment', 'Studio Apartment'],
-  Villa: ['3 BHK Villa', '4 BHK Villa', 'Luxury Villa'],
-  House: ['Independent House', '2 BHK House', 'Row House'],
-  Commercial: ['Commercial Space', 'Office Space', 'Co-working Floor'],
-  'Plot / Land': ['Residential Plot', 'Commercial Plot', 'Farm Land'],
-  Duplex: ['3 BHK Duplex', '4 BHK Duplex'],
-  Shop: ['Shop / Showroom', 'Retail Shop', 'Corner Shop'],
-}
-const RENT_BASE = { Apartment: [9000, 1500], Villa: [35000, 4000], House: [15000, 2500], Commercial: [40000, 5000], 'Plot / Land': [18000, 3000], Duplex: [28000, 3500], Shop: [30000, 6000] }
-
-const buildInitialData = () => {
-  const pool = [
-    ...Array(10).fill('Available'), ...Array(16).fill('Request'),
-    ...Array(22).fill('Rented'), ...Array(6).fill('In Review'),
-  ]
-  const tenantName = (k) => `${FIRST[(k * 5 + 2) % FIRST.length]} ${LAST[(k * 7 + 3) % LAST.length]}`
-  const rows = SEED.map((s, i) => ({
-    id: `RENT${String(i + 1).padStart(3, '0')}`,
-    title: s[0], owner: s[1], phone: s[2], type: s[3], rent: s[4], date: s[5], status: s[6], location: s[7],
-    tenant: s[6] === 'Rented' ? tenantName(i + 40) : '',
-  }))
-  for (let k = 0; k < 54; k += 1) {
-    const type = PROPERTY_TYPES[(k * 3 + 1) % 7]
-    const titles = TITLES[type]
-    const [base, step] = RENT_BASE[type]
-    const status = pool[(k * 17) % 54]
-    rows.push({
-      id: `RENT${String(k + 11).padStart(3, '0')}`,
-      title: titles[k % titles.length],
-      owner: `${FIRST[k % FIRST.length]} ${LAST[(k * 5 + 1) % LAST.length]}`,
-      phone: `+91 ${90000 + ((k * 7919) % 9999)} ${10000 + ((k * 3571) % 89999)}`,
-      type,
-      rent: base + ((k * 37) % 12) * step,
-      date: toISO(new Date(2026, 10, 4 - k)),
-      status,
-      location: LOCATIONS[(k * 5 + 2) % LOCATIONS.length],
-      tenant: status === 'Rented' ? tenantName(k) : '',
-    })
-  }
-  return rows
+const formatRent = (n) => (n ? `₹ ${Number(n).toLocaleString('en-IN')} / Month` : '—')
+const formatPhone = (raw) => {
+  const d = String(raw || '').replace(/\D/g, '').slice(-10)
+  if (d.length < 10) return raw || '—'
+  return `+91 ${d.slice(0, 5)} ${d.slice(5)}`
 }
 
 const getPageList = (current, total) => {
@@ -451,7 +397,8 @@ const PropertyForm = ({ initial, onSubmit, onCancel }) => {
 /*  Main component                                                    */
 /* ------------------------------------------------------------------ */
 const RentManagement = () => {
-  const [rows, setRows] = useState(buildInitialData)
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState(DEFAULT_FILTERS)
   const [applied, setApplied] = useState(DEFAULT_FILTERS)
   const [page, setPage] = useState(1)
@@ -470,6 +417,44 @@ const RentManagement = () => {
   }, [])
   useEffect(() => () => clearTimeout(toastTimer.current), [])
   const closeModal = useCallback(() => setModal(null), [])
+
+  const mapRentFromApi = (doc) => ({
+    id: doc._id,
+    displayId: `RN-${String(doc._id || '').slice(-5).toUpperCase()}`,
+    title: doc.title || 'Untitled Property',
+    owner: doc.ownerName || 'Owner',
+    phone: formatPhone(doc.phone),
+    email: doc.email || '',
+    type: doc.propertyType || 'Apartment',
+    rent: doc.rent || 0,
+    date: doc.availability || (doc.createdAt ? new Date(doc.createdAt).toISOString().slice(0, 10) : toISO(new Date())),
+    status: doc.status || 'Request',
+    location: doc.location || 'Bhubaneswar',
+    tenant: doc.tenant || '',
+    image: Array.isArray(doc.images) && doc.images.length > 0 ? getMediaUrl(doc.images[0]) : null,
+  })
+
+  const fetchRentListings = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_ENDPOINTS.SELL_RENT}?listingType=rent`)
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data)) {
+        setRows(json.data.map(mapRentFromApi))
+      } else {
+        setRows([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch rent listings:', err)
+      setRows([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchRentListings()
+  }, [fetchRentListings])
 
   /* ---- derived data ---- */
   const stats = useMemo(() => ({
@@ -516,32 +501,71 @@ const RentManagement = () => {
     return n
   })
 
-  const saveProperty = (values) => {
-    if (modal && modal.row) {
-      setRows((prev) => prev.map((r) => (r.id === modal.row.id ? { ...r, ...values } : r)))
-      showToast('Property updated successfully.')
-    } else {
-      const next = Math.max(0, ...rows.map((r) => parseInt(r.id.replace(/\D/g, ''), 10))) + 1
-      setRows((prev) => [{ ...values, id: `RENT${String(next).padStart(3, '0')}` }, ...prev])
-      setPage(1)
-      showToast('Rent property added successfully.')
+  const saveProperty = async (values) => {
+    try {
+      if (modal && modal.row) {
+        const res = await fetch(`${API_ENDPOINTS.SELL_RENT}/${modal.row.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, ownerName: values.owner, propertyType: values.type, availability: values.date }),
+        })
+        const json = await res.json()
+        if (!res.ok || !json.success) throw new Error(json.message || 'Update failed')
+        setRows((prev) => prev.map((r) => (r.id === modal.row.id ? mapRentFromApi(json.data) : r)))
+        showToast('Property updated successfully.')
+      } else {
+        const res = await fetch(API_ENDPOINTS.SELL_RENT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, listingType: 'rent', ownerName: values.owner, propertyType: values.type, availability: values.date }),
+        })
+        const json = await res.json()
+        if (!res.ok || !json.success) throw new Error(json.message || 'Create failed')
+        setRows((prev) => [mapRentFromApi(json.data), ...prev])
+        setPage(1)
+        showToast('Rent property added successfully.')
+      }
+      setModal(null)
+    } catch (err) {
+      showToast(err.message || 'Failed to save rent property.', 'error')
     }
-    setModal(null)
   }
 
-  const deleteRows = (ids) => {
-    const set = new Set(ids)
-    setRows((prev) => prev.filter((r) => !set.has(r.id)))
-    setSelected((prev) => { const n = new Set(prev); ids.forEach((id) => n.delete(id)); return n })
-    setModal(null)
-    showToast(ids.length > 1 ? `${ids.length} properties deleted.` : 'Property deleted.')
+  const deleteRows = async (ids) => {
+    try {
+      if (ids.length === 1) {
+        await fetch(`${API_ENDPOINTS.SELL_RENT}/${ids[0]}`, { method: 'DELETE' })
+      } else {
+        await fetch(`${API_ENDPOINTS.SELL_RENT}/bulk`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, action: 'delete' }),
+        })
+      }
+      const set = new Set(ids)
+      setRows((prev) => prev.filter((r) => !set.has(r.id)))
+      setSelected((prev) => { const n = new Set(prev); ids.forEach((id) => n.delete(id)); return n })
+      setModal(null)
+      showToast(ids.length > 1 ? `${ids.length} properties deleted.` : 'Property deleted.')
+    } catch {
+      showToast('Failed to delete property.', 'error')
+    }
   }
 
-  const onBulkAction = (key) => {
+  const onBulkAction = async (key) => {
     if (selected.size === 0) { showToast('Select at least one property first.', 'error'); return }
     if (key === 'delete') { setModal({ type: 'bulkDelete' }); return }
-    setRows((prev) => prev.map((r) => (selected.has(r.id) ? { ...r, status: key } : r)))
-    showToast(`${selected.size} ${selected.size > 1 ? 'properties' : 'property'} marked as ${key}.`)
+    try {
+      await fetch(`${API_ENDPOINTS.SELL_RENT}/bulk`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selected], status: key }),
+      })
+      setRows((prev) => prev.map((r) => (selected.has(r.id) ? { ...r, status: key } : r)))
+      showToast(`${selected.size} ${selected.size > 1 ? 'properties' : 'property'} marked as ${key}.`)
+    } catch {
+      showToast('Bulk update failed.', 'error')
+    }
   }
 
   const exportCsv = () => {
