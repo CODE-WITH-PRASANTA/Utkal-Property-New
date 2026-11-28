@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { API_ENDPOINTS } from "../../config/api";
 import "./Contact.css";
 
 /* ==========================================
@@ -189,6 +190,7 @@ const Contact = () => {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(null); // holds the data after submit
 
   const [cardsRef, cardsShown] = useReveal();
@@ -198,8 +200,9 @@ const Contact = () => {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
     if (!consent) {
       setError("Please tick the consent box to send your message.");
@@ -209,24 +212,43 @@ const Contact = () => {
     }
 
     setError("");
+    setSubmitting(true);
 
     const payload = {
-      ...form,
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
       message: form.message.trim(),
-      website: SITE_NAME,
-      submittedAt: new Date().toISOString(),
+      interest: "General Contact",
+      service: "General Contact",
+      source: "Contact Page",
     };
 
-    // TODO: send `payload` to your API here, e.g.
-    // await fetch("/api/contact", { method: "POST", body: JSON.stringify(payload) });
-    console.log("Contact form submitted:", payload);
+    try {
+      const response = await fetch(API_ENDPOINTS.ENQUIRY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    setSubmitted(payload);
-    setForm(EMPTY_FORM);
-    setConsent(false);
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success) {
+        setError(data?.message || "Failed to send your message. Please try again.");
+        return;
+      }
+
+      setSubmitted({
+        ...payload,
+        submittedAt: data.data?.createdAt || new Date().toISOString(),
+      });
+      setForm(EMPTY_FORM);
+      setConsent(false);
+    } catch (err) {
+      setError("Unable to reach the server. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const sendAnother = () => setSubmitted(null);
@@ -381,6 +403,7 @@ const Contact = () => {
                     value={form.phone}
                     onChange={handleChange}
                     autoComplete="tel"
+                    required
                   />
                 </div>
 
@@ -432,8 +455,8 @@ const Contact = () => {
                   </p>
                 )}
 
-                <button type="submit" className="Contact-submit">
-                  <span>Send Message</span>
+                <button type="submit" className="Contact-submit" disabled={submitting}>
+                  <span>{submitting ? "Sending..." : "Send Message"}</span>
                   <Icon name="arrow" />
                 </button>
               </form>

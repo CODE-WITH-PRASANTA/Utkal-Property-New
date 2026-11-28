@@ -14,78 +14,10 @@ const deleteFile = (url) => {
   }
 };
 
-const SEED_TEAM = [
-  {
-    name: "Rohit Kumar",
-    role: "Project Manager",
-    email: "rohit@utkalproperty.com",
-    phone: "+91 98612 34567",
-    joined: "2025-01-10",
-    status: "Active",
-    experience: "10+ Years",
-    bio: "Expert in luxury real estate development and project management across Bhubaneswar and Cuttack.",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=85",
-    facebook: "https://facebook.com",
-    twitter: "https://x.com",
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    name: "Priya Mohanty",
-    role: "Property Consultant",
-    email: "priya@utkalproperty.com",
-    phone: "+91 93456 78901",
-    joined: "2025-01-15",
-    status: "Active",
-    experience: "8+ Years",
-    bio: "Helping families and corporate clients discover prime properties and high-yield investments.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=85",
-    facebook: "https://facebook.com",
-    twitter: "https://x.com",
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    name: "Amit Das",
-    role: "Sales Executive",
-    email: "amit@utkalproperty.com",
-    phone: "+91 91234 56789",
-    joined: "2025-01-20",
-    status: "Active",
-    experience: "5+ Years",
-    bio: "Specializing in duplex homes, premium apartments, and commercial leasing.",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&auto=format&fit=crop&q=85",
-    facebook: "https://facebook.com",
-    twitter: "https://x.com",
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
-  },
-  {
-    name: "Anjali Sethi",
-    role: "Sales Manager",
-    email: "anjali@utkalproperty.com",
-    phone: "+91 98531 40762",
-    joined: "2025-02-15",
-    status: "Active",
-    experience: "7+ Years",
-    bio: "Driving customer satisfaction and guiding end-to-end property acquisitions.",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&auto=format&fit=crop&q=85",
-    facebook: "https://facebook.com",
-    twitter: "https://x.com",
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
-  },
-];
-
 // @desc    Get all team members
 // @route   GET /api/team
 const getMembers = async (req, res) => {
   try {
-    let count = await Team.countDocuments();
-    if (count === 0) {
-      await Team.insertMany(SEED_TEAM);
-    }
-
     const { role, status, search } = req.query;
     const filter = {};
 

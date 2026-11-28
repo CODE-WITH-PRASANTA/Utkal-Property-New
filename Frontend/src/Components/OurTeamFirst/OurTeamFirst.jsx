@@ -172,16 +172,14 @@ const OurTeamFirst = () => {
             </div>
           ) : (
             filteredMembers.map((member, index) => {
-              const memberImage = member.image
-                ? getMediaUrl(member.image)
-                : "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=900&auto=format&fit=crop&q=85";
+              const memberImage = member.image ? getMediaUrl(member.image) : "";
 
               const socials = [
-                { type: "facebook", label: "Facebook", url: member.facebook || "https://facebook.com" },
-                { type: "x", label: "Twitter / X", url: member.twitter || "https://x.com" },
-                { type: "instagram", label: "Instagram", url: member.instagram || "https://instagram.com" },
-                { type: "linkedin", label: "LinkedIn", url: member.linkedin || "https://linkedin.com" },
-              ];
+                { type: "facebook", label: "Facebook", url: member.facebook },
+                { type: "x", label: "Twitter / X", url: member.twitter },
+                { type: "instagram", label: "Instagram", url: member.instagram },
+                { type: "linkedin", label: "LinkedIn", url: member.linkedin },
+              ].filter((s) => Boolean(s.url));
 
               return (
                 <article
@@ -196,16 +194,29 @@ const OurTeamFirst = () => {
                       </span>
                     )}
 
-                    <img
-                      src={memberImage}
-                      alt={member.name}
-                      className="our-team-first-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=900&auto=format&fit=crop&q=85";
-                      }}
-                    />
+                    {memberImage ? (
+                      <img
+                        src={memberImage}
+                        alt={member.name}
+                        className="our-team-first-image"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="our-team-first-image"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#e2e8f0",
+                          color: "#64748b",
+                          fontSize: "3rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {member.name ? member.name.charAt(0).toUpperCase() : "U"}
+                      </div>
+                    )}
 
                     <div className="our-team-first-image-overlay"></div>
 

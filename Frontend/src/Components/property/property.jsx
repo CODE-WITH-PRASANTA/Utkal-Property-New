@@ -375,7 +375,7 @@ const Property = () => {
         best: Boolean(p.isBestProperty),
         price: p.price || 0,
         formattedPrice: priceFormatted,
-        address: p.location || "Patia, Bhubaneswar, Odisha",
+        address: p.location ? p.location.trim() : "",
         beds,
         baths,
         sqft,
@@ -386,37 +386,28 @@ const Property = () => {
     });
   }, [properties]);
 
-  // Extract distinct locations for left sidebar filter
+  // Extract distinct locations dynamically from loaded properties only
   const locationOptions = useMemo(() => {
-    const locSet = new Set();
-    const defaults = [
-      "Patia",
-      "Hanspal",
-      "Kalarahanga",
-      "Raghunathpur",
-      "Khandagiri",
-      "Chandrasekharpur",
-      "Jaydev Vihar",
-      "Nayapalli",
-      "Sundarpada",
-      "Bhubaneswar",
-      "Cuttack",
-    ];
+    const locMap = new Map();
 
-    // Extract localities from loaded properties
     formattedProperties.forEach((p) => {
       if (!p.address) return;
       const parts = p.address.split(",").map((s) => s.trim()).filter(Boolean);
       parts.forEach((part) => {
         const clean = part.replace(/^(near|opposite|beside|at)\s+/i, "").trim();
-        if (clean.length >= 3 && clean.length <= 25) {
-          locSet.add(clean);
+        if (clean.length >= 2 && clean.length <= 40) {
+          const key = clean.toLowerCase();
+          if (!locMap.has(key)) {
+            locMap.set(key, clean);
+          }
         }
       });
     });
 
-    defaults.forEach((d) => locSet.add(d));
-    return ["All Locations", ...Array.from(locSet)];
+    return [
+      "All Locations",
+      ...Array.from(locMap.values()).sort((a, b) => a.localeCompare(b)),
+    ];
   }, [formattedProperties]);
 
   // Dynamic filter definitions
